@@ -385,8 +385,6 @@
     </footer>
 
     <script>
-        const WEBHOOK_URL = window.DISCORD_WEBHOOK_TURTLE || '';
-
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
             document.querySelectorAll('input[type="date"]').forEach(input => {
@@ -401,46 +399,21 @@
             if (event) event.target.classList.add('active');
         }
 
-        async function sendToDiscord(data, type) {
-            if (!WEBHOOK_URL) { console.warn('No webhook configured'); return true; }
-            const embed = {
-                title: type === 'application' ? '🏠 NEW RENTAL APPLICATION — 253 Lake Rd' : '📅 NEW SHOWING REQUEST — 253 Lake Rd',
-                color: type === 'application' ? 0x2563eb : 0xf59e0b,
-                fields: [],
-                timestamp: new Date().toISOString(),
-                footer: { text: 'Turtle Enterprises LLC · antcpu.com/turtle' }
-            };
-            if (type === 'application') {
-                embed.fields = [
-                    { name: '👤 Name', value: `${data.firstName} ${data.lastName}`, inline: true },
-                    { name: '📧 Email', value: data.email, inline: true },
-                    { name: '📱 Phone', value: data.phone, inline: true },
-                    { name: '🏠 Current Address', value: data.address, inline: false },
-                    { name: '💰 Monthly Income', value: `$${Number(data.income).toLocaleString()}`, inline: true },
-                    { name: '💼 Employer', value: data.employer || 'Not provided', inline: true },
-                    { name: '📅 Move-in Date', value: data.moveDate || 'Flexible', inline: true },
-                    { name: '📝 Notes', value: data.notes || 'None', inline: false },
-                    { name: '✅ Income Qualified?', value: Number(data.income) >= 4500 ? '✅ YES — $' + Number(data.income).toLocaleString() : '⚠️ BELOW THRESHOLD — $' + Number(data.income).toLocaleString(), inline: false }
-                ];
-            } else {
-                embed.fields = [
-                    { name: '👤 Name', value: `${data.firstName} ${data.lastName}`, inline: true },
-                    { name: '📧 Email', value: data.email, inline: true },
-                    { name: '📱 Phone', value: data.phone, inline: true },
-                    { name: '📅 Date', value: data.date, inline: true },
-                    { name: '⏰ Time', value: data.time, inline: true },
-                    { name: '❓ Questions', value: data.questions || 'None', inline: false }
-                ];
-            }
+        async function notifyGate(event, message, data) {
             try {
-                const response = await fetch(WEBHOOK_URL, {
+                const res = await fetch('https://antcpu-ai.vercel.app/api/notify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ embeds: [embed], username: '🐢 253 Lake Road' })
+                    body: JSON.stringify({
+                        event,
+                        source: 'turtle-rental',
+                        message,
+                        data
+                    })
                 });
-                return response.ok;
-            } catch (error) {
-                console.error('Discord error:', error);
+                return res.ok;
+            } catch (err) {
+                console.error('Gate error:', err);
                 return false;
             }
         }
@@ -451,7 +424,24 @@
             const submitBtn = e.target.querySelector('button');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
-            const success = await sendToDiscord(data, 'application');
+
+            const qualified = Number(data.income) >= 4500;
+            const success = await notifyGate(
+                'rental_application',
+                `New rental application from ${data.firstName} ${data.lastName} — ${qualified ? '✅ Income qualified' : '⚠️ Below threshold'}`,
+                {
+                    name: `${data.firstName} ${data.lastName}`,
+                    email: data.email,
+                    phone: data.phone,
+                    address: data.address,
+                    income: `$${Number(data.income).toLocaleString()}`,
+                    employer: data.employer || 'Not provided',
+                    moveDate: data.moveDate || 'Flexible',
+                    qualified: qualified ? 'YES' : 'NO',
+                    notes: data.notes || 'None'
+                }
+            );
+
             if (success) {
                 document.getElementById('app-success').style.display = 'block';
                 document.getElementById('app-error').style.display = 'none';
@@ -471,7 +461,20 @@
             const submitBtn = e.target.querySelector('button');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Scheduling...';
-            const success = await sendToDiscord(data, 'showing');
+
+            const success = await notifyGate(
+                'showing_request',
+                `New showing request from ${data.firstName} ${data.lastName} — ${data.date} at ${data.time}`,
+                {
+                    name: `${data.firstName} ${data.lastName}`,
+                    email: data.email,
+                    phone: data.phone,
+                    date: data.date,
+                    time: data.time,
+                    questions: data.questions || 'None'
+                }
+            );
+
             if (success) {
                 document.getElementById('show-success').style.display = 'block';
                 document.getElementById('show-error').style.display = 'none';
@@ -492,5 +495,7 @@
             });
         });
     </script>
+
+    
 </body>
 </html>
