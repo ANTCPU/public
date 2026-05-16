@@ -4,12 +4,20 @@
     <meta charset="utf-8">
     <title>Turtle Enterprises LLC</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    
+    <!-- Main CSS -->
     <link rel="stylesheet" href="assets/css/main.css">
     <noscript><link rel="stylesheet" href="assets/css/noscript.css"></noscript>
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="assets/css/fontawesome-all.min.css">
 </head>
 <body class="is-preload">
+
+    <!-- Wrapper -->
     <div id="wrapper">
+
+        <!-- Header -->
         <header id="header">
             <div class="logo">
                 <span class="fas fa-praying-hands"></span>
@@ -17,25 +25,31 @@
             <div class="content">
                 <div class="inner">
                     <h1>Turtle Enterprises LLC</h1>
-                    <p>Veteran-Owned Real Estate &amp; Property Management · Thomasville, NC</p>
+                    <p>A business designed to elevate your business.</p>
                 </div>
             </div>
             <nav>
                 <ul>
                     <li><a href="#intro">Intro</a></li>
-                    <li><a href="#work">Rentals</a></li>
+                    <li><a href="#work">Work</a></li>
                     <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
             </nav>
         </header>
+
+        <!-- Main -->
         <div id="main">
+
+            <!-- Intro -->
             <article id="intro">
                 <h2 class="major">Intro</h2>
                 <span class="image main"><img src="images/pic01.jpg" alt="Intro Image"></span>
-                <p>Welcome to Turtle Enterprises LLC — a veteran-owned real estate and land acquisition company based in Thomasville, NC.</p>
-                <p>We are currently in open application season for our move-in ready rental at 253 Lake Road. Quality tenants, all-inclusive living, and a community-first approach to property management.</p>
+                <p>Welcome to our website—we thank you for stopping by.</p>
+                <p>The professional services we offer are growing!</p>
             </article>
+
+            <!-- Work -->
             <article id="work">
                 <h2 class="major">Property Management</h2>
                 <span class="image main">
@@ -43,27 +57,23 @@
                         <img src="images/pic02.jpg" alt="Rental Property">
                     </a>
                 </span>
-                <p><strong>253 Lake Road · Thomasville, NC 27360</strong></p>
-                <p><strong>Open Application Season — Now Accepting Applicants</strong></p>
-                <p>This move-in ready home includes lawn care, power, water, cable, trash, and home security. All-inclusive living at one monthly rate.</p>
-                <p>A $99 application fee places you on our qualified waitlist. Virtual tour coming soon. Showings available for serious candidates.</p>
-                <p><strong>Target rent: $1,500/mo · All utilities included · Move-in ready</strong></p>
-                <ul class="actions">
-                    <li><a href="https://antcpu.com/turtle/Rental/253LakeRd27360.html#tour" class="button primary">View Property &amp; Apply →</a></li>
-                </ul>
+                <p>Click the image to see this move-in ready rental at 253 Lake Road, Thomasville, NC. Is there a new home rental in your future?</p>
+                <p>Call Turtle Enterprises for a business consult about your property management, residential upgrades, and more.</p>
             </article>
+
+            <!-- About -->
             <article id="about">
                 <h2 class="major">About</h2>
                 <span class="image main"><img src="images/pic03.jpg" alt="About Us"></span>
                 <h3>There really is something about the journey!</h3>
-                <p>Turtle Enterprises LLC is a veteran-owned real estate and land acquisition company founded in 2023 and based in Thomasville, NC.</p>
-                <p>Our mission is simple — serve the community, build quality housing, and grow one property at a time. We specialize in property management, residential upgrades, and real estate consulting.</p>
-                <p>Land acquisition is our next frontier. If you have a property opportunity or want to discuss a consulting engagement, we want to hear from you.</p>
+                <p>We have been in business since 2023. As a Veteran Owned business, our first job is to serve the community. Tell us where you want to go, and the next chapter begins!</p>
             </article>
+
+            <!-- Contact -->
             <article id="contact">
                 <h2 class="major">Contact</h2>
-                <p>Turtle Enterprises LLC · Thomasville, North Carolina</p>
-                <p>Interested in 253 Lake Rd? Submit your application fee through the rental listing or send us a message below to get started.</p>
+                <p>Turtle Enterprises LLC | Located in North Carolina</p>
+
                 <form id="contactForm">
                     <div class="fields">
                         <div class="field half">
@@ -85,6 +95,7 @@
                     </ul>
                 </form>
                 <div id="formFeedback" aria-live="polite"></div>
+
                 <ul class="icons">
                     <li>
                         <a href="https://www.facebook.com/profile.php?id=61551050932371" target="_blank" class="icon brands fa-facebook-f">
@@ -93,49 +104,70 @@
                     </li>
                 </ul>
             </article>
+
         </div>
+
+        <!-- Footer -->
         <footer id="footer">
-            <p class="copyright">&copy; 2023 - <script>document.write(new Date().getFullYear());</script> Turtle Enterprises LLC</p>
+            <p class="copyright">
+                &copy; 2023 - <script>document.write(new Date().getFullYear());</script> Turtle Enterprises LLC
+            </p>
         </footer>
+
     </div>
+
+    <!-- Background -->
     <div id="bg"></div>
+
+    <!-- Scripts -->
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/browser.min.js"></script>
     <script src="assets/js/breakpoints.min.js"></script>
     <script src="assets/js/util.js"></script>
     <script src="assets/js/main.js"></script>
+
+    <!-- Contact Form Discord Webhook -->
     <script>
     document.getElementById("contactForm").addEventListener("submit", async function(e) {
         e.preventDefault();
+
         const submitBtn = this.querySelector('input[type="submit"]');
         const feedback = document.getElementById("formFeedback");
+
         submitBtn.value = "Sending...";
         submitBtn.disabled = true;
         feedback.textContent = "";
+
         const webhookURL = window.DISCORD_WEBHOOK_TURTLE || '';
+
         const name = document.getElementById("name").value.trim() || "Anonymous";
         const email = document.getElementById("email").value.trim() || "No email";
         const message = document.getElementById("message").value.trim() || "No message";
+
         const payload = {
-            content: `📬 **New Turtle Enterprises Inquiry**\n**Name:** ${name}\n**Email:** ${email}\n**Message:**\n${message}`
+            content: `📬 **New Contact Form Submission**\n**Name:** ${name}\n**Email:** ${email}\n**Message:**\n${message}`
         };
+
         try {
             const res = await fetch(webhookURL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
+
             if (!res.ok) throw new Error(`Discord returned ${res.status}`);
-            feedback.textContent = "🎉 Message sent! We will be in touch soon.";
+
+            feedback.textContent = "🎉 Message sent successfully!";
             this.reset();
         } catch (err) {
             console.error(err);
-            feedback.textContent = "⚠️ Failed to send. Please try again or contact us on Facebook.";
+            feedback.textContent = "⚠️ Failed to send message. Please try again.";
         } finally {
             submitBtn.value = "Send Message";
             submitBtn.disabled = false;
         }
     });
     </script>
+
 </body>
 </html>
