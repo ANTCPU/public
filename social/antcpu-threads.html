@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTCPU on Threads | Meta's Text-First Platform Mastery</title>
+    <meta name="description" content="See how ANTCPU leverages Threads for authentic business conversations, automation insights, and real-time client engagement in Meta's newest platform.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body style="margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#fafafa;">
+
+<!-- Dynamic Loading Hero Section -->
+<div id="threads-hero" style="background:linear-gradient(135deg,#000 0%,#333 50%,#000 100%);color:white;padding:60px 20px;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\">
+    <path d=\"M20,20 Q50,10 80,20 Q90,50 80,80 Q50,90 20,80 Q10,50 20,20\" fill=\"none\" stroke=\"white\" stroke-width=\"0.5\" opacity=\"0.1\"/>
+    <path d=\"M30,30 Q50,25 70,30 Q75,50 70,70 Q50,75 30,70 Q25,50 30,30\" fill=\"none\" stroke=\"white\" stroke-width=\"0.3\" opacity=\"0.1\"/>
+    </svg></div>
+    
+    <div style="position:relative;z-index:2;max-width:800px;margin:0 auto;">
+        <div style="display:inline-block;background:rgba(255,255,255,0.1);padding:10px 20px;border-radius:50px;margin-bottom:20px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);">
+            <i class="fab fa-threads" style="font-size:24px;margin-right:10px;"></i>
+            <span style="font-weight:600;">Text-First Platform Pioneer</span>
+        </div>
+        
+        <h1 style="font-size:3.5em;margin:20px 0;font-weight:700;line-height:1.2;" id="hero-title">ANTCPU Threads Mastery</h1>
+        <p style="font-size:1.3em;margin-bottom:30px;opacity:0.9;">Authentic conversations that convert followers into automation clients</p>
+        
+        <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:40px;">
+            <a href="https://threads.net/@antcpu" target="_blank" style="background:white;color:#000;padding:15px 30px;border-radius:50px;text-decoration:none;font-weight:600;transition:all 0.3s;box-shadow:0 4px 15px rgba(255,255,255,0.2);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 25px rgba(255,255,255,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(255,255,255,0.2)'">
+                <i class="fab fa-threads"></i> Follow on Threads
+            </a>
+            <a href="#" style="background:rgba(255,255,255,0.1);color:white;padding:15px 30px;border-radius:50px;text-decoration:none;font-weight:600;border:2px solid white;transition:all 0.3s;backdrop-filter:blur(10px);" onmouseover="this.style.background='white';this.style.color='#000'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.color='white'">
+                🚀 Start Conversation
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Threads Strategy Showcase -->
+<div style="max-width:1200px;margin:0 auto;padding:60px 20px;">
+    
+    <!-- Performance Stats -->
+    <div style="text-align:center;margin-bottom:60px;">
+        <h2 style="font-size:2.5em;color:#333;margin-bottom:40px;">Threads Performance That Engages</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:30px;">
+            
+            <div class="stat-card" style="background:white;padding:30px;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1);text-align:center;transition:transform 0.3s;border-left:5px solid #000;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="background:#000;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px;">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3 style="font-size:2.2em;color:#000;margin:10px 0;">20+</h3>
+                <p style="color:#666;font-weight:500;">Daily Threads</p>
+            </div>
+            
+            <div class="stat-card" style="background:white;padding:30px;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1);text-align:center;transition:transform 0.3s;border-left:5px solid #333;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="background:#333;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 style="font-size:2.2em;color:#333;margin:10px 0;">Real-Time</h3>
+                <p style="color:#666;font-weight:500;">Engagement</p>
+            </div>
+            
+            <div class="stat-card" style="background:white;padding:30px;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1);text-align:center;transition:transform 0.3s;border-left:5px solid #666;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="background:#666;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px;">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <h3 style="font-size:2.2em;color:#666;margin:10px 0;">Authentic</h3>
+                <p style="color:#666;font-weight:500;">Conversations</p>
+            </div>
+            
+            <div class="stat-card" style="background:white;padding:30px;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1);text-align:center;transition:transform 0.3s;border-left:5px solid #4caf50;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="background:#4caf50;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px;">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <h3 style="font-size:2.2em;color:#4caf50;margin:10px 0;">Meta</h3>
+                <p style="color:#666;font-weight:500;">Integration</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Threads Content Strategy -->
+    <div style="margin-bottom:60px;">
+        <h2 style="font-size:2.5em;color:#333;text-align:center;margin-bottom:40px;">Our Threads Content Strategy</h2>
+        
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:30px;">
+            
+            <!-- Real-Time Insights -->
+            <div style="background:white;border-radius:15px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,0.1);transition:transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="background:linear-gradient(135deg,#000,#333);padding:30px;color:white;">
+                    <i class="fas fa-bolt" style="font-size:2em;margin-bottom:15px;"></i>
+                    <h3 style="font-size:1.5em;margin:0;">Real-Time Business Insights</h3>
+                </div>
+                <div style="padding:30px;">
+                    <ul style="list-style:none;padding:0;margin:0;">
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Live automation builds</li>
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Quick business tips</li>
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Behind-the-scenes thoughts</li>
+                        <li style="padding:10px 0;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Industry observations</li>
+                    </ul>
+                    <a href="/lead-form.html" style="display:inline-block;background:#000;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;margin-top:20px;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#000'">
+                        Get Real-Time Updates
+                    </a>
+                </div>
+            </div>
+
+            <!-- Community Building -->
+            <div style="background:white;border-radius:15px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,0.1);transition:transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:30px;color:white;">
+                    <i class="fas fa-users" style="font-size:2em;margin-bottom:15px;"></i>
+                    <h3 style="font-size:1.5em;margin:0;">Community Conversations</h3>
+                </div>
+                <div style="padding:30px;">
+                    <ul style="list-style:none;padding:0;margin:0;">
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Entrepreneur discussions</li>
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Tech trend analysis</li>
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Problem-solving threads</li>
+                        <li style="padding:10px 0;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Networking opportunities</li>
+                    </ul>
+                    <a href="/lead-form.html" style="display:inline-block;background:#667eea;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;margin-top:20px;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='#5a6fd8'" onmouseout="this.style.background='#667eea'">
+                        Join Our Community
+                    </a>
+                </div>
+            </div>
+
+            <!-- Authentic Storytelling -->
+            <div style="background:white;border-radius:15px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,0.1);transition:transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="background:linear-gradient(135deg,#ffa726,#ff7043);padding:30px;color:white;">
+                    <i class="fas fa-heart" style="font-size:2em;margin-bottom:15px;"></i>
+                    <h3 style="font-size:1.5em;margin:0;">Authentic Brand Stories</h3>
+                </div>
+                <div style="padding:30px;">
+                    <ul style="list-style:none;padding:0;margin:0;">
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Veteran entrepreneur journey</li>
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Family business balance</li>
+                        <li style="padding:10px 0;border-bottom:1px solid #eee;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Client success celebrations</li>
+                        <li style="padding:10px 0;"><i class="fas fa-check" style="color:#4caf50;margin-right:10px;"></i>Honest business insights</li>
+                    </ul>
+                    <a href="/lead-form.html" style="display:inline-block;background:#ffa726;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;margin-top:20px;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='#ff9800'" onmouseout="this.style.background='#ffa726'">
+                        Share Your Story
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Threads Feed -->
+    <div style="margin-bottom:60px;">
+        <h2 style="font-size:2.5em;color:#333;text-align:center;margin-bottom:40px;">Recent Threads from @antcpu</h2>
+        
+        <div style="max-width:600px;margin:0 auto;">
+            <!-- Thread 1 -->
+            <div style="background:white;border-radius:15px;padding:25px;margin-bottom:20px;box-shadow:0 3px 15px rgba(0,0,0,0.1);border-left:4px solid #000;">
+                <div style="display:flex;align-items:center;margin-bottom:15px;">
+                    <div style="width:40px;height:40px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;margin-right:15px;">A</div>
+                    <div>
+                        <strong>@antcpu</strong>
+                        <span style="color:#666;margin-left:10px;">2h</span>
+                    </div>
+                </div>
+                <p style="margin:0;line-height:1.6;color:#333;">Just automated a client's entire lead capture process. What used to take them 3 hours daily now runs in the background while they focus on what they love. 
+
+That's the power of smart automation. 🚀
+
+#Automation #SmallBusiness #Efficiency</p>
+                <div style="margin-top:15px;color:#666;font-size:14px;">
+                    <i class="fas fa-heart" style="margin-right:5px;"></i> 12
+                    <i class="fas fa-comment" style="margin-left:15px;margin-right:5px;"></i> 3
+                    <i class="fas fa-share" style="margin-left:15px;margin-right:5px;"></i> 2
+                </div>
+            </div>
+
+            <!-- Thread 2 -->
+            <div style="background:white;border-radius:15px;padding:25px;margin-bottom:20px;box-shadow:0 3px 15px rgba(0,0,0,0.1);border-left:4px solid #667eea;">
+                <div style="display:flex;align-items:center;margin-bottom:15px;">
+                    <div style="width:40px;height:40px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;margin-right:15px;">A</div>
+                    <div>
+                        <strong>@antcpu</strong>
+                        <span style="color:#666;margin-left:10px;">4h</span>
+                    </div>
+                </div>
+                <p style="margin:0;line-height:1.6;color:#333;">Quick tip for entrepreneurs: 
+
+Your website should work FOR you, not against you. If visitors can't figure out what you do in 5 seconds, you're losing money.
+
+Same-day fixes available. DM me. 💪
+
+#WebDesign #Entrepreneurship #QuickWins</p>
+                <div style="margin-top:15px;color:#666;font-size:14px;">
+                    <i class="fas fa-heart" style="margin-right:5px;"></i> 8
+                    <i class="fas fa-comment" style="margin-left:15px;margin-right:5px;"></i> 5
+                    <i class="fas fa-share" style="margin-left:15px;margin-right:5px;"></i> 1
+                </div>
+            </div>
+
+            <!-- Thread 3 -->
+            <div style="background:white;border-radius:15px;padding:25px;margin-bottom:20px;box-shadow:0 3px 15px rgba(0,0,0,0.1);border-left:4px solid #4caf50;">
+                <div style="display:flex;align-items:center;margin-bottom:15px;">
+                    <div style="width:40px;height:40px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;margin-right:15px;">A</div>
+                    <div>
+                        <strong>@antcpu</strong>
+                        <span style="color:#666;margin-left:10px;">6h</span>
+                    </div>
+                </div>
+                <p style="margin:0;line-height:1.6;color:#333;">Veteran-owned businesses have a unique advantage: we understand systems, discipline, and getting things done.
+
+But we also understand the value of family time.
+
+That's why I build automation that gives you both success AND time with what matters most. 🇺🇸
+
+#VeteranOwned #WorkLifeBalance #Automation</p>
+                <div style="margin-top:15px;color:#666;font-size:14px;">
+                    <i class="fas fa-heart" style="margin-right:5px;"></i> 15
+                    <i class="fas fa-comment" style="margin-left:15px;margin-right:5px;"></i> 7
+                    <i class="fas fa-share" style="margin-left:15px;margin-right:5px;"></i> 4
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Threads Advertising Strategy -->
+    <div style="background:linear-gradient(135deg,#000,#333);color:white;padding:60px 40px;border-radius:20px;margin-bottom:60px;">
+        <h2 style="font-size:2.5em;text-align:center;margin-bottom:40px;">How We Leverage Threads for Business</h2>
+        
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:30px;">
+            <div style="background:rgba(255,255,255,0.1);padding:30px;border-radius:15px;backdrop-filter:blur(10px);">
+                <h3 style="font-size:1.3em;margin-bottom:15px;"><i class="fas fa-comments" style="margin-right:10px;"></i>Authentic Engagement</h3>
+                <p>Real conversations with business owners, sharing genuine insights and building trust through transparency.</p>
+            </div>
+            
+            <div style="background:rgba(255,255,255,0.1);padding:30px;border-radius:15px;backdrop-filter:blur(10px);">
+                <h3 style="font-size:1.3em;margin-bottom:15px;"><i class="fas fa-clock" style="margin-right:10px;"></i>Real-Time Value</h3>
+                <p>Immediate tips, live problem-solving, and instant responses that demonstrate our expertise and responsiveness.</p>
+            </div>
+            
+            <div style="background:rgba(255,255,255,0.1);padding:30px;border-radius:15px;backdrop-filter:blur(10px);">
+                <h3 style="font-size:1.3em;margin-bottom:15px;"><i class="fas fa-network-wired" style="margin-right:10px;"></i>Meta Ecosystem</h3>
+                <p>Seamless integration with Instagram and Facebook, creating a unified brand presence across Meta platforms.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action Section -->
+    <div style="text-align:center;background:white;padding:60px 40px;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.1);">
+        <h2 style="font-size:2.5em;color:#333;margin-bottom:20px;">Ready to Join the Conversation?</h2>
+        <p style="font-size:1.2em;color:#666;margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto;">Let's build authentic relationships that convert into real business results. Same-day solutions, genuine conversations, lasting partnerships.</p>
+        
+        <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;">
+            <a href="/lead-form.html" style="background:#000;color:white;padding:18px 35px;border-radius:50px;text-decoration:none;font-weight:600;font-size:1.1em;transition:all 0.3s;box-shadow:0 5px 20px rgba(0,0,0,0.3);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 30px rgba(0,0,0,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 5px 20px rgba(0,0,0,0.3)'">
+                🚀 Start Our Conversation
+            </a>
+            <a href="https://threads.net/@antcpu" target="_blank" style="background:transparent;color:#000;padding:18px 35px;border-radius:50px;text-decoration:none;font-weight:600;font-size:1.1em;border:2px solid #000;transition:all 0.3s;" onmouseover="this.style.background='#000';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#000'">
+                <i class="fab fa-threads"></i> Follow on Threads
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Other Platforms Preview -->
+<div style="background:#f8f9fa;padding:60px 20px;">
+    <div style="max-width:1200px;margin:0 auto;text-align:center;">
+        <h2 style="font-size:2.5em;color:#333;margin-bottom:20px;">Explore Our Other Platforms</h2>
+        <p style="font-size:1.2em;color:#666;margin-bottom:40px;">Each platform, perfectly optimized for its unique audience</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+            <a href="https://antcpu.com/social/antcpu-tiktok.html" style="background:white;padding:30px;border-radius:15px;text-decoration:none;color:#333;transition:transform 0.3s;box-shadow:0 3px 15px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="fab fa-tiktok" style="font-size:2em;color:#ff0050;margin-bottom:15px;"></i>
+                <h3>TikTok</h3>
+                <p style="color:#666;">6K Followers</p>
+            </a>
+            
+            <a href="https://antcpu.com/social/antcpu-linkedin.html" style="background:white;padding:30px;border-radius:15px;text-decoration:none;color:#333;transition:transform 0.3s;box-shadow:0 3px 15px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="fab fa-linkedin" style="font-size:2em;color:#0077b5;margin-bottom:15px;"></i>
+                <h3>LinkedIn</h3>
+                <p style="color:#666;">40+ Connections</p>
+            </a>
+            
+            <a href="https://antcpu.com/social/antcpu-instagram.html" style="background:white;padding:30px;border-radius:15px;text-decoration:none;color:#333;transition:transform 0.3s;box-shadow:0 3px 15px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="fab fa-instagram" style="font-size:2em;color:#e4405f;margin-bottom:15px;"></i>
+                <h3>Instagram</h3>
+                <p style="color:#666;">Growing Daily</p>
+            </a>
+            
+            <a href="https://antcpu.com/social/antcpu-twitter.html" style="background:white;padding:30px;border-radius:15px;text-decoration:none;color:#333;transition:transform 0.3s;box-shadow:0 3px 15px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="fab fa-twitter" style="font-size:2em;color:#1da1f2;margin-bottom:15px;"></i>
+                <h3>Twitter/X</h3>
+                <p style="color:#666;">Tech Insights</p>
+            </a>
+            
+            <a href="https://antcpu.com/social/antcpu-threads.html" style="background:white;padding:30px;border-radius:15px;text-decoration:none;color:#333;transition:transform 0.3s;box-shadow:0 3px 15px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="fab fa-threads" style="font-size:2em;color:#000;margin-bottom:15px;"></i>
+                <h3>Threads</h3>
+                <p style="color:#666;">Meta Integration</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Dynamic loading animations
+window.addEventListener('load', function() {
+    // Animate hero title
+    const title = document.getElementById('hero-title');
+    title.style.opacity = '0';
+    title.style.transform = 'translateY(30px)';
+    title.style.transition = 'all 1s ease';
+    
+    setTimeout(() => {
+        title.style.opacity = '1';
+        title.style.transform = 'translateY(0)';
+    }, 500);
+    
+    // Animate stat cards
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(50px)';
+        card.style.transition = 'all 0.8s ease';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 1000 + (index * 200));
+    });
+});
+
+// Thread floating animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes threadFloat {
+        0% { transform: translateX(-100px) rotate(0deg); }
+        50% { transform: translateX(50vw) rotate(180deg); }
+        100% { transform: translateX(calc(100vw + 100px)) rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; <span id="y"></span> antcpu — Built with precision ⚙️</p>
+
+    <nav class="footer-links">
+      <a href="https://antcpu.com">🏠 Home</a>
+      <a href="https://antcpu.com/about.html">👤 About</a>
+      <a href="https://antcpu.com//lead-form.html">✉️ Contact</a>
+      <a href="https://antcpu.com/PrivacyPolicy.html">🔒 Privacy</a>
+  </div>
+</footer>
+
+<script>document.getElementById("y").textContent=new Date().getFullYear();</script>
+
+<style>
+  .site-footer {
+    background:#0b0b0b;
+    color:#d0d0d0;
+    padding:25px 10px;
+    text-align:center;
+    font-family:Inter,Arial;
+  }
+
+  .footer-links a {
+    color:#00e0ff;
+    margin:0 12px;
+    text-decoration:none;
+    font-weight:500;
+    display:inline-block;
+    transition:transform .2s ease, opacity .2s ease;
+  }
+
+  .footer-links a:hover {
+    transform:scale(1.15);
+    opacity:.8;
+  }
+
+  .footer-inner p {
+    margin-bottom:12px;
+    font-size:14px;
+  }
+</style>
+</body>
+</html>
