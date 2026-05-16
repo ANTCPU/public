@@ -1,0 +1,209 @@
+<script>
+(()=>{
+  let currentEmpId = null;
+  let currentMode  = 'blank';
+  let selectedTplId = null;
+
+  // ── MODE SWITCHER ──────────────────────────────────────
+  window.setMode = (mode) => {
+    currentMode = mode;
+    ['blank','template','ai'].forEach(m => {
+      document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('selected', m === mode);
+      document.getElementById('panel' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('active', m === mode);
+    });
+    document.getElementById('aiGenerateBtn').style.display = mode === 'ai' ? 'block' : 'none';
+    if (mode === 'template') loadTemplates();
+  };
+
+  // ── LOAD TEMPLATES INTO SELECTOR ──────────────────────
+  const loadTemplates = () => {
+    const templates = ANT.store.get('antcpu_templates', []);
+    const emp = currentEmpId ? (typeof ANTAI !== 'undefined' ? ANTAI.EMPLOYEES.find(e => e.id === currentEmpId) : null) : null;
+    const agentName = emp ? emp.id : null;
+    const filtered = agentName ? templates.filter(t => t.agent === agentName || t.type === 'email') : templates;
+    const list = document.getElementById('tplSelectList');
+    if (!filtered.length) {
+      list.innerHTML = '<div style="color:#333;font-family:monospace;font-size:.75rem;padding:10px;">// no templates found — <a href="templates.html" style="color:#d29922;">add templates</a></div>';
+      return;
+    }
+    list.innerHTML = filtered.map(t => `
+      <div class="tpl-select-item" id="tplitem-${t.id}" onclick="selectTpl('${t.id}','${(t.body||'').replace(/'/g,"\\'")}')">
+        <div class="tpl-select-name">${t.name}</div>
+        <div class="tpl-select-desc">${t.desc}</div>
+      </div>
+    `).join('');
+  };
+
+  window.selectTpl = (id, body) => {
+    selectedTplId = id;
+    document.querySelectorAll('.tpl-select-item').forEach(el => el.classList.remove('selected'));
+    const el = document.getElementById('tplitem-' + id);
+    if (el) el.classList.add('selected');
+    document.getElementById('askPromptTemplate').value = body;
+  };
+
+  // ── AI GENERATE ────────────────────────────────────────
+  window.generateAI = async () => {
+    const prompt = document.getElementById('aiPromptInput').value.trim();
+    if (!prompt) { ANT.status('askStatus','err','✗ enter a prompt first'); return; }
+    const btn = document.getElementById('aiGenerateBtn');
+    btn.disabled = true;
+    ANT.status('askStatus','loading','✨ generating draft...');
+    try {
+      if (typeof ANTAI !== 'undefined') {
+        const result = await ANTAI.employeeAsk(currentEmpId, 'Draft a response for: ' + prompt);
+        document.getElementById('askPromptAI').value = result.response;
+        ANT.status('askStatus','ok','✓ draft ready — review and send');
+      } else {
+        document.getElementById('askPromptAI').value = '// ANTAI not loaded — API key required';
+        ANT.status('askStatus','err','✗ ANTAI not available');
+      }
+    } catch(e) {
+      ANT.status('askStatus','err','✗ ' + e.message);
+    }
+    btn.disabled = false;
+  };
+
+  // ── GET ACTIVE PROMPT ──────────────────────────────────
+  const getPrompt = () => {
+    if (currentMode === 'blank')    return document.getElementById('askPromptBlank').value.trim();
+    if (currentMode === 'template') return document.getElementById('askPromptTemplate').value.trim();
+    if (currentMode === 'ai')       return document.getElementById('askPromptAI').value.trim();
+    return '';
+  };
+
+  // ── RENDER EMPLOYEES ───────────────────────────────────
+  function renderEmployees() {
+    if (typeof ANTAI === 'undefined') { setTimeout(renderEmployees, 200); return; }
+    const grid = document.getElementById('empGrid');
+    const emps = ANTAI.EMPLOYEES;
+    grid.innerHTML = emps.map(e => `
+      <div class="emp-card ${e.status}">
+        <div class="emp-top">
+          <div class="emp-avatar">${e.avatar}</div>
+          <div class="emp-info">
+            <div class="emp-name">${e.name}</div>
+            <div class="emp-role">${e.role}</div>
+            <div class="emp-model">// ${ANTAI.PROVIDERS[e.model]?.name || e.model}</div>
+          </div>
+          <span class="emp-status-badge ${e.status}">${e.status.toUpperCase()}</span>
+        </div>
+        <div class="emp-tasks">
+          ${e.tasks.map(t => `<div class="emp-task">${t}</div>`).join('')}
+        </div>
+        <div class="emp-footer">
+          <div class="emp-ant">⚡ ${e.ant_earned} ANT earned</div>
+          <div class="emp-last">${e.last_active ? 'last: ' + new Date(e.last_active).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : 'never active'}</div>
+        </div>
+        <div class="emp-actions">
+          <button class="emp-btn emp-btn-ask" onclick="openAsk('${e.id}')">💬 ask</button>
+          ${e.url ? `<a class="emp-btn emp-btn-open" href="${e.url}" style="display:inline-block;padding:5px 14px;background:#58a6ff20;border:1px solid #58a6ff50;border-radius:20px;color:#58a6ff;text-decoration:none;font-size:.78rem;font-weight:600;letter-spacing:.04em;">↗ open</a>` : ""}
+          <button class="emp-btn emp-btn-pay" onclick="queuePay('${e.id}')" ${e.status==='offline'?'disabled':''}>⚡ pay ANT</button>
+        </div>
+      </div>
+    `).join('');
+    updateStats();
+  }
+
+  function updateStats() {
+    if (typeof ANTAI === 'undefined') return;
+    const emps = ANTAI.EMPLOYEES;
+    document.getElementById('stat-active').textContent  = emps.filter(e=>e.status==='active').length;
+    document.getElementById('stat-standby').textContent = emps.filter(e=>e.status==='standby').length;
+    document.getElementById('stat-ant').textContent     = emps.reduce((s,e)=>s+e.ant_earned,0);
+    const queue = ANT.store.get('antcpu_ant_pay_queue',[]);
+    document.getElementById('stat-pending').textContent = queue.filter(p=>p.status==='pending').length;
+    document.getElementById('office-status').textContent = emps.filter(e=>e.status==='active').length + ' agents online';
+  }
+
+  function renderPayQueue() {
+    const queue = ANT.store.get('antcpu_ant_pay_queue',[]);
+    const el = document.getElementById('payQueue');
+    if (!queue.length) {
+      el.innerHTML = '<div style="text-align:center;color:#333;font-size:.8rem;padding:20px;font-family:monospace;">// no pending pay events</div>';
+      return;
+    }
+    el.innerHTML = queue.slice().reverse().map(p => `
+      <div class="pay-queue-row ${p.status}">
+        <div class="pay-info">
+          <div class="pay-employee">${p.employee} — ${p.role}</div>
+          <div class="pay-task">${p.task}</div>
+        </div>
+        <div class="pay-amount">⚡ ${p.amount} ANT</div>
+        ${p.status==='pending'
+          ? `<button class="pay-confirm-btn" onclick="confirmPay('${p.id}')">✓ confirm</button>`
+          : `<span class="pay-status">✅ confirmed</span>`}
+      </div>
+    `).join('');
+  }
+
+  // ── MODAL ──────────────────────────────────────────────
+  window.openAsk = (empId) => {
+    currentEmpId = empId;
+    selectedTplId = null;
+    if (typeof ANTAI === 'undefined') return;
+    const emp = ANTAI.EMPLOYEES.find(e=>e.id===empId);
+    document.getElementById('askTitle').textContent = '// ask ' + emp.name;
+    document.getElementById('askEmployee').textContent = emp.avatar + ' ' + emp.name + ' — ' + emp.role;
+    document.getElementById('askPromptBlank').value = '';
+    document.getElementById('askPromptTemplate').value = '';
+    document.getElementById('askPromptAI').value = '';
+    document.getElementById('aiPromptInput').value = '';
+    document.getElementById('askResponse').className = 'ask-response';
+    document.getElementById('askStatus').className = 'status-bar';
+    setMode('blank');
+    document.getElementById('askModal').classList.add('open');
+  };
+
+  window.closeAsk = () => {
+    document.getElementById('askModal').classList.remove('open');
+    currentEmpId = null;
+  };
+
+  window.sendAsk = async () => {
+    const prompt = getPrompt();
+    if (!prompt) { ANT.status('askStatus','err','✗ nothing to send'); return; }
+    const btn = document.getElementById('askSendBtn');
+    btn.disabled = true;
+    ANT.status('askStatus','loading','asking ' + currentEmpId + '...');
+    document.getElementById('askResponse').className = 'ask-response';
+    try {
+      const result = await ANTAI.employeeAsk(currentEmpId, prompt);
+      document.getElementById('askResponse').textContent = result.response;
+      document.getElementById('askResponse').className = 'ask-response show';
+      ANT.status('askStatus','ok','✓ response received');
+      setTimeout(()=>document.getElementById('askStatus').classList.remove('show'),3000);
+      renderEmployees();
+    } catch(e) {
+      ANT.status('askStatus','err','✗ ' + e.message);
+    }
+    btn.disabled = false;
+  };
+
+  window.queuePay = (empId) => {
+    if (typeof ANTAI === 'undefined') return;
+    const task = prompt('Describe the task this agent completed:');
+    if (!task) return;
+    ANTAI.queuePay(empId, task);
+    renderPayQueue();
+    updateStats();
+  };
+
+  window.confirmPay = (payId) => {
+    if (typeof ANTAI === 'undefined') return;
+    ANTAI.confirmPay(payId, 'human');
+    renderPayQueue();
+    renderEmployees();
+  };
+
+  document.getElementById('askModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('askModal')) closeAsk();
+  });
+
+  // boot
+  setTimeout(() => { renderEmployees(); renderPayQueue(); }, 300);
+  setInterval(() => { renderPayQueue(); updateStats(); }, 10000);
+})();
+</script>
+</body>
+</html>
