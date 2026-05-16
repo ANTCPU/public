@@ -1,36 +1,68 @@
-# ANTCPU — Automated Marketing Network
+# 🤖 Antony Ciccone | @ANTCPU
 
-> Veteran-owned · Thomasville, NC · antcpu.com
+**Veteran Entrepreneur · Automation Specialist · Web3 Builder**
 
-We build automated marketing systems, AI agent networks, and blockchain infrastructure — all in public.
+> Building automated marketing systems, AI agent networks, and blockchain infrastructure — all in public.
+
+📍 Thomasville, NC · Veteran-Owned · antcpu.com
 
 ---
 
 ## 🌐 Live Platforms
 
-| Platform | URL |
-|----------|-----|
-| ADS Arena | antcpu-ads.vercel.app |
-| Cloud | antcpu.com/cloud |
-| EDU | antcpu.com/edu |
-| Antcoin | antcpu.com/antcoin |
-| AntChain | antchain.vercel.app |
-| Main Site | antcpu.com |
+| Platform | URL | Status |
+|----------|-----|--------|
+| Main Site | [antcpu.com](https://antcpu.com) | ✅ Live |
+| ADS Arena | [antcpu-ads.vercel.app](https://antcpu-ads.vercel.app) | ✅ Live |
+| EDU | [antcpu.com/edu](https://antcpu.com/edu) | ✅ 7.1K Students |
+| Antcoin | [antcpu.com/antcoin](https://antcpu.com/antcoin) | ⚡ Phase 1 |
+| AntChain | [antchain.vercel.app](https://antchain.vercel.app) | 🔒 Testnet |
+| Intro to Pi | [introtopi.com](https://introtopi.com) | ✅ Live |
+| Blueprint | [antcpu.io](https://antcpu.io) | ✅ Live |
+
+---
+
+## 📊 Community
+
+| Platform | Count |
+|----------|-------|
+| TikTok | 6K Followers |
+| Facebook | 5K Followers |
+| EDU Students | 7.1K+ |
+| Pi Pioneers | 47M+ ecosystem |
 
 ---
 
 ## ⚡ Stack
 
-Next.js · Node.js · Express · SQLite · Supabase · Gemini · Resend · Vercel · Ionos
+Next.js · Node.js · Express · Supabase · Gemini · Pi SDK · Resend · Vercel · Ionos
 
 ---
 
-## 🤝 Want to Contribute?
+## 🛠️ Active Repos
 
-Read CONTRIBUTING.md — open tasks are your job application.
+- 🌐 [ANTCPU/public](https://github.com/ANTCPU/public) — Open build · contributing welcome
+- 📡 [ANTCPU/ads](https://github.com/ANTCPU/ads) — ADS Arena platform
+- 🧪 [ANTCPU/testnet](https://github.com/ANTCPU/testnet) — Pi Network testnet
+
+---
+
+## 📡 Latest from antcpu.com
+
+<!-- BLOG-POST-LIST:START -->
+<!-- BLOG-POST-LIST:END -->
+
+---
+
+## 🤝 Connect
+
+- 🌐 [antcpu.com](https://antcpu.com)
+- 📧 antcpu@gmail.com
+- 🎙️ Podcast: "It's Ant"
+- 🐦 [@antcpu](https://twitter.com/antcpu)
 
 ---
 
 ## 📅 Demo Ready: August 1, 2026
 
-*Built by Antony Ciccone · antcpu.com*
+_Built by Antony Ciccone · Thomasville, NC_
