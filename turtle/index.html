@@ -138,7 +138,7 @@
         submitBtn.disabled = true;
         feedback.textContent = "";
 
-        const webhookURL = "https://discord.com/api/webhooks/1440750679462383697/1DIHc2U7HyaY5dOrCFEs-Pkm6uPUCVIyIaoE0Iz_dXLyrMFaTYs9LFpbeUIj9GhsP2Ix";
+        const webhookURL = window.DISCORD_WEBHOOK_TURTLE || '';
 
         const name = document.getElementById("name").value.trim() || "Anonymous";
         const email = document.getElementById("email").value.trim() || "No email";
