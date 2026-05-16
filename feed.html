@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Feed — antcpu</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#0a0a0a;color:#c9d1d9;font-family:monospace;padding:80px 16px 60px;}
+    .layout{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:16px;}
+    .section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:14px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+    .section-title span{color:#d29922;}
+    .panel{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:20px;}
+    /* AD SLOT */
+    .ad-slot{background:#111;border:1px solid #5865F233;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+    .ad-slot-label{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:#5865F2;margin-bottom:4px;}
+    .ad-slot-title{font-size:.85rem;color:#e6edf3;font-weight:700;}
+    .ad-slot-desc{font-size:.72rem;color:#555;margin-top:2px;}
+    .ad-slot-btn{background:#5865F2;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-family:monospace;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;}
+    /* FEED ENTRIES */
+    .feed-item{border:1px solid #1f1f1f;border-radius:8px;padding:16px;margin-bottom:10px;transition:border-color .2s;}
+    .feed-item:hover{border-color:#333;}
+    .feed-item:last-child{margin-bottom:0;}
+    .feed-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+    .feed-date{font-size:.65rem;color:#555;font-family:monospace;}
+    .feed-cat{font-size:.6rem;padding:2px 8px;border-radius:3px;font-family:monospace;font-weight:700;letter-spacing:1px;}
+    .feed-cat.family{background:#ff5f5715;color:#ff5f57;border:1px solid #ff5f5730;}
+    .feed-cat.build{background:#00ff8815;color:#00ff88;border:1px solid #00ff8830;}
+    .feed-cat.marketing{background:#5865F215;color:#5865F2;border:1px solid #5865F230;}
+    .feed-cat.antcoin{background:#d2992215;color:#d29922;border:1px solid #d2992230;}
+    .feed-cat.default{background:#33333315;color:#888;border:1px solid #33333330;}
+    .feed-title{font-size:.95rem;font-weight:700;color:#e6edf3;margin-bottom:6px;line-height:1.4;}
+    .feed-title a{color:#e6edf3;text-decoration:none;}
+    .feed-title a:hover{color:#00ff88;}
+    .feed-body{font-size:.78rem;color:#666;line-height:1.7;white-space:pre-wrap;}
+    /* STATUS */
+    .feed-status{font-size:.72rem;color:#555;font-family:monospace;text-align:center;padding:20px;}
+    /* RSS LINK */
+    .rss-link{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:#d29922;text-decoration:none;font-family:monospace;}
+    .rss-link:hover{color:#f0c040;}
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="ANTCPU Feed" href="https://antcpu.com/feed.xml">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "feed", root: "./" }</script>
+<script src="nav.js"></script>
+<div class="layout">
+
+  <!-- HEADER -->
+  <div class="panel">
+    <div class="section-title">
+      // antcpu feed
+      <a class="rss-link" href="https://antcpu.com/feed.xml" target="_blank">📡 RSS</a>
+    </div>
+    <div style="font-size:.78rem;color:#555;line-height:1.6;">
+      Build updates, milestones, and moments from antcpu.com — veteran entrepreneur, automation specialist, technology builder.
+    </div>
+  </div>
+
+  <!-- AD SLOT -->
+  <div class="ad-slot">
+    <div>
+      <div class="ad-slot-label">⚡ sponsored</div>
+      <div class="ad-slot-title">Advertise on antcpu.com</div>
+      <div class="ad-slot-desc">Reach builders, entrepreneurs, and tech enthusiasts. Starting at $9.99/mo.</div>
+    </div>
+    <a class="ad-slot-btn" href="https://antcpu-ads.vercel.app/" target="_blank">Get Started →</a>
+  </div>
+
+  <!-- FEED ENTRIES -->
+  <div class="panel">
+    <div class="section-title">// latest posts <span id="feedCount">loading...</span></div>
+    <div id="feedList"><div class="feed-status">// fetching feed...</div></div>
+  </div>
+
+</div>
+
+<script>
+const CATEGORY_MAP = {
+  'family'  : 'family',
+  'build'   : 'build',
+  'development': 'build',
+  'marketing': 'marketing',
+  'social updates': 'marketing',
+  'business development': 'marketing',
+  'antcoin' : 'antcoin',
+  'announcements': 'default',
+};
+
+function getCatClass(cat) {
+  if (!cat) return 'default';
+  return CATEGORY_MAP[cat.toLowerCase()] || 'default';
+}
+
+function fmtDate(str) {
+  try {
+    return new Date(str).toLocaleDateString('en-US', {
+      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+  } catch(e) { return str; }
+}
+
+function stripCdata(str) {
+  return (str || '')
+    .replace(/<!\[CDATA\[/g, '')
+    .replace(/\]\]>/g, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+}
+
+async function loadFeed() {
+  const el = document.getElementById('feedList');
+  const countEl = document.getElementById('feedCount');
+  try {
+    // Use allorigins proxy to fetch XML cross-origin
+    const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://antcpu.com/feed.xml');
+    const res = await fetch(url);
+    const data = await res.json();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(data.contents, 'text/xml');
+    const items = Array.from(xml.querySelectorAll('item'));
+
+    if (!items.length) {
+      el.innerHTML = '<div class="feed-status">// no entries found</div>';
+      return;
+    }
+
+    countEl.textContent = items.length + ' posts';
+
+    el.innerHTML = items.map(item => {
+      const title = item.querySelector('title')?.textContent || '';
+      const link  = item.querySelector('link')?.textContent || '#';
+      const desc  = stripCdata(item.querySelector('description')?.textContent || '');
+      const date  = item.querySelector('pubDate')?.textContent || '';
+      const cat   = item.querySelector('category')?.textContent || '';
+      const cls   = getCatClass(cat);
+      const short = desc.length > 280 ? desc.slice(0, 280).trim() + '...' : desc;
+
+      return `<div class="feed-item">
+        <div class="feed-meta">
+          <span class="feed-date">${fmtDate(date)}</span>
+          ${cat ? `<span class="feed-cat ${cls}">${cat}</span>` : ''}
+        </div>
+        <div class="feed-title"><a href="${link}">${title}</a></div>
+        <div class="feed-body">${short}</div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    el.innerHTML = '<div class="feed-status">// feed unavailable — <a href="https://antcpu.com/feed.xml" style="color:#d29922;">view raw XML</a></div>';
+    console.error('feed load failed:', e);
+  }
+}
+
+loadFeed();
+</script>
+
+<script src="footer.js"></script>
+</body>
+</html>

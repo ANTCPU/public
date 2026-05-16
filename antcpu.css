@@ -1,0 +1,278 @@
+/* ============================================================
+   ANTCPU.CSS — antcpu-launcher
+   Shared design system — loaded on every page via nav.js
+   Version: 1.0.0 — 2026-04-21
+   ============================================================ */
+
+/* ── RESET ─────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── BASE ──────────────────────────────────────────────── */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0a0a0a;
+  color: #c9d1d9;
+  min-height: 100vh;
+}
+
+/* ── TYPOGRAPHY ────────────────────────────────────────── */
+.ant-mono { font-family: monospace; }
+
+.ant-label {
+  display: block;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 6px;
+  font-family: monospace;
+}
+
+.ant-section-title {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #555;
+  margin-bottom: 14px;
+  font-family: monospace;
+  border-bottom: 1px solid #1f1f1f;
+  padding-bottom: 8px;
+}
+
+.ant-empty {
+  text-align: center;
+  color: #333;
+  font-size: .8rem;
+  padding: 20px;
+  font-family: monospace;
+}
+
+/* ── COLORS ────────────────────────────────────────────── */
+:root {
+  --ant-green:   #00ff88;
+  --ant-gold:    #d29922;
+  --ant-red:     #f85149;
+  --ant-blue:    #5865F2;
+  --ant-bg:      #0a0a0a;
+  --ant-bg2:     #0d0d0d;
+  --ant-bg3:     #111;
+  --ant-border:  #1f1f1f;
+  --ant-border2: #222;
+  --ant-muted:   #555;
+  --ant-text:    #c9d1d9;
+  --ant-bright:  #e6edf3;
+}
+
+/* ── PANEL ─────────────────────────────────────────────── */
+.ant-panel {
+  padding: 20px;
+  background: var(--ant-bg2);
+  border: 1px solid var(--ant-border);
+  border-radius: 10px;
+}
+.ant-panel-gold  { border-color: #d2992233; }
+.ant-panel-green { border-color: #00ff8833; }
+.ant-panel-red   { border-color: #f8514933; }
+.ant-panel-blue  { border-color: #5865F233; }
+
+/* ── BUTTONS ───────────────────────────────────────────── */
+.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: monospace;
+  text-decoration: none;
+}
+.ant-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.ant-btn-primary { background: var(--ant-green); color: #0a0a0a; }
+.ant-btn-primary:hover { background: #00cc6a; }
+
+.ant-btn-gold { background: var(--ant-gold); color: #0a0a0a; }
+.ant-btn-gold:hover { background: #b8841a; }
+
+.ant-btn-red { background: var(--ant-red); color: #fff; }
+.ant-btn-red:hover { background: #d03030; }
+
+.ant-btn-blue { background: var(--ant-blue); color: #fff; }
+.ant-btn-blue:hover { background: #4752C4; }
+
+.ant-btn-ghost {
+  background: var(--ant-bg3);
+  color: var(--ant-muted);
+  border: 1px solid var(--ant-border2);
+}
+.ant-btn-ghost:hover { color: var(--ant-text); border-color: #444; }
+
+/* ── INPUTS ────────────────────────────────────────────── */
+.ant-input, .ant-textarea, .ant-select {
+  width: 100%;
+  background: var(--ant-bg3);
+  border: 1px solid var(--ant-border2);
+  border-radius: 8px;
+  color: var(--ant-text);
+  font-family: monospace;
+  font-size: .82rem;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+.ant-input:focus,
+.ant-textarea:focus,
+.ant-select:focus { border-color: var(--ant-green); }
+.ant-textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+
+.ant-field { margin-bottom: 12px; }
+
+.ant-char-count { text-align: right; font-size: .7rem; color: #555; margin-top: 4px; font-family: monospace; }
+.ant-char-count.warn { color: var(--ant-gold); }
+.ant-char-count.over { color: var(--ant-red); }
+
+/* ── STATUS BAR ────────────────────────────────────────── */
+.status-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: .8rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-family: monospace;
+}
+.status-bar.show    { display: flex; }
+.status-bar.ok      { background: #00ff8811; color: var(--ant-green); border: 1px solid #00ff8833; }
+.status-bar.err     { background: #f8514911; color: var(--ant-red);   border: 1px solid #f8514933; }
+.status-bar.loading { background: #d2992211; color: var(--ant-gold);  border: 1px solid #d2992233; }
+.status-bar.partial { background: #5865F211; color: var(--ant-blue);  border: 1px solid #5865F233; }
+
+/* ── BADGES ────────────────────────────────────────────── */
+.ant-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: .65rem;
+  font-weight: 700;
+  font-family: monospace;
+}
+.ant-badge-green  { background: #00ff8822; color: var(--ant-green); border: 1px solid #00ff8844; }
+.ant-badge-gold   { background: #d2992222; color: var(--ant-gold);  border: 1px solid #d2992244; }
+.ant-badge-red    { background: #f8514922; color: var(--ant-red);   border: 1px solid #f8514944; }
+.ant-badge-blue   { background: #5865F222; color: var(--ant-blue);  border: 1px solid #5865F244; }
+.ant-badge-muted  { background: #1a1a1a;   color: #555;             border: 1px solid #222; }
+
+/* ── DOTS ──────────────────────────────────────────────── */
+.ant-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.ant-dot-green  { background: var(--ant-green); box-shadow: 0 0 5px var(--ant-green); }
+.ant-dot-gold   { background: var(--ant-gold);  box-shadow: 0 0 5px var(--ant-gold); }
+.ant-dot-red    { background: var(--ant-red);   box-shadow: 0 0 5px var(--ant-red); }
+.ant-dot-muted  { background: #333; }
+
+/* ── PROGRESS BAR ──────────────────────────────────────── */
+.ant-bar-track {
+  background: #1a1a1a;
+  border-radius: 20px;
+  height: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.ant-bar-fill {
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, var(--ant-green), var(--ant-gold));
+  transition: width .5s ease;
+}
+
+/* ── CARDS ─────────────────────────────────────────────── */
+.ant-card {
+  background: var(--ant-bg2);
+  border: 1px solid var(--ant-border);
+  border-radius: 8px;
+  padding: 14px;
+  transition: border-color .2s;
+}
+.ant-card:hover { border-color: #333; }
+
+/* ── DIVIDER ───────────────────────────────────────────── */
+.ant-hr { border: none; border-top: 1px solid var(--ant-border); margin: 16px 0; }
+
+/* ── SPINNER ───────────────────────────────────────────── */
+.ant-spinner {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border: 2px solid rgba(0,255,136,.2);
+  border-top-color: var(--ant-green);
+  border-radius: 50%;
+  animation: ant-spin .7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes ant-spin { to { transform: rotate(360deg); } }
+
+/* ── LAYOUT HELPERS ────────────────────────────────────── */
+.ant-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.ant-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.ant-full   { grid-column: 1 / -1; }
+@media (max-width: 768px) {
+  .ant-grid-2, .ant-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ── TABS ──────────────────────────────────────────────── */
+.ant-tab-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.ant-tab {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: .75rem;
+  font-family: monospace;
+  cursor: pointer;
+  border: 1px solid var(--ant-border2);
+  background: var(--ant-bg3);
+  color: var(--ant-muted);
+  transition: all .15s;
+}
+.ant-tab.active {
+  background: #00ff8811;
+  color: var(--ant-green);
+  border-color: #00ff8833;
+}
+
+/* ── HISTORY ROW ───────────────────────────────────────── */
+.ant-hist-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--ant-bg3);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: .75rem;
+  font-family: monospace;
+  border-left: 3px solid var(--ant-border);
+}
+.ant-hist-row.ok  { border-left-color: #00ff8844; }
+.ant-hist-row.err { border-left-color: #f8514944; }
+
+/* ── TOWER LOG ─────────────────────────────────────────── */
+.log-message { color: #e6edf3; font-size: .85rem; line-height: 1.5; margin: 4px 0; }
+.log-action  { color: #00ff88; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; font-family: monospace; }
+.log-time    { color: #c9d1d9; font-size: .72rem; font-family: monospace; }
+.log-meta    { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+.log-item    { padding: 12px 0; border-bottom: 1px solid #1a1f1c; }
+.log-top     { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+
+/* ── BRIGHT TEXT UTILITY ───────────────────────────────── */
+.ant-text-bright { color: #e6edf3 !important; }
+.ant-text-white  { color: #ffffff !important; }
+.ant-muted-mid   { color: #888 !important; }
