@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANTCOIN — Virtual Cryptocurrency</title>
+  <meta name="description" content="AntChain — a human-powered blockchain built for world usage. Join early before the first ANT is sold.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --black:       #0a0a0a;
+      --surface:     #111111;
+      --card:        #161616;
+      --card-hover:  #1c1c1c;
+      --border:      #222222;
+      --border-lit:  #2e2e2e;
+      --gold:        #c9a84c;
+      --gold-dim:    #7a6030;
+      --gold-glow:   rgba(201,168,76,0.10);
+      --cyan:        #00d4ff;
+      --cyan-dim:    rgba(0,212,255,0.08);
+      --green:       #3ecf8e;
+      --white:       #f2f2f2;
+      --text:        #a0a0a0;
+      --muted:       #555;
+      --font:        'Inter', 'Segoe UI', system-ui, sans-serif;
+      --r:           12px;
+      --r-lg:        20px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--black);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* subtle ambient glow */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(circle at 15% 85%, rgba(201,168,76,0.04) 0%, transparent 55%),
+        radial-gradient(circle at 85% 15%, rgba(0,212,255,0.04) 0%, transparent 55%);
+      pointer-events: none; z-index: -1;
+    }
+
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { color: var(--white); }
+
+    /* ── LAYOUT ─────────────────────────────────────────── */
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { padding: 88px 0; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: none; }
+
+    /* ── TYPE ───────────────────────────────────────────── */
+    .eyebrow {
+      display: inline-block;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 800; color: var(--white);
+      line-height: 1.1; letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 700; color: var(--white);
+      line-height: 1.2; letter-spacing: -0.01em;
+    }
+
+    h3 { font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+
+    p { color: var(--text); max-width: 580px; }
+
+    /* ── BUTTONS ────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: var(--r);
+      font-size: 0.9rem; font-weight: 700;
+      cursor: pointer; border: none;
+      transition: all 0.2s ease; text-decoration: none;
+    }
+    .btn-gold {
+      background: var(--gold); color: #000;
+    }
+    .btn-gold:hover {
+      background: #dbb95a; color: #000;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(201,168,76,0.28);
+    }
+    .btn-ghost {
+      background: transparent; color: var(--white);
+      border: 1px solid var(--border-lit);
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── NAV ────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,10,0.94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .nav-inner {
+      display: flex; align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 1rem; font-weight: 800;
+      color: var(--white); letter-spacing: 0.06em;
+    }
+    .nav-logo em { color: var(--gold); font-style: normal; }
+    .nav-links {
+      display: flex; align-items: center;
+      gap: 20px; list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--muted); letter-spacing: 0.05em;
+      text-transform: uppercase; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    @media (max-width: 600px) {
+      .nav-links .hide-mobile { display: none; }
+    }
+
+    /* ── HERO ───────────────────────────────────────────── */
+    #hero {
+      padding: 110px 0 88px;
+      position: relative; overflow: hidden;
+    }
+    #hero::before {
+      content: '';
+      position: absolute; top: -160px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-size: 0.72rem; font-weight: 700;
+      color: var(--gold); letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .hero-pill::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%; background: var(--gold);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; } 50% { opacity: 0.2; }
+    }
+    .hero h1 { margin-bottom: 20px; }
+    .hero h1 .accent { color: var(--gold); }
+    .hero-sub {
+      font-size: 1.1rem; color: var(--text);
+      margin-bottom: 36px; line-height: 1.75;
+    }
+    .hero-actions {
+      display: flex; align-items: center;
+      gap: 14px; flex-wrap: wrap;
+    }
+    .hero-note {
+      margin-top: 18px;
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .hero-note .ok { color: var(--green); }
+
+    /* ── PILLARS ────────────────────────────────────────── */
+    #concept .head { margin-bottom: 48px; }
+    .pillars {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .pillar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .pillar:hover {
+      border-color: var(--gold-dim);
+      transform: translateY(-2px);
+    }
+    .pillar-icon { font-size: 1.8rem; margin-bottom: 14px; display: block; }
+    .pillar p { font-size: 0.88rem; line-height: 1.65; max-width: 100%; }
+
+    /* ── GENESIS ────────────────────────────────────────── */
+    #genesis { background: var(--surface); }
+    .genesis-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 56px; align-items: center;
+    }
+    @media (max-width: 680px) {
+      .genesis-grid { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    /* hex badge — pure CSS */
+    .badge-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 28px;
+    }
+    .hex {
+      position: relative;
+      width: 150px; height: 150px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hex::before, .hex::after {
+      content: ''; position: absolute; inset: 0;
+      clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+    }
+    .hex::before {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    }
+    .hex::after {
+      inset: 3px;
+      background: var(--card);
+    }
+    .hex-content {
+      position: relative; z-index: 1;
+      text-align: center;
+    }
+    .hex-content .ant { font-size: 2rem; display: block; line-height: 1; }
+    .hex-content .badge-name {
+      font-size: 0.6rem; font-weight: 800;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); margin-top: 4px; display: block;
+    }
+    .hex-content .badge-chain {
+      font-size: 0.5rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted);
+      margin-top: 2px; display: block;
+    }
+
+    /* slot tracker */
+    .slots-wrap { width: 100%; max-width: 260px; }
+    .slots-meta {
+      display: flex; justify-content: space-between;
+      font-size: 0.72rem; color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .slots-meta strong { color: var(--gold); }
+    .slots {
+      display: flex; gap: 5px;
+    }
+    .slot {
+      flex: 1; height: 7px;
+      border-radius: 4px;
+      background: var(--border-lit);
+    }
+    .slot.on {
+      background: linear-gradient(90deg, var(--gold), var(--gold-dim));
+    }
+    .slots-note {
+      font-size: 0.68rem; color: var(--muted);
+      margin-top: 8px; text-align: center;
+    }
+
+    /* genesis copy */
+    .genesis-copy h2 { margin-bottom: 14px; }
+    .genesis-copy > p { margin-bottom: 18px; font-size: 0.92rem; line-height: 1.7; }
+    .perks { list-style: none; display: flex; flex-direction: column; gap: 9px; margin-bottom: 26px; }
+    .perks li {
+      display: flex; align-items: flex-start;
+      gap: 10px; font-size: 0.86rem; color: var(--text);
+    }
+    .perks li::before {
+      content: '◆'; color: var(--gold);
+      font-size: 0.55rem; margin-top: 5px; flex-shrink: 0;
+    }
+
+    /* ── APP WIREFRAMES ─────────────────────────────────── */
+    #app .head { margin-bottom: 48px; }
+    .frames {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .frame {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .frame-tag {
+      padding: 8px 14px;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .frame-tag.live   { background: rgba(62,207,142,0.08); color: var(--green); }
+    .frame-tag.soon   { background: rgba(201,168,76,0.08); color: var(--gold); }
+    .frame-tag.future { background: rgba(0,212,255,0.06);  color: var(--cyan); }
+    .frame-body {
+      padding: 24px;
+    }
+    .frame-body h3 { margin-bottom: 8px; }
+    .frame-body p  { font-size: 0.84rem; line-height: 1.6; max-width: 100%; }
+
+    /* mock UI bars */
+    .mock { margin-top: 18px; display: flex; flex-direction: column; gap: 7px; }
+    .mock-bar {
+      height: 8px; border-radius: 4px;
+      background: var(--border-lit);
+    }
+    .mock-bar.w-full  { width: 100%; }
+    .mock-bar.w-3q    { width: 75%; }
+    .mock-bar.w-half  { width: 50%; }
+    .mock-bar.w-1q    { width: 30%; }
+    .mock-bar.gold    { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+    .mock-bar.cyan    { background: linear-gradient(90deg, rgba(0,212,255,0.3), rgba(0,212,255,0.6)); }
+    .mock-bar.green   { background: linear-gradient(90deg, rgba(62,207,142,0.3), rgba(62,207,142,0.6)); }
+
+    /* ── MEMBERSHIP ─────────────────────────────────────── */
+    #membership {
+      background: var(--surface);
+    }
+    .membership-inner {
+      max-width: 720px; margin: 0 auto; text-align: center;
+    }
+    .membership-inner h2 { margin-bottom: 12px; }
+    .membership-inner > p { margin: 0 auto 32px; font-size: 1rem; line-height: 1.7; }
+
+    /* what you get */
+    .get-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 24px;
+      text-align: left;
+      margin: 0 auto 32px;
+      max-width: 560px;
+    }
+    @media (max-width: 520px) { .get-list { grid-template-columns: 1fr; } }
+    .get-list li {
+      display: flex; align-items: flex-start;
+      gap: 10px; font-size: 0.86rem; color: var(--text);
+    }
+    .get-list li::before {
+      content: '✓'; color: var(--green);
+      font-weight: 700; flex-shrink: 0;
+    }
+
+    /* paypal container */
+    #paypal-button-container-P-41U730087X178670ENFUTGQY {
+      position: relative; z-index: 10;
+      margin: 0 auto 28px;
+      max-width: 380px;
+      padding: 20px;
+      background: var(--card);
+      border: 1px solid var(--border-lit);
+      border-radius: var(--r-lg);
+    }
+    #paypal-button-container-P-41U730087X178670ENFUTGQY::before {
+      content: '🔒 Secure Payment via PayPal';
+      display: block; text-align: center;
+      color: var(--muted); font-size: 0.78rem;
+      margin-bottom: 14px; font-weight: 500;
+    }
+
+    /* stats row */
+    .stats {
+      display: flex; justify-content: center;
+      gap: 32px; flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .stat { text-align: center; }
+    .stat-n {
+      display: block; font-size: 1.8rem;
+      font-weight: 800; color: var(--gold);
+      line-height: 1;
+    }
+    .stat-l {
+      font-size: 0.72rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-top: 4px; display: block;
+    }
+
+    /* trust badges */
+    .trust {
+      display: flex; justify-content: center;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .trust-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      background: rgba(62,207,142,0.06);
+      border: 1px solid rgba(62,207,142,0.18);
+      border-radius: 100px;
+      font-size: 0.75rem; color: var(--green); font-weight: 600;
+    }
+
+    /* ── ROADMAP ────────────────────────────────────────── */
+    #roadmap .head { margin-bottom: 48px; }
+    .road {
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; max-width: 600px;
+    }
+    .road::before {
+      content: '';
+      position: absolute; left: 18px; top: 0; bottom: 0;
+      width: 1px; background: var(--border-lit);
+    }
+    .road-item {
+      display: flex; gap: 24px;
+      align-items: flex-start;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .road-item:last-child { border-bottom: none; }
+    .road-dot {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 800;
+      flex-shrink: 0; position: relative; z-index: 1;
+    }
+    .road-dot.done  { background: var(--gold); color: #000; }
+    .road-dot.next  { background: var(--card); border: 2px solid var(--gold); color: var(--gold); }
+    .road-dot.later { background: var(--card); border: 2px solid var(--border-lit); color: var(--muted); }
+    .road-text h3   { margin-bottom: 4px; }
+    .road-text p    { font-size: 0.84rem; max-width: 100%; }
+
+    /* ── FOOTER ─────────────────────────────────────────── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+    }
+    .footer-logo {
+      font-size: 0.9rem; font-weight: 800;
+      color: var(--white); letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+    .footer-logo em { color: var(--gold); font-style: normal; }
+    .footer-links {
+      display: flex; justify-content: center;
+      gap: 20px; flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .footer-links a {
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy {
+      font-size: 0.72rem; color: var(--muted);
+    }
+
+    /* ── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 768px) {
+      section { padding: 64px 0; }
+      #hero { padding: 80px 0 64px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav>
+  <div class="wrap nav-inner">
+    <a href="/antcoin/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="https://antcpu.com/drive/stock/logo/antcoinlogo.jpg"
+        alt="AntCoin" style="height:36px;width:auto;border-radius:50%;opacity:.9;background:#000;mix-blend-mode:normal;">
+    </a>
+    <ul class="nav-links">
+      <li class="hide-mobile"><a href="#concept">Vision</a></li>
+      <li class="hide-mobile"><a href="#genesis">Genesis</a></li>
+      <li class="hide-mobile"><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#membership" class="btn btn-gold" style="padding:8px 16px;font-size:0.78rem;">Join — $9.99</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────── -->
+<section id="hero">
+  <div class="wrap hero">
+    <div class="hero-pill">Early Membership — Now Open</div>
+    <h1>A Blockchain <span class="accent">Built by People.</span><br>For the World.</h1>
+    <p class="hero-sub">
+      AntChain is Real people, running the nodes, securing the network,
+      and building trust through activity — not just code. Designed to work
+      everywhere, including places where crypto never reached an exchange.
+    </p>
+    <div class="hero-actions">
+      <a href="#membership" class="btn btn-gold">Join ANTCOIN — $9.99</a>
+      <a href="https://antchain.vercel.app" class="btn btn-ghost" target="_blank">View Live Demo →</a>
+    </div>
+    <p class="hero-note">
+      <span class="ok">✓</span> Cancel anytime &nbsp;·&nbsp;
+      <span class="ok">✓</span> Genesis badge stays forever &nbsp;·&nbsp;
+      <span class="ok">✓</span> Before the first ANT is Minted
+    </p>
+  </div>
+</section>
+
+<!-- ── CONCEPT ───────────────────────────────────────────── -->
+<section id="concept">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">The Concept</span>
+      <h2>Not another fork.<br>An original idea.</h2>
+    </div>
+    <div class="pillars">
+
+      <div class="pillar">
+        <span class="pillar-icon">🧑‍💻</span>
+        <h3>Human-Powered Nodes</h3>
+        <p>Real people run the network. Node activity secures the chain and builds genuine trust. A human operation is what makes it real — not just algorithmic consensus.</p>
+      </div>
+
+      <div class="pillar">
+        <span class="pillar-icon">🌍</span>
+        <h3>World-Scale Access</h3>
+        <p>Built for countries where crypto never reached an exchange — where people trade peer-to-peer, in person, on their phones. AntChain works at every economic level, from sub-$1 to Bitcoin's peak.</p>
+      </div>
+
+      <div class="pillar">
+        <span class="pillar-icon">🤝</span>
+        <h3>Trust Through Activity</h3>
+        <p>Every node, every transaction, every member adds to a chain of earned legitimacy. We're here to help each other along the journey — that's the whole point.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── GENESIS ───────────────────────────────────────────── -->
+<section id="genesis">
+  <div class="wrap">
+    <div class="genesis-grid">
+
+      <div class="badge-wrap">
+        <div class="hex">
+          <div class="hex-content">
+            <span class="ant">🐜</span>
+            <span class="badge-name">Genesis</span>
+            <span class="badge-chain">AntChain</span>
+          </div>
+        </div>
+        <div class="slots-wrap">
+          <div class="slots-meta">
+            <span>Genesis Wallet Slots</span>
+            <strong>0 / 10 Claimed</strong>
+          </div>
+          <div class="slots">
+            <div class="slot"></div><div class="slot"></div>
+            <div class="slot"></div><div class="slot"></div>
+            <div class="slot"></div><div class="slot"></div>
+            <div class="slot"></div><div class="slot"></div>
+            <div class="slot"></div><div class="slot"></div>
+          </div>
+          <p class="slots-note">First 10 wallets earn permanent on-chain Genesis status</p>
+        </div>
+      </div>
+
+      <div class="genesis-copy">
+        <span class="eyebrow">Genesis Wallets</span>
+        <h2>The first 10 are the foundation.</h2>
+        <p>Genesis wallets aren't just early — they're the trust layer the entire network is built on. Your wallet becomes part of the chain's permanent record from block one.</p>
+        <ul class="perks">
+          <li>Permanent Genesis badge — on-chain, forever</li>
+          <li>First node activity rights on the network</li>
+          <li>Recognized in every future AntChain explorer</li>
+          <li>Priority access to Pioneer features at v0.5</li>
+          <li>AntCPU app integration — photo API + tools</li>
+        </ul>
+        <a href="#membership" class="btn btn-gold">Claim Your Slot — $9.99</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── APP WIREFRAMES ────────────────────────────────────── -->
+<section id="app">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">The App</span>
+      <h2>Your wallet. Your journey.<br>Secure wallets.</h2>
+    </div>
+    <div class="frames">
+
+      <div class="frame">
+        <div class="frame-tag live">● Live Now V.2</div>
+        <div class="frame-body">
+          <h3>Wallet Dashboard</h3>
+          <p>Create your wallet, view your balance, and manage your ANT — live on MAINNET v1.</p>
+          <div class="mock">
+            <div class="mock-bar w-full gold"></div>
+            <div class="mock-bar w-3q"></div>
+            <div class="mock-bar w-half"></div>
+            <div class="mock-bar w-1q"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-tag soon">◎ Coming v0.5</div>
+        <div class="frame-body">
+          <h3>Guided Onboarding</h3>
+          <p>A personal step-by-step guide through your first wallet, first transaction, and first node activity. We track where people need help and improve the path.</p>
+          <div class="mock">
+            <div class="mock-bar w-full cyan"></div>
+            <div class="mock-bar w-3q"></div>
+            <div class="mock-bar w-half"></div>
+            <div class="mock-bar w-1q"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-tag future">◇ Coming v1.0</div>
+        <div class="frame-body">
+          <h3>Agent v2 Payments</h3>
+          <p>AntChain becomes the payment processor for Agent v2 — AI-powered transactions settled on-chain, in ANT.</p>
+          <div class="mock">
+            <div class="mock-bar w-full green"></div>
+            <div class="mock-bar w-3q"></div>
+            <div class="mock-bar w-half"></div>
+            <div class="mock-bar w-1q"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── MEMBERSHIP ────────────────────────────────────────── -->
+<section id="membership">
+  <div class="wrap">
+    <div class="membership-inner">
+      <span class="eyebrow">Early Membership</span>
+      <h2>Join ANTCOIN before the first coin is sold.</h2>
+      <p>Early access to ANTCOIN-powered tools, services, and community. Lock in your Genesis slot and your price — before v0.5 launches and the first ANT goes on sale.</p>
+
+      <ul class="get-list">
+        <li>Early ANTCOIN access before first sale</li>
+        <li>Genesis wallet slot (first 10)</li>
+        <li>Discord community — 24/7</li>
+        <li>AntCPU app — photo API + tools (v0.5)</li>
+        <li>Guided onboarding in-app</li>
+        <li>Cancel anytime — badge stays forever</li>
+      </ul>
+
+      <!-- PayPal Button — real subscription P-41U730087X178670ENFUTGQY -->
+      <div id="paypal-button-container-P-41U730087X178670ENFUTGQY"></div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-n">$9.99</span>
+          <span class="stat-l">Early Membership</span>
+        </div>
+        <div class="stat">
+          <span class="stat-n">650+</span>
+          <span class="stat-l">
+            <a href="https://www.facebook.com/antcoin" target="_blank"
+               style="color:var(--muted);text-decoration:none;"
+               onmouseover="this.style.color='var(--white)'"
+               onmouseout="this.style.color='var(--muted)'">
+              Community Members
+            </a>
+          </span>
+        </div>
+        <div class="stat">
+          <span class="stat-n">10</span>
+          <span class="stat-l">Genesis Slots</span>
+        </div>
+      </div>
+
+      <div class="trust">
+        <div class="trust-badge"><span>🛡️</span> PayPal Processing</div>
+        <div class="trust-badge"><span>✅</span> Money Back Guarantee</div>
+        <div class="trust-badge"><span>🔐</span> 256-bit Encryption</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── ROADMAP ───────────────────────────────────────────── -->
+<section id="roadmap">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Roadmap</span>
+      <h2>Where we are.<br>Where we're going.</h2>
+    </div>
+    <div class="road">
+
+      <div class="road-item">
+        <div class="road-dot done">v0.2</div>
+        <div class="road-text">
+          <h3>Auth + Wallet Creation — Live ✅</h3>
+          <p>Real accounts, secure auth, wallet creation with Genesis /
+            Pioneer / Standard tier system. MAINNET v1 backend live on ANTchain.
+           v0.2 ✅ GenesisBlock countdown live at antchain.vercel.app.
+            Animated auth panel. No install required.</p>
+        </div>
+      </div>
+
+      <div class="road-item">
+        <div class="road-dot next">v0.5</div>
+        <div class="road-text">
+          <h3>Mainnet Working Demo 🔜</h3>
+          <p>Live transactions, guided onboarding, AntCPU app integration — photo API and tools. Genesis badge fully on-chain. Early members get first access.</p>
+        </div>
+      </div>
+
+      <div class="road-item">
+        <div class="road-dot later">v1.0</div>
+        <div class="road-text">
+          <h3>Full Public Launch 🔮</h3>
+          <p>Agent v2 payment processor integration. First ANT goes on sale. Human node network fully operational. World-scale access — including peer-to-peer markets.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <div class="footer-logo">ANT<em>COIN</em></div>
+    <div class="footer-links">
+      <a href="https://antchain.vercel.app" target="_blank">Launch App</a>
+      <a href="https://www.facebook.com/antcoin" target="_blank">Community</a>
+      <a href="mailto:antcpu@gmail.com">Contact</a>
+      <a href="#membership">Join — $9.99</a>
+    </div>
+    <p class="footer-copy">© 2026 ANTCOIN. All rights reserved. &nbsp;·&nbsp; AntChain MAINNET v1</p>
+  </div>
+</footer>
+
+<!-- ── PAYPAL SDK ─────────────────────────────────────────── -->
+<script>
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const discordWebhook = window.DISCORD_WEBHOOK_ANTCOIN || ''; if (!discordWebhook) return;
+
+  function loadPayPalSDK() {
+    return new Promise((resolve, reject) => {
+      if (window.paypal) { resolve(); return; }
+      const script = document.createElement('script');
+      const extra = isMobile ? '&disable-funding=credit,card' : '';
+      script.src = `https://www.paypal.com/sdk/js?client-id=ASA7czaVSUJ22jQ-qTJc-YsAJqlqhPWIxg7Odu7e6pQcXVOsagBP2vY4n90dLSNSY8wG9yBz9EQy_FqS&vault=true&intent=subscription${extra}`;
+      script.async = true;
+      const timer = setTimeout(() => reject(new Error('PayPal timeout')), isMobile ? 15000 : 10000);
+      script.onload  = () => { clearTimeout(timer); resolve(); };
+      script.onerror = () => { clearTimeout(timer); reject(new Error('PayPal SDK failed')); };
+      document.head.appendChild(script);
+    });
+  }
+
+  async function initPayPal() {
+    const container = document.getElementById('paypal-button-container-P-41U730087X178670ENFUTGQY');
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:#555;font-size:0.8rem;">Loading payment...</div>';
+    try {
+      await loadPayPalSDK();
+      if (isMobile) await new Promise(r => setTimeout(r, 500));
+      container.innerHTML = '';
+      paypal.Buttons({
+        style: {
+          shape: 'pill', color: 'blue',
+          layout: 'vertical', label: 'subscribe',
+          height: isMobile ? 44 : 52, tagline: false
+        },
+        createSubscription: (data, actions) =>
+          actions.subscription.create({ plan_id: 'P-41U730087X178670ENFUTGQY' }),
+        onApprove: (data) => {
+          alert('🎉 Welcome to ANTCOIN! Your membership is active. Check your email for access details.');
+          fetch(discordWebhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              content: `🎉 **New ANTCOIN Member!**\n\n**Subscription ID:** ${data.subscriptionID}\n**Device:** ${isMobile ? 'Mobile' : 'Desktop'}\n**Timestamp:** ${new Date().toLocaleString()}\n**Status:** ✅ Active\n\nWelcome to AntChain. 🐜`
+            })
+          }).catch(e => console.error('Discord webhook error:', e));
+        },
+        onError: (err) => {
+          console.error('PayPal error:', err);
+          container.innerHTML = `
+            <div style="background:#1a0a0a;border:1px solid #5a1a1a;color:#ff6b6b;padding:14px;border-radius:10px;text-align:center;font-size:0.82rem;">
+              Payment error — please refresh and try again.<br><br>
+              <button onclick="initPayPal()" style="background:var(--gold);color:#000;border:none;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer;">Retry</button>
+            </div>`;
+        },
+        onCancel: () => console.log('Payment cancelled')
+      }).render('#paypal-button-container-P-41U730087X178670ENFUTGQY');
+    } catch (err) {
+      console.error('PayPal init failed:', err);
+      container.innerHTML = `
+        <div style="background:#1a0a0a;border:1px solid #5a1a1a;color:#ff6b6b;padding:14px;border-radius:10px;text-align:center;font-size:0.82rem;">
+          Unable to load PayPal. Check your connection.<br><br>
+          <button onclick="initPayPal()" style="background:var(--gold);color:#000;border:none;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer;">Retry</button>
+        </div>`;
+    }
+  }
+
+  if (isMobile) {
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        const c = document.getElementById('paypal-button-container-P-41U730087X178670ENFUTGQY');
+        if (c && window.paypal) { c.innerHTML = ''; initPayPal(); }
+      }, 500);
+    });
+  }
+
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', initPayPal)
+    : initPayPal();
+</script>
+
+</body>
+</html>

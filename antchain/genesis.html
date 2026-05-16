@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ANTCPU — Genesis Block</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold:   #F0C040;
+    --orange: #FF7A1A;
+    --green:  #00ffaa;
+    --purple: #B080FF;
+    --bg: #060608;
+    --border: rgba(255,255,255,0.09);
+    --text-dim: rgba(255,255,255,0.32);
+    --text-mid: rgba(255,255,255,0.60);
+    --text-bright: rgba(255,255,255,0.92);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text-bright);
+    font-family: 'Syne', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    cursor: default;
+    user-select: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    opacity: 0.5; pointer-events: none; z-index: 50;
+  }
+
+  #app { position: relative; width: 100vw; height: 100vh; z-index: 1; }
+
+  /* HEADER */
+  #header {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 28px 36px; z-index: 20;
+  }
+  .brand { font-weight: 800; font-size: 19px; letter-spacing: 0.2em; color: var(--text-bright); }
+  .sub   { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.24em; color: var(--text-dim); text-transform: uppercase; margin-top: 3px; }
+  #date-display { text-align: right; }
+  .dlabel { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 3px; }
+  .dval   { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--text-mid); }
+
+  /* STAGE */
+  #stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #network-svg {
+    width: min(100vw, 133.33vh);
+    height: min(75vw, 100vh);
+    max-width: 960px; max-height: 720px;
+    overflow: visible;
+  }
+
+  /* STATUS BAR */
+  #statusbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 20px 36px 26px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    z-index: 20;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(to top, rgba(6,6,8,0.97) 0%, transparent 100%);
+  }
+  #node-count { display: flex; align-items: baseline; gap: 8px; }
+  #count-num  { font-weight: 800; font-size: 34px; color: var(--text-bright); line-height: 1; transition: color 0.6s; }
+  .denom      { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--text-dim); }
+  .clabel     { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; align-self: center; margin-left: 2px; }
+  #genesis-status { text-align: right; }
+  .glabel     { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+  #status-value { font-weight: 600; font-size: 14px; letter-spacing: 0.18em; color: var(--text-mid); text-transform: uppercase; transition: color 0.5s, text-shadow 0.5s; }
+  #status-value.sealed { color: var(--gold); text-shadow: 0 0 28px rgba(240,192,64,0.8), 0 0 60px rgba(240,192,64,0.35); }
+
+  /* TOOLTIP */
+  #tooltip {
+    position: fixed;
+    background: rgba(10,10,14,0.97);
+    border: 1px solid rgba(255,255,255,0.13);
+    padding: 8px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--text-mid); letter-spacing: 0.1em;
+    pointer-events: none; opacity: 0; transition: opacity 0.12s;
+    z-index: 100; white-space: nowrap;
+  }
+  .tip-name { color: var(--text-bright); font-size: 11px; margin-bottom: 2px; }
+
+  /* PARTICLES */
+  #particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  @keyframes drift {
+    0%   { transform: translate(0,0); opacity: 0; }
+    8%   { opacity: 0.9; }
+    92%  { opacity: 0.5; }
+    100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+  }
+  .particle { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.65); animation: drift linear infinite; }
+
+  /* SVG KEYFRAMES */
+  @keyframes pendingScale {
+    0%, 100% { transform: scale(1);    opacity: 1; }
+    50%       { transform: scale(1.2);  opacity: 0.55; }
+  }
+  @keyframes breatheGlow {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 1; }
+  }
+  @keyframes outerBreathe {
+    0%, 100% { opacity: 0.28; }
+    50%       { opacity: 0.58; }
+  }
+  @keyframes sealExpand {
+    0%   { r: 4;   opacity: 1;   stroke-width: 4; }
+    100% { r: 340; opacity: 0;   stroke-width: 0.5; }
+  }
+  @keyframes sealExpand2 {
+    0%   { r: 4;   opacity: 0.55; stroke-width: 2; }
+    100% { r: 380; opacity: 0;    stroke-width: 0.3; }
+  }
+
+  /* Node label */
+  .node-label {
+    font-family: 'Space Mono', monospace; font-size: 9.5px;
+    fill: rgba(255,255,255,0); letter-spacing: 0.14em;
+    text-anchor: middle; pointer-events: none;
+    transition: fill 0.6s;
+  }
+  .node-label.vis { fill: rgba(255,255,255,0.72); }
+
+  /* Hint */
+  #hint {
+    position: absolute; bottom: 92px; left: 50%; transform: translateX(-50%);
+    font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.22em;
+    color: var(--text-dim); text-transform: uppercase;
+    pointer-events: none; opacity: 1; transition: opacity 1.2s; white-space: nowrap;
+  }
+  #hint.hidden { opacity: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="particles"></div>
+
+  <div id="header">
+    <div>
+      <div class="brand">ANTCPU</div>
+      <div class="sub">Genesis Network</div>
+    </div>
+    <div id="date-display">
+      <div class="dlabel">Block Origin</div>
+      <div class="dval" id="static-date"></div>
+    </div>
+  </div>
+
+  <div id="stage">
+    <svg id="network-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="blur-xl" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="14"/>
+        </filter>
+        <filter id="blur-lg" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="7"/>
+        </filter>
+        <filter id="blur-md" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3.5"/>
+        </filter>
+        <filter id="blur-line" x="-5%" y="-300%" width="110%" height="700%">
+          <feGaussianBlur stdDeviation="2.2"/>
+        </filter>
+      </defs>
+
+      <radialGradient id="bggrad" cx="50%" cy="50%" r="60%">
+        <stop offset="0%"   stop-color="#0e0e16"/>
+        <stop offset="100%" stop-color="#060608"/>
+      </radialGradient>
+      <rect width="800" height="600" fill="url(#bggrad)"/>
+
+      <g id="conn-glow-layer"></g>
+      <g id="conn-layer"></g>
+      <g id="outer-glow-layer"></g>
+      <g id="mid-glow-layer"></g>
+      <g id="core-layer"></g>
+      <g id="label-layer"></g>
+
+      <circle id="wave1" cx="400" cy="300" r="0" fill="none" stroke="#F0C040" opacity="0" style="display:none"/>
+      <circle id="wave2" cx="400" cy="300" r="0" fill="none" stroke="#F0C040" opacity="0" style="display:none"/>
+    </svg>
+  </div>
+
+  <div id="hint">Auto-demo · Click nodes to activate manually</div>
+
+  <div id="statusbar">
+    <div id="node-count">
+      <div id="count-num">0</div>
+      <div class="denom">/10</div>
+      <div class="clabel">nodes confirmed</div>
+    </div>
+    <div id="genesis-status">
+      <div class="glabel">Genesis Block</div>
+      <div id="status-value">PENDING</div>
+    </div>
+  </div>
+
+  <div id="tooltip">
+    <div class="tip-name" id="tip-name"></div>
+    <div id="tip-type"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────
+const NODES = [
+  { id:0, name:'GENESIS',  type:'Origin Node'  },
+  { id:1, name:'ALPHA',    type:'Validator'    },
+  { id:2, name:'BETA',     type:'Relay'        },
+  { id:3, name:'GAMMA',    type:'Validator'    },
+  { id:4, name:'DELTA',    type:'Observer'     },
+  { id:5, name:'EPSILON',  type:'Relay'        },
+  { id:6, name:'ZETA',     type:'Validator'    },
+  { id:7, name:'ETA',      type:'Observer'     },
+  { id:8, name:'THETA',    type:'Relay'        },
+  { id:9, name:'IOTA',     type:'Validator'    },
+];
+
+const COLORS = [
+  '#F0C040', // 0 — gold
+  '#FF7A1A', // 1 — orange
+  '#F0C040', // 2 — gold
+  '#00ffaa', // 3 — green
+  '#B080FF', // 4 — purple
+  '#FF7A1A', // 5 — orange
+  '#F0C040', // 6 — gold
+  '#00ffaa', // 7 — green
+  '#B080FF', // 8 — purple
+  '#FF7A1A', // 9 — orange
+];
+
+// ── GEOMETRY ─────────────────────────────────────────────────────────
+const CX = 400, CY = 300, RADIUS = 215, Y_COMP = 0.38;
+
+function getPos(id) {
+  if (id === 0) return { x: CX, y: CY, z: 0, sc: 1, op: 1 };
+  const a = (2 * Math.PI / 9) * (id - 1) - Math.PI / 2;
+  const x = CX + RADIUS * Math.cos(a);
+  const y = CY + RADIUS * Math.sin(a) * Y_COMP;
+  const z = Math.sin(a);
+  const sc = 0.78 + 0.22 * ((z + 1) / 2);
+  const op = 0.72 + 0.28 * ((z + 1) / 2);
+  return { x, y, z, sc, op };
+}
+
+function getR(id) {
+  return id === 0 ? 24 : Math.round(12.5 * getPos(id).sc);
+}
+
+// ── SVG ───────────────────────────────────────────────────────────────
+const NS = 'http://www.w3.org/2000/svg';
+function mk(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+}
+
+const connGlowL  = document.getElementById('conn-glow-layer');
+const connL      = document.getElementById('conn-layer');
+const outerGlowL = document.getElementById('outer-glow-layer');
+const midGlowL   = document.getElementById('mid-glow-layer');
+const coreL      = document.getElementById('core-layer');
+const labelL     = document.getElementById('label-layer');
+
+// ── STATE ─────────────────────────────────────────────────────────────
+const nodeState = Array(10).fill('off'); // off | pending | on
+let confirmedCount = 0;
+let sealed = false;
+const refs = {};       // id → { outerGlow, midGlow, fill, ring, hit, label }
+const connDrawn = new Set();
+let seqTimers = [];    // so we can cancel on manual advance
+
+// ── BUILD ─────────────────────────────────────────────────────────────
+function buildNodes() {
+  for (const node of NODES) {
+    const p   = getPos(node.id);
+    const r   = getR(node.id);
+    const col = COLORS[node.id];
+
+    // Outer XL halo
+    const outerGlow = mk('circle', {
+      cx: p.x, cy: p.y, r: r + 22, fill: col,
+      opacity: 0, filter: 'url(#blur-xl)'
+    });
+    outerGlowL.appendChild(outerGlow);
+
+    // Mid glow
+    const midGlow = mk('circle', {
+      cx: p.x, cy: p.y, r: r + 9, fill: col,
+      opacity: 0, filter: 'url(#blur-lg)'
+    });
+    midGlowL.appendChild(midGlow);
+
+    // Core fill
+    const fill = mk('circle', { cx: p.x, cy: p.y, r: r - 1, fill: col, opacity: 0 });
+    coreL.appendChild(fill);
+
+    // Ring
+    const ring = mk('circle', {
+      cx: p.x, cy: p.y, r,
+      fill: 'none', stroke: '#2c2c34', 'stroke-width': 1.6,
+      opacity: p.op * 0.65
+    });
+    coreL.appendChild(ring);
+
+    // Hit target
+    const hit = mk('circle', {
+      cx: p.x, cy: p.y, r: Math.max(r + 18, 26),
+      fill: 'transparent', style: 'cursor:pointer'
+    });
+    coreL.appendChild(hit);
+
+    // Label
+    const lbl = mk('text', { x: p.x, y: p.y + r + 18, class: 'node-label' });
+    lbl.textContent = node.name;
+    labelL.appendChild(lbl);
+
+    refs[node.id] = { outerGlow, midGlow, fill, ring, hit, label: lbl };
+
+    // Events
+    hit.addEventListener('click', () => handleClick(node.id));
+    ring.addEventListener('click', () => handleClick(node.id));
+    hit.addEventListener('mouseenter',  e => showTip(e, node));
+    hit.addEventListener('mouseleave',  hideTip);
+    ring.addEventListener('mouseenter', e => showTip(e, node));
+    ring.addEventListener('mouseleave', hideTip);
+  }
+}
+
+// ── VISUAL STATE APPLIERS ─────────────────────────────────────────────
+function applyOff(id) {
+  const { outerGlow, midGlow, fill, ring, label } = refs[id];
+  const p = getPos(id);
+
+  ring.setAttribute('stroke', '#2c2c34');
+  ring.setAttribute('stroke-width', 1.6);
+  ring.style.cssText = `opacity: ${p.op * 0.65}`;
+
+  fill.style.opacity = 0;
+  outerGlow.style.cssText = 'opacity: 0';
+  midGlow.style.cssText   = 'opacity: 0';
+  label.classList.remove('vis');
+}
+
+function applyPending(id) {
+  const { outerGlow, midGlow, fill, ring, label } = refs[id];
+  const p = getPos(id);
+
+  ring.setAttribute('stroke', '#F0C040');
+  ring.setAttribute('stroke-width', 2.2);
+  // Pulsing scale via inline animation on the element
+  ring.style.cssText = `
+    opacity: 1;
+    transform-origin: ${p.x}px ${p.y}px;
+    animation: pendingScale 1.8s ease-in-out infinite;
+    transform-box: fill-box;
+  `;
+
+  // Gold haze behind
+  midGlow.setAttribute('fill', '#F0C040');
+  midGlow.style.cssText = `opacity: 0.5; animation: breatheGlow 1.8s ease-in-out infinite;`;
+
+  outerGlow.setAttribute('fill', '#F0C040');
+  outerGlow.style.cssText = `opacity: 0.18; animation: breatheGlow 1.8s ease-in-out infinite;`;
+
+  fill.style.opacity = 0;
+  label.classList.add('vis');
+}
+
+function applyConfirmed(id) {
+  const { outerGlow, midGlow, fill, ring, label } = refs[id];
+  const col = COLORS[id];
+
+  ring.style.cssText = 'opacity: 1';
+  ring.setAttribute('stroke', col);
+  ring.setAttribute('stroke-width', 2);
+
+  fill.setAttribute('fill', col);
+  fill.style.opacity = 0.95;
+
+  midGlow.setAttribute('fill', col);
+  midGlow.style.cssText = 'animation: breatheGlow 3s ease-in-out infinite; opacity:';
+
+  outerGlow.setAttribute('fill', col);
+  outerGlow.style.cssText = 'animation: outerBreathe 3s ease-in-out infinite 0.4s; opacity:';
+
+  label.classList.add('vis');
+}
+
+function applySealed(id) {
+  const { outerGlow, midGlow, fill, ring } = refs[id];
+  const r = getR(id);
+
+  ring.setAttribute('stroke', '#F0C040');
+  ring.setAttribute('stroke-width', 2.2);
+  fill.setAttribute('fill',   '#F0C040');
+  fill.style.opacity = 1;
+  midGlow.setAttribute('fill',  '#F0C040');
+  midGlow.setAttribute('r', r + 12);
+  outerGlow.setAttribute('fill','#F0C040');
+  outerGlow.setAttribute('r', r + 30);
+  midGlow.style.cssText   = 'animation: breatheGlow 2s ease-in-out infinite; opacity:';
+  outerGlow.style.cssText = 'animation: outerBreathe 2s ease-in-out infinite; opacity:';
+}
+
+// ── CONNECTIONS ───────────────────────────────────────────────────────
+function drawConnection(a, b) {
+  const key = `${Math.min(a,b)}-${Math.max(a,b)}`;
+  if (connDrawn.has(key)) return;
+  connDrawn.add(key);
+
+  const pa = getPos(a), pb = getPos(b);
+  const col = COLORS[a];
+  const len = Math.hypot(pb.x - pa.x, pb.y - pa.y);
+  const avgZ = ((pa.z||0) + (pb.z||0)) / 2;
+  const lineOpacity = 0.30 + 0.22 * ((avgZ + 1) / 2);
+
+  // Glowing blurred line
+  const glowLine = mk('line', {
+    x1: pa.x, y1: pa.y, x2: pb.x, y2: pb.y,
+    stroke: col, 'stroke-width': 4,
+    filter: 'url(#blur-line)', 'stroke-linecap': 'round', opacity: 0
+  });
+  glowLine.setAttribute('stroke-dasharray', len);
+  glowLine.setAttribute('stroke-dashoffset', len);
+  connGlowL.appendChild(glowLine);
+
+  // Sharp white line
+  const sharpLine = mk('line', {
+    x1: pa.x, y1: pa.y, x2: pb.x, y2: pb.y,
+    stroke: `rgba(255,255,255,${lineOpacity})`,
+    'stroke-width': 1.1, 'stroke-linecap': 'round', opacity: 0
+  });
+  sharpLine.setAttribute('stroke-dasharray', len);
+  sharpLine.setAttribute('stroke-dashoffset', len);
+  connL.appendChild(sharpLine);
+
+  // Animate dash draw
+  const dur = 850;
+  let start = null;
+  (function draw(ts) {
+    if (!start) start = ts;
+    const t = Math.min((ts - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const off = len * (1 - ease);
+    glowLine.setAttribute('stroke-dashoffset', off);
+    glowLine.style.opacity = ease * 0.55;
+    sharpLine.setAttribute('stroke-dashoffset', off);
+    sharpLine.style.opacity = ease;
+    if (t < 1) requestAnimationFrame(draw);
+  })(performance.now());
+}
+
+function connectToConfirmed(id) {
+  for (let i = 0; i < 10; i++) {
+    if (nodeState[i] === 'on' && i !== id) drawConnection(id, i);
+  }
+}
+
+// ── NODE ACTIONS ──────────────────────────────────────────────────────
+function setPending(id) {
+  if (nodeState[id] === 'on') return;
+  nodeState[id] = 'pending';
+  applyPending(id);
+}
+
+function setConfirmed(id) {
+  if (nodeState[id] === 'on') return;
+  nodeState[id] = 'on';
+  applyConfirmed(id);
+  connectToConfirmed(id);
+  confirmedCount++;
+  document.getElementById('count-num').textContent = confirmedCount;
+  if (confirmedCount === 10) setTimeout(triggerSeal, 600);
+}
+
+// ── HANDLE CLICK ──────────────────────────────────────────────────────
+function handleClick(id) {
+  if (sealed) return;
+  document.getElementById('hint').classList.add('hidden');
+  const s = nodeState[id];
+  if (s === 'off') {
+    setPending(id);
+    setTimeout(() => { if (nodeState[id] === 'pending') setConfirmed(id); }, 480);
+  } else if (s === 'pending') {
+    setConfirmed(id);
+  }
+}
+
+// ── SEAL ──────────────────────────────────────────────────────────────
+function triggerSeal() {
+  sealed = true;
+  clearSeqTimers();
+
+  for (let i = 0; i < 10; i++) applySealed(i);
+
+  document.getElementById('count-num').style.color = '#F0C040';
+  const sv = document.getElementById('status-value');
+  sv.textContent = 'SEALED';
+  sv.classList.add('sealed');
+
+  const w1 = document.getElementById('wave1');
+  const w2 = document.getElementById('wave2');
+  [w1, w2].forEach(w => { w.style.display = ''; w.style.animation = 'none'; void w.offsetWidth; });
+  w1.setAttribute('stroke-width', 4);
+  w1.style.animation = 'sealExpand 2.2s ease-out forwards';
+  setTimeout(() => {
+    w2.setAttribute('stroke-width', 2);
+    w2.style.animation = 'sealExpand2 2.8s ease-out forwards';
+  }, 350);
+
+  setTimeout(resetAll, 5500);
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────
+function resetAll() {
+  clearSeqTimers();
+  sealed = false;
+  confirmedCount = 0;
+
+  for (let i = 0; i < 10; i++) { nodeState[i] = 'off'; applyOff(i); }
+
+  connDrawn.clear();
+  while (connGlowL.firstChild) connGlowL.removeChild(connGlowL.firstChild);
+  while (connL.firstChild)     connL.removeChild(connL.firstChild);
+
+  const w1 = document.getElementById('wave1');
+  const w2 = document.getElementById('wave2');
+  w1.style.display = w2.style.display = 'none';
+  w1.style.animation = w2.style.animation = 'none';
+
+  document.getElementById('count-num').textContent = '0';
+  document.getElementById('count-num').style.color = '';
+  const sv = document.getElementById('status-value');
+  sv.textContent = 'PENDING';
+  sv.classList.remove('sealed');
+
+  setTimeout(runSequence, 1400);
+}
+
+// ── AUTO SEQUENCE ─────────────────────────────────────────────────────
+function clearSeqTimers() {
+  seqTimers.forEach(clearTimeout);
+  seqTimers = [];
+}
+
+function runSequence() {
+  if (sealed) return;
+  clearSeqTimers();
+  const PEND_DUR  = 580;
+  const STEP_GAP  = 860;
+
+  for (let i = 0; i < 10; i++) {
+    const id = i; // natural order: center first
+    const t0 = seqTimers.push(setTimeout(() => {
+      if (!sealed) setPending(id);
+    }, i * STEP_GAP)) && (i * STEP_GAP);
+
+    seqTimers.push(setTimeout(() => {
+      if (!sealed && nodeState[id] === 'pending') setConfirmed(id);
+    }, i * STEP_GAP + PEND_DUR));
+  }
+}
+
+// ── TOOLTIP ───────────────────────────────────────────────────────────
+const tooltip = document.getElementById('tooltip');
+function showTip(e, node) {
+  document.getElementById('tip-name').textContent = node.name;
+  document.getElementById('tip-type').textContent = node.type;
+  tooltip.style.opacity = 1;
+  moveTip(e);
+}
+function hideTip()   { tooltip.style.opacity = 0; }
+document.addEventListener('mousemove', moveTip);
+function moveTip(e) {
+  if (!e || tooltip.style.opacity == 0) return;
+  let x = e.clientX + 14, y = e.clientY - 10;
+  if (x + 180 > window.innerWidth) x = e.clientX - 180;
+  tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+}
+
+// ── PARTICLES ─────────────────────────────────────────────────────────
+function buildParticles() {
+  const c = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const sz = Math.random() * 1.8 + 0.4;
+    const dur = 20 + Math.random() * 26;
+    Object.assign(p.style, {
+      width: sz + 'px', height: sz + 'px',
+      left:  (Math.random() * 100) + '%',
+      top:   (Math.random() * 100) + '%',
+      '--dx': ((Math.random() - 0.5) * 140) + 'px',
+      '--dy': ((Math.random() - 0.5) * 100) + 'px',
+      animationDuration:  dur + 's',
+      animationDelay:    -(Math.random() * dur) + 's',
+    });
+    c.appendChild(p);
+  }
+}
+
+// ── DATE ──────────────────────────────────────────────────────────────
+function setDate() {
+  const d = new Date();
+  const M = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('static-date').textContent =
+    `${String(d.getDate()).padStart(2,'0')} ${M[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ── TOUCH ─────────────────────────────────────────────────────────────
+document.getElementById('network-svg').addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const svg = document.getElementById('network-svg');
+  const rect = svg.getBoundingClientRect();
+  const sx = (t.clientX - rect.left) / rect.width  * 800;
+  const sy = (t.clientY - rect.top)  / rect.height * 600;
+  let best = Infinity, bestId = -1;
+  for (const node of NODES) {
+    const p = getPos(node.id);
+    const d = Math.hypot(sx - p.x, sy - p.y);
+    if (d < best && d < getR(node.id) + 24) { best = d; bestId = node.id; }
+  }
+  if (bestId >= 0) handleClick(bestId);
+}, { passive: false });
+
+// ── INIT ──────────────────────────────────────────────────────────────
+setDate();
+buildParticles();
+buildNodes();
+setTimeout(runSequence, 800);
+</script>
+</body>
+</html>

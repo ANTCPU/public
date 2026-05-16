@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="ANTCPU Phase 2 on Pi Network Testnet — Live transaction monitoring with session persistence via cookies.">
+<meta name="theme-color" content="#0b0815">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ANTCPU · Pi Testnet Dashboard</title>
+
+<!-- Pi SDK -->
+<script src="https://sdk.minepi.com/pi-sdk.js" defer></script>
+
+<style>
+/* ═══════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --pp:   #6c3fc5;
+  --pv:   #8b5cf6;
+  --pg:   #f59e0b;
+  --pgl:  #fcd34d;
+  --pd:   #0b0815;
+  --pc:   rgba(255,255,255,0.042);
+  --pb:   rgba(139,92,246,0.22);
+  --grn:  #10b981;
+  --org:  #f97316;
+  --red:  #ef4444;
+  --r:    18px;
+  --rl:   24px;
+  --dur:  .3s;
+  --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--pd);
+  color: #fff;
+  overflow-x: hidden;
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── AMBIENT ORBS ─────────────────────────────── */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  animation: orb-drift 14s ease-in-out infinite alternate;
+}
+.orb-1 { width:560px;height:560px;background:radial-gradient(circle,rgba(108,63,197,.16),transparent 70%);top:-180px;left:-200px; }
+.orb-2 { width:400px;height:400px;background:radial-gradient(circle,rgba(245,158,11,.09),transparent 70%);bottom:-120px;right:-140px;animation-delay:-7s; }
+.orb-3 { width:280px;height:280px;background:radial-gradient(circle,rgba(16,185,129,.07),transparent 70%);top:38%;left:52%;animation-delay:-3.5s; }
+
+@keyframes orb-drift {
+  from { transform:translate(0,0) scale(1); }
+  to   { transform:translate(28px,18px) scale(1.07); }
+}
+
+/* ── LAYOUT ───────────────────────────────────── */
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 16px 64px;
+  position: relative;
+  z-index: 1;
+}
+
+@media(max-width: 480px) {
+  .wrap { padding: 32px 12px 48px; }
+}
+
+/* ── ENVIRONMENT INDICATOR ──────────────────────── */
+.env-badge {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  border: 1px solid;
+}
+
+.env-badge.dev {
+  background: rgba(59,130,246,.12);
+  border-color: rgba(59,130,246,.26);
+  color: #93c5fd;
+}
+
+.env-badge.prod {
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.26);
+  color: #86efac;
+}
+
+.env-badge.local {
+  background: rgba(249,115,22,.12);
+  border-color: rgba(249,115,22,.26);
+  color: #fdba74;
+}
+
+.env-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: blink 2s ease-in-out infinite;
+}
+
+.env-badge.dev .env-dot { background: #3b82f6; box-shadow: 0 0 4px #3b82f6; }
+.env-badge.prod .env-dot { background: var(--grn); box-shadow: 0 0 4px var(--grn); }
+.env-badge.local .env-dot { background: var(--org); box-shadow: 0 0 4px var(--org); }
+
+/* ── SESSION INDICATOR ──────────────────────────– */
+.session-badge {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(139,92,246,.12);
+  border: 1px solid rgba(139,92,246,.26);
+  color: #c4b5fd;
+  z-index: 100;
+  cursor: pointer;
+  transition: all var(--dur);
+}
+
+.session-badge:hover {
+  background: rgba(139,92,246,.20);
+}
+
+.session-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.session-dot.active {
+  background: var(--grn);
+  box-shadow: 0 0 4px var(--grn);
+  animation: blink 2s ease-in-out infinite;
+}
+
+.session-dot.inactive {
+  background: rgba(255,255,255,.26);
+}
+
+@keyframes blink {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.35;transform:scale(1.55)}
+}
+
+/* ── EYEBROW ──────────────────────────────────── */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(139,92,246,.09);
+  border: 1px solid var(--pb);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--pv);
+  margin-bottom: 20px;
+  animation: fadeInDown .6s var(--ease) forwards;
+  opacity: 0;
+}
+
+.live-dot {
+  width:7px;height:7px;border-radius:50%;
+  background:var(--grn);
+  box-shadow:0 0 8px var(--grn);
+  animation:blink 1.8s ease-in-out infinite;
+}
+
+@keyframes fadeInDown {
+  from{opacity:0;transform:translateY(-20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── HERO ─────────────────────────────────────── */
+.hero-title {
+  font-size: clamp(24px, 5vw, 42px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  animation: fadeInDown .8s var(--ease) .1s forwards;
+  opacity: 0;
+}
+
+.hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg,var(--pv),var(--pg));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  color: rgba(255,255,255,.50);
+  font-size: clamp(13px, 2vw, 15px);
+  line-height: 1.6;
+  max-width: 600px;
+  margin-bottom: 28px;
+  animation: fadeInDown .8s var(--ease) .2s forwards;
+  opacity: 0;
+}
+
+/* ── PILLS ──────────────────────────────────── */
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 40px;
+  animation: fadeInDown .8s var(--ease) .3s forwards;
+  opacity: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid;
+  backdrop-filter: blur(10px);
+  transition: transform var(--dur) ease;
+  text-decoration: none;
+  cursor: default;
+}
+
+.pill.g  { background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.30); color:#6ee7b7; }
+.pill.v  { background:rgba(139,92,246,.08); border-color:var(--pb); color:#c4b5fd; }
+.pill.au { background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.26); color:var(--pgl); }
+
+#rpc-pill { transition:border-color .4s,background .4s,color .4s; }
+#rpc-pill .rpc-dot { width:5px;height:5px;border-radius:50%;background:#4b5563;transition:background .4s,box-shadow .4s; }
+#rpc-pill.ok  { background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.30);color:#6ee7b7; }
+#rpc-pill.ok  .rpc-dot { background:var(--grn);box-shadow:0 0 6px var(--grn);animation:blink 1.8s infinite; }
+#rpc-pill.err { background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.26);color:#fca5a5; }
+#rpc-pill.err .rpc-dot { background:var(--red);box-shadow:0 0 6px var(--red); }
+
+/* ── SECTION LABEL ────────────────────────────– */
+.sec-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.26);
+  margin-bottom: 14px;
+}
+
+/* ═══════════════════════════════════════════════
+   STATS BAR
+═══════════════════════════════════════════════ */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--pc);
+  border: 1px solid var(--pb);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.055) inset;
+  transition: transform var(--dur) var(--ease);
+}
+
+.stat-card:hover { transform: translateY(-3px); }
+
+.stat-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-val.grad {
+  background: linear-gradient(135deg,var(--pv),var(--pg));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-lbl {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.28);
+}
+
+/* ═══════════════════════════════════════════════
+   RPC PANEL
+═══════════════════════════════════════════════ */
+.rpc-panel {
+  background: linear-gradient(135deg,
+    rgba(139,92,246,.09) 0%,
+    rgba(245,158,11,.05) 100%);
+  border: 1px solid rgba(139,92,246,.28);
+  border-radius: var(--rl);
+  padding: 20px;
+  margin-bottom: 32px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.055) inset;
+  animation: slideUp .6s var(--ease) .6s forwards;
+  opacity: 0;
+}
+
+@keyframes slideUp {
+  from { opacity:0;transform:translateY(20px); }
+  to   { opacity:1;transform:translateY(0); }
+}
+
+.rpc-tag {
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(245,158,11,.11);
+  border:1px solid rgba(245,158,11,.26);
+  border-radius:100px;
+  padding:3px 10px;
+  font-size:9px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--pgl);margin-bottom:10px;
+}
+
+.rpc-title { font-size:14px;font-weight:700;color:#fff;margin-bottom:6px; }
+.rpc-desc  { font-size:12px;color:rgba(255,255,255,.48);line-height:1.5;margin-bottom:12px; }
+
+.rpc-terminal {
+  background: rgba(0,0,0,.6);
+  border: 1px solid rgba(139,92,246,.16);
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.022);
+  border-bottom: 1px solid rgba(255,255,255,.045);
+}
+
+.term-bar span { width: 8px; height: 8px; border-radius: 50%; }
+.term-bar span:nth-child(1) { background: #ef4444; }
+.term-bar span:nth-child(2) { background: #f59e0b; }
+.term-bar span:nth-child(3) { background: #10b981; }
+
+.term-lbl { font-size: 9px; color: rgba(255,255,255,.20); margin-left: 6px; }
+.term-body { padding: 12px; line-height: 1.6; max-height: 100px; overflow-y: auto; color: rgba(255,255,255,.7); }
+
+/* ═══════════════════════════════════════════════
+   TX FEED
+═══════════════════════════════════════════════ */
+.tx-panel {
+  background: rgba(0,0,0,.30);
+  border: 1px solid rgba(139,92,246,.16);
+  border-radius: var(--rl);
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  margin-bottom: 32px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.32);
+  animation: slideUp .6s var(--ease) .7s forwards;
+  opacity: 0;
+}
+
+.tx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,.016);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tx-head-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.82); }
+.tx-head-sub { font-size: 9px; color: rgba(255,255,255,.26); margin-top: 2px; }
+
+.tx-controls { display: flex; align-items: center; gap: 8px; }
+.tx-count { font-size: 10px; font-weight: 700; background: rgba(139,92,246,.11); border: 1px solid rgba(139,92,246,.20); border-radius: 6px; padding: 4px 8px; color: #c4b5fd; min-width: 60px; text-align: center; }
+
+.tx-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(139,92,246,.11);
+  border: 1px solid rgba(139,92,246,.20);
+  border-radius: 6px;
+  color: #c4b5fd;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background var(--dur);
+  font-family: inherit;
+}
+
+.tx-btn:disabled { opacity: .5; cursor: not-allowed; }
+.tx-btn:not(:disabled):hover { background: rgba(139,92,246,.20); }
+
+.tx-list {
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139,92,246,.26) transparent;
+}
+
+.tx-list::-webkit-scrollbar { width: 4px; }
+.tx-list::-webkit-scrollbar-track { background: transparent; }
+.tx-list::-webkit-scrollbar-thumb { background: rgba(139,92,246,.26); border-radius: 4px; }
+
+.tx-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.032);
+  transition: background var(--dur);
+  animation: slideIn .3s ease forwards;
+  font-size: 11px;
+}
+
+.tx-row:last-child { border-bottom: none; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.tx-ico { font-size: 12px; flex-shrink: 0; }
+.tx-hash { font-family: 'Courier New', monospace; font-size: 10px; color: #c4b5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-hash a { color: inherit; text-decoration: none; }
+.tx-hash a:hover { color: var(--pgl); }
+.tx-meta { font-size: 9px; color: rgba(255,255,255,.26); margin-top: 2px; }
+.tx-time { font-size: 9px; color: rgba(255,255,255,.20); white-space: nowrap; }
+
+.tx-empty, .tx-loading {
+  padding: 28px 16px;
+  text-align: center;
+  color: rgba(255,255,255,.26);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(139,92,246,.18);
+  border-top-color: var(--pv);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tx-foot {
+  padding: 8px 16px;
+  border-top: 1px solid rgba(255,255,255,.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 9px;
+  color: rgba(255,255,255,.20);
+}
+
+.tx-foot a { color: var(--pv); text-decoration: none; }
+.tx-foot a:hover { color: var(--pgl); }
+
+/* ═══════════════════════════════════════════════
+   AUTH CARD
+═══════════════════════════════════════════════ */
+.auth-card {
+  background: var(--pc);
+  border: 1px solid var(--pb);
+  border-radius: var(--rl);
+  padding: 20px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.055) inset;
+  margin-bottom: 32px;
+  animation: slideUp .6s var(--ease) .8s forwards;
+  opacity: 0;
+}
+
+.auth-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.auth-desc  { font-size: 12px; color: rgba(255,255,255,.46); line-height: 1.5; margin-bottom: 14px; }
+
+.profile-box {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: rgba(16,185,129,.06);
+  border: 1px solid rgba(16,185,129,.22);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  animation: slideUp .3s var(--ease) forwards;
+}
+
+.profile-box.show { display: flex; }
+
+.profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pp), var(--pv));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(108,63,197,.4);
+  flex-shrink: 0;
+}
+
+.profile-name { font-size: 12px; font-weight: 700; color: #fff; }
+.profile-uid  { font-size: 9px; color: rgba(255,255,255,.30); font-family: 'Courier New', monospace; }
+
+.auth-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: linear-gradient(135deg, var(--pp), var(--pv)); color: #fff; box-shadow: 0 4px 16px rgba(108,63,197,.40); }
+.btn.primary:hover:not(:disabled) { box-shadow: 0 6px 24px rgba(108,63,197,.52); }
+.btn.ghost { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); color: rgba(255,255,255,.70); }
+.btn.ghost:hover:not(:disabled) { background: rgba(255,255,255,.09); color: #fff; }
+.btn.danger { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.24); color: #fca5a5; padding: 6px 12px; font-size: 11px; }
+
+.pay-result {
+  display: none;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(16,185,129,.06);
+  border: 1px solid rgba(16,185,129,.20);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: #6ee7b7;
+  line-height: 1.5;
+  word-break: break-all;
+  animation: slideUp .3s var(--ease) forwards;
+}
+
+.pay-result.show { display: flex; }
+.pay-result.err  { background: rgba(239,68,68,.06); border-color: rgba(239,68,68,.20); color: #fca5a5; }
+
+/* ═══════════════════════════════════════════════
+   CTA ROW
+═══════════════════════════════════════════════ */
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  animation: slideUp .6s var(--ease) .9s forwards;
+  opacity: 0;
+}
+
+.referral {
+  font-size: 10px;
+  color: rgba(255,255,255,.26);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.referral a { color: var(--pv); text-decoration: none; font-weight: 600; }
+.referral a:hover { color: var(--pgl); }
+
+@media(max-width: 600px) {
+  .referral { margin-left: 0; margin-top: 10px; width: 100%; }
+}
+
+/* ═══════════════════════════════════════════════
+   ACCESSIBILITY
+═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .orb { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Environment badge -->
+<div class="env-badge" id="env-badge">
+  <span class="env-dot"></span>
+  <span id="env-text">Loading…</span>
+</div>
+
+<!-- Session badge -->
+<div class="session-badge" id="session-badge" title="Click to view session info">
+  <span class="session-dot inactive" id="session-dot"></span>
+  <span id="session-text">No Session</span>
+</div>
+
+<!-- Ambient orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="eyebrow">
+    <span class="live-dot"></span>
+    Pi Testnet · Live RPC Integration
+  </div>
+
+  <h1 class="hero-title">
+    ANTCPU on <em>Pi Network.</em><br>Testnet Dashboard.
+  </h1>
+
+  <p class="hero-sub">
+    Real-time transaction monitoring with session persistence. Your data is saved automatically using cookies.
+  </p>
+
+  <!-- Status Pills -->
+  <div class="pills">
+    <span class="pill g">
+      <span class="live-dot"></span>RPC LIVE
+    </span>
+    <span class="pill au">⛓ Horizon API Active</span>
+    <span class="pill v" id="rpc-pill">
+      <span class="rpc-dot"></span>
+      <span id="rpc-txt">RPC · Checking…</span>
+    </span>
+  </div>
+
+  <!-- Live Stats -->
+  <p class="sec-lbl">Live Testnet Metrics</p>
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-val grad" id="ls-ledger">—</div>
+      <div class="stat-lbl">Latest Ledger</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="ls-txcount">—</div>
+      <div class="stat-lbl">Transactions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val grad" id="ls-proto">—</div>
+      <div class="stat-lbl">Protocol Version</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="ls-ops">—</div>
+      <div class="stat-lbl">Operations</div>
+    </div>
+  </div>
+
+  <!-- RPC Panel -->
+  <p class="sec-lbl">RPC Server Integration</p>
+  <div class="rpc-panel">
+    <div class="rpc-tag">
+      <span class="live-dot" style="width:5px;height:5px;"></span>
+      Pi Testnet RPC · rpc.testnet.minepi.com
+    </div>
+    <h2 class="rpc-title">Smart Contract Data Access</h2>
+    <p class="rpc-desc">
+      Read contract states, query account balances, and execute state-changing transactions with standard fees.
+    </p>
+
+    <div class="rpc-terminal">
+      <div class="term-bar">
+        <span></span><span></span><span></span>
+        <span class="term-lbl">RPC HEALTH CHECK</span>
+      </div>
+      <div class="term-body">
+        <div>$ curl https://rpc.testnet.minepi.com</div>
+        <div style="margin-top:4px;"><span style="color:#93c5fd;">→</span> <span id="rpc-term-out"><span style="animation:spin 0.7s linear infinite;">⟳</span> checking…</span></div>
+      </div>
+    </div>
+
+    <button class="btn ghost" style="width:100%;justify-content:center;" onclick="pingRPC()">
+      ⟳ Test RPC Server
+    </button>
+  </div>
+
+  <!-- Live TX Feed -->
+  <p class="sec-lbl">Live Testnet Transactions</p>
+
+  <div class="tx-panel">
+    <div class="tx-head">
+      <div>
+        <div class="tx-head-title">⛓ Transaction Feed</div>
+        <div class="tx-head-sub">api.testnet.minepi.com · auto-refresh every 10s</div>
+      </div>
+      <div class="tx-controls">
+        <span class="tx-count" id="tx-count">— txns</span>
+        <button class="tx-btn" id="tx-refresh-btn" onclick="loadTxns(true)" title="Manually refresh">⟳</button>
+      </div>
+    </div>
+
+    <div class="tx-list" id="tx-list" role="region" aria-label="Transaction feed">
+      <div class="tx-loading"><div class="spinner"></div>Fetching transactions…</div>
+    </div>
+
+    <div class="tx-foot">
+      <span>
+        Data via <a href="https://api.testnet.minepi.com/transactions" target="_blank" rel="noopener noreferrer">Horizon API</a>
+        · <a href="https://blockexplorer.minepi.com/" target="_blank" rel="noopener noreferrer">Block Explorer ↗</a>
+      </span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:4px;height:4px;border-radius:50%;background:var(--grn);box-shadow:0 0 4px var(--grn);"></span> Auto-refresh</span>
+    </div>
+  </div>
+
+  <!-- Auth & Payment -->
+  <p class="sec-lbl">Pi SDK Authentication</p>
+
+  <div class="auth-card">
+    <h2 class="auth-title">Pioneer Auth & Payment Flow</h2>
+    <p class="auth-desc">
+      Test Pi Network authentication. Your session will be saved automatically. After login, trigger a 0.001 π payment.
+    </p>
+
+    <div class="profile-box" id="profile-box" role="status" aria-live="polite">
+      <div class="profile-avatar" id="profile-avatar">π</div>
+      <div style="flex:1;">
+        <div class="profile-name" id="profile-name">Pioneer</div>
+        <div class="profile-uid" id="profile-uid">uid: —</div>
+      </div>
+    </div>
+
+    <div class="auth-btns">
+      <button class="btn primary" id="btn-login" onclick="doLogin()" title="Login with Pi Network">🔑 Login</button>
+      <button class="btn primary" id="btn-pay" onclick="doPay()" style="display:none;" title="Send 0.001 Pi payment">⚡ Pay 0.001 π</button>
+      <button class="btn danger" id="btn-logout" onclick="doLogout()" style="display:none;" title="Logout">Logout</button>
+    </div>
+
+    <div class="pay-result" id="pay-result" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-row">
+    <a href="https://auth-antcpu.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn primary">🔒 Full App</a>
+    <a href="https://introtopi.com/" target="_blank" rel="noopener noreferrer" class="btn ghost">π Docs</a>
+    <a href="https://minepi.com/blog/rpc-server/" target="_blank" rel="noopener noreferrer" class="btn ghost">📡 RPC Blog</a>
+    <span class="referral">Join: <a href="https://minepi.com/antcpu" target="_blank" rel="noopener noreferrer">antcpu</a></span>
+  </div>
+
+</div>
+
+<!-- Main Script -->
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════
+   ENVIRONMENT DETECTION & CONFIG
+   ════════════════════════════════════════════════ */
+
+// Detect environment
+const ENV = {
+  isDev: !!(
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('.local')
+  ),
+  isVercel: window.location.hostname.includes('vercel.app'),
+  isProd: !!(
+    window.location.protocol === 'https:' &&
+    !window.location.hostname.includes('localhost') &&
+    !window.location.hostname.includes('.local')
+  ),
+  getApiUrl: function() {
+    if (this.isDev) return 'http://localhost:3000/api';
+    if (this.isVercel) return '/api'; // Same domain on Vercel
+    return 'https://' + window.location.hostname + '/api';
+  }
+};
+
+// Set environment badge
+const envBadge = document.getElementById('env-badge');
+const envText = document.getElementById('env-text');
+if (ENV.isDev) {
+  envBadge.className = 'env-badge dev';
+  envText.textContent = '🔧 Local Dev';
+} else if (ENV.isVercel) {
+  envBadge.className = 'env-badge prod';
+  envText.textContent = '✓ Vercel Prod';
+} else if (ENV.isProd) {
+  envBadge.className = 'env-badge prod';
+  envText.textContent = '✓ Production';
+}
+
+console.log('🌍 Environment:', {
+  isDev: ENV.isDev,
+  isVercel: ENV.isVercel,
+  isProd: ENV.isProd,
+  apiUrl: ENV.getApiUrl()
+});
+
+/* ════════════════════════════════════════════════
+   COOKIE & SESSION MANAGEMENT
+   ════════════════════════════════════════════════ */
+
+const SESSION = {
+  // Simple cookie utilities
+  setCookie: function(name, value, days = 30) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = 'expires=' + date.toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; ${expires}; path=/; SameSite=Lax`;
+    console.log(`✓ Cookie set: ${name}`);
+  },
+
+  getCookie: function(name) {
+    const nameEQ = name + '=';
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(nameEQ)) {
+        try {
+          return JSON.parse(decodeURIComponent(cookie.substring(nameEQ.length)));
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+    return null;
+  },
+
+  deleteCookie: function(name) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    console.log(`✓ Cookie deleted: ${name}`);
+  },
+
+  // Check if session exists
+  isActive: function() {
+    return !!this.getCookie('antcpu_user');
+  },
+
+  // Restore session from cookies
+  restore: function() {
+    const user = this.getCookie('antcpu_user');
+    if (user) {
+      console.log('✓ Session restored from cookie:', user.username);
+      return user;
+    }
+    return null;
+  },
+
+  // Save session to cookies
+  save: function(user) {
+    this.setCookie('antcpu_user', user, 30);
+    this.updateBadge();
+    console.log('✓ Session saved:', user.username);
+  },
+
+  // Clear session
+  clear: function() {
+    this.deleteCookie('antcpu_user');
+    this.updateBadge();
+    console.log('✓ Session cleared');
+  },
+
+  // Update session badge
+  updateBadge: function() {
+    const sessionBadge = document.getElementById('session-badge');
+    const sessionDot = document.getElementById('session-dot');
+    const sessionText = document.getElementById('session-text');
+
+    const user = this.getCookie('antcpu_user');
+    if (user) {
+      sessionBadge.style.display = 'inline-flex';
+      sessionDot.className = 'session-dot active';
+      sessionText.textContent = `✓ ${user.username}`;
+    } else {
+      sessionBadge.style.display = 'inline-flex';
+      sessionDot.className = 'session-dot inactive';
+      sessionText.textContent = 'No Session';
+    }
+  }
+};
+
+// Session badge click handler
+document.getElementById('session-badge').addEventListener('click', function() {
+  const user = SESSION.getCookie('antcpu_user');
+  if (user) {
+    alert(`Logged in as: ${user.username}\n\nUser ID: ${user.piUid}\n\nSession expires in 30 days`);
+  } else {
+    alert('No active session. Login to create one.');
+  }
+});
+
+/* ════════════════════════════════════════════════
+   API CONFIGURATION
+   ════════════════════════════════════════════════ */
+
+const API = {
+  HORIZON: 'https://api.testnet.minepi.com',
+  RPC: 'https://rpc.testnet.minepi.com',
+  EXPLORER: 'https://blockexplorer.minepi.com'
+};
+
+const FETCH_OPTS = {
+  credentials: 'include' // Include cookies in requests
+};
+
+/* ════════════════════════════════════════════════
+   UTILITIES
+   ════════════════════════════════════════════════ */
+
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString();
+const short = h => h ? `${h.slice(0, 6)}…${h.slice(-4)}` : '—';
+const ts = iso => {
+  const d = new Date(iso), diff = Math.floor((new Date() - d) / 1000);
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  return `${Math.floor(diff / 3600)}h`;
+};
+
+let piUser = null;
+let txTimer = null;
+let isLoading = false;
+
+/* ════════════════════════════════════════════════
+   INITIALIZATION
+   ════════════════════════════════════════════════ */
+
+window.addEventListener('load', async () => {
+  // Restore session
+  const savedUser = SESSION.restore();
+  if (savedUser) {
+    piUser = savedUser;
+    showAuthSuccess(savedUser);
+  }
+
+  // Initialize Pi SDK
+  try {
+    Pi.init({ version: '2.0', sandbox: true });
+  } catch (e) {
+    console.error('Pi SDK init:', e);
+  }
+
+  // Load data
+  await Promise.all([
+    pingRPC(),
+    loadLedger(),
+    loadTxns(false)
+  ]);
+
+  // Auto-refresh
+  txTimer = setInterval(() => {
+    if (!isLoading) loadTxns(false);
+  }, 10000);
+
+  SESSION.updateBadge();
+});
+
+window.addEventListener('beforeunload', () => {
+  if (txTimer) clearInterval(txTimer);
+});
+
+/* ════════════════════════════════════════════════
+   RPC HEALTH CHECK
+   ════════════════════════════════════════════════ */
+
+async function pingRPC() {
+  const pill = $('rpc-pill');
+  const txt = $('rpc-txt');
+  const out = $('rpc-term-out');
+
+  txt.textContent = 'RPC · Pinging…';
+
+  try {
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 6000);
+
+    const res = await fetch(API.RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getHealth' }),
+      signal: ctrl.signal
+    });
+
+    clearTimeout(timeout);
+    const data = await res.json();
+    const status = data?.result?.status ?? 'ok';
+
+    pill.className = 'pill v ok';
+    txt.textContent = `RPC · ${status.toUpperCase()}`;
+    out.innerHTML = `<span style="color:#a7f3d0;word-break:break-all;font-size:10px;">${JSON.stringify(data).substring(0, 150)}</span>`;
+  } catch (e) {
+    pill.className = 'pill v err';
+    txt.textContent = 'RPC · Error';
+    out.innerHTML = `<span style="color:#fca5a5;">✗ ${e.message}</span>`;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   LOAD DATA
+   ════════════════════════════════════════════════ */
+
+async function loadLedger() {
+  try {
+    const res = await fetch(`${API.HORIZON}/ledgers?limit=1&order=desc`);
+    const { _embedded } = await res.json();
+    const l = _embedded.records[0];
+
+    $('ls-ledger').textContent = fmt(l.sequence);
+    $('ls-txcount').textContent = fmt(l.successful_transaction_count);
+    $('ls-proto').textContent = `v${l.protocol_version}`;
+    $('ls-ops').textContent = fmt(l.operation_count);
+  } catch (e) {
+    console.warn('Ledger load failed:', e);
+  }
+}
+
+async function loadTxns(manual = false) {
+  if (isLoading && !manual) return;
+  isLoading = true;
+
+  const btn = $('tx-refresh-btn');
+  const list = $('tx-list');
+
+  if (manual) {
+    btn.disabled = true;
+    list.innerHTML = '<div class="tx-loading"><div class="spinner"></div>Loading…</div>';
+  }
+
+  try {
+    const [txRes, ledRes] = await Promise.all([
+      fetch(`${API.HORIZON}/transactions?limit=12&order=desc`),
+      fetch(`${API.HORIZON}/ledgers?limit=1&order=desc`)
+    ]);
+
+    const txData = await txRes.json();
+    const ledData = await ledRes.json();
+    const txns = txData._embedded?.records ?? [];
+    const led = ledData._embedded?.records?.[0];
+
+    if (led) {
+      $('ls-ledger').textContent = fmt(led.sequence);
+      $('ls-txcount').textContent = fmt(led.successful_transaction_count);
+    }
+
+    $('tx-count').textContent = `${txns.length} txns`;
+
+    if (!txns.length) {
+      list.innerHTML = '<div class="tx-empty">No transactions</div>';
+      return;
+    }
+
+    list.innerHTML = txns.map(tx => {
+      const acct = tx.source_account.slice(0, 6) + '…' + tx.source_account.slice(-4);
+      const url = `${API.EXPLORER}/tx/${tx.hash}`;
+      const icon = tx.successful ? '✓' : '✗';
+      const color = tx.successful ? 'color:#10b981' : 'color:#ef4444';
+
+      return `
+        <div class="tx-row">
+          <div class="tx-ico"><span style="${color}">${icon}</span></div>
+          <div>
+            <div class="tx-hash">
+              <a href="${url}" target="_blank" rel="noopener noreferrer">${short(tx.hash)}</a>
+            </div>
+            <div class="tx-meta">Ledger ${fmt(tx.ledger)} · ${acct}</div>
+          </div>
+          <div class="tx-time">${ts(tx.created_at)} ago</div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    if (manual) list.innerHTML = `<div class="tx-empty">Error: ${e.message}</div>`;
+  } finally {
+    isLoading = false;
+    btn.disabled = false;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   AUTHENTICATION
+   ════════════════════════════════════════════════ */
+
+function showAuthSuccess(user) {
+  $('profile-box').classList.add('show');
+  $('profile-name').textContent = `@${user.username}`;
+  $('profile-uid').textContent = `uid: ${user.piUid.slice(0, 8)}…`;
+  $('profile-avatar').textContent = user.username.charAt(0).toUpperCase();
+
+  $('btn-login').style.display = 'none';
+  $('btn-pay').style.display = 'inline-flex';
+  $('btn-logout').style.display = 'inline-flex';
+}
+
+async function doLogin() {
+  const btn = $('btn-login');
+  btn.disabled = true;
+  btn.textContent = '⟳ Authenticating…';
+
+  try {
+    const auth = await Pi.authenticate(['username', 'payments']);
+    piUser = auth.user;
+
+    // Save session to cookies (30 day persistence)
+    SESSION.save({
+      piUid: piUser.uid,
+      username: piUser.username,
+      accessToken: auth.accessToken,
+      loginTime: new Date().toISOString()
+    });
+
+    showAuthSuccess(piUser);
+    console.log('✓ Authenticated:', piUser.username);
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '🔑 Login';
+    alert('Login failed: ' + e.message);
+  }
+}
+
+async function doPay() {
+  if (!piUser) return;
+
+  const btn = $('btn-pay');
+  const result = $('pay-result');
+  btn.disabled = true;
+
+  try {
+    const payment = await Pi.createPayment(
+      {
+        amount: 0.001,
+        memo: 'ANTCPU Testnet',
+        metadata: { app: 'antcpu', phase: 'testnet' }
+      },
+      {
+        onReadyForServerApproval: () => Pi.currentPayment?.approve?.(),
+        onCancel: (id) => {
+          result.textContent = `Cancelled: ${id}`;
+          result.className = 'pay-result show err';
+          btn.disabled = false;
+        },
+        onError: (err) => {
+          result.textContent = `Error: ${err.message}`;
+          result.className = 'pay-result show err';
+          btn.disabled = false;
+        }
+      }
+    );
+
+    result.textContent = `✓ Payment created: ${payment.identifier.slice(0, 12)}…`;
+    result.className = 'pay-result show';
+    btn.disabled = false;
+  } catch (e) {
+    result.textContent = `✗ ${e.message}`;
+    result.className = 'pay-result show err';
+    btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  piUser = null;
+  SESSION.clear();
+  $('profile-box').classList.remove('show');
+  $('btn-login').style.display = 'inline-flex';
+  $('btn-pay').style.display = 'none';
+  $('btn-logout').style.display = 'none';
+  $('btn-login').textContent = '🔑 Login';
+  $('pay-result').className = 'pay-result';
+  console.log('✓ Logged out');
+}
+</script>
+
+</body>
+</html>
