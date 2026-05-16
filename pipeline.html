@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pipeline — antcpu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Segoe UI",sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
+.layout{max-width:900px;margin:0 auto;padding:80px 24px 60px;}
+.page-title{font-size:1.4rem;font-weight:700;color:#00ff88;font-family:monospace;letter-spacing:2px;margin-bottom:4px;}
+.page-sub{font-size:.72rem;color:#555;font-family:monospace;margin-bottom:32px;}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.section-title span{color:#d29922;}
+.panel{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:20px;margin-bottom:16px;}
+
+/* CHAIN */
+.chain-spine{display:flex;flex-direction:column;gap:8px;}
+.chain-node{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;overflow:hidden;transition:border-color .2s;}
+.chain-node:hover{border-color:#333;}
+.chain-node.active{border-left:3px solid #00ff88;}
+.chain-node.standby{border-left:3px solid #d29922;}
+.chain-node.blocked{border-left:3px solid #ff4444;}
+.node-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;}
+.node-num{font-size:.65rem;font-family:monospace;color:#555;min-width:52px;}
+.node-name{font-size:.9rem;font-weight:600;color:#e6edf3;flex:1;}
+.node-url{font-size:.65rem;font-family:monospace;color:#555;}
+.node-version{font-size:.65rem;font-family:monospace;color:#d29922;margin-left:8px;}
+.node-badge{font-size:.6rem;font-family:monospace;padding:2px 8px;border-radius:10px;font-weight:700;letter-spacing:1px;}
+.node-badge.active{background:#00ff8820;color:#00ff88;border:1px solid #00ff8840;}
+.node-badge.standby{background:#d2992220;color:#d29922;border:1px solid #d2992240;}
+.node-badge.blocked{background:#ff444420;color:#ff4444;border:1px solid #ff444440;}
+.node-detail{display:none;padding:0 16px 16px;border-top:1px solid #1a1a1a;}
+.node-detail.open{display:block;}
+.node-rows{margin:12px 0;}
+.node-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #111;font-size:.78rem;}
+.node-row:last-child{border-bottom:none;}
+.node-row .lbl{color:#555;font-family:monospace;}
+.node-row .val{color:#c9d1d9;font-family:monospace;text-align:right;}
+.node-row .val.green{color:#00ff88;}
+.node-row .val.yellow{color:#d29922;}
+.node-row .val.red{color:#ff4444;}
+.node-next-link{display:inline-block;margin-top:8px;font-size:.72rem;font-family:monospace;color:#00ff88;text-decoration:none;}
+.node-next-link:hover{text-decoration:underline;}
+.node-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.btn-xs{font-size:.65rem;font-family:monospace;padding:4px 10px;border-radius:4px;cursor:pointer;border:1px solid #333;background:#0d0d0d;color:#ccc;transition:all .2s;}
+.btn-xs:hover{border-color:#555;color:#fff;}
+.btn-xs.green{border-color:#00ff8840;color:#00ff88;}
+.btn-xs.yellow{border-color:#d2992240;color:#d29922;}
+.btn-xs.red{border-color:#ff444440;color:#ff4444;}
+
+/* SPRINT */
+.sprint-task{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:12px;margin-bottom:8px;}
+.sprint-task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.sprint-task-name{font-size:.8rem;font-family:monospace;color:#e6edf3;}
+.sprint-task-node{font-size:.65rem;font-family:monospace;color:#555;}
+.sprint-task-actions{display:flex;gap:6px;margin-top:8px;}
+.vault-verdict{font-size:.65rem;font-family:monospace;margin-top:6px;padding:4px 8px;border-radius:4px;}
+.vault-verdict.clear{background:#00ff8810;color:#00ff88;border:1px solid #00ff8820;}
+.vault-verdict.warn{background:#d2992210;color:#d29922;border:1px solid #d2992220;}
+.vault-verdict.flag{background:#ff444410;color:#ff4444;border:1px solid #ff444420;}
+.add-task-row{display:flex;gap:8px;margin-top:12px;}
+.task-input{flex:1;background:#0d0d0d;border:1px solid #333;color:#ccc;padding:6px 10px;border-radius:6px;font-family:monospace;font-size:.75rem;}
+.task-input:focus{outline:none;border-color:#555;}
+select.task-input{cursor:pointer;}
+
+/* BUTTONS */
+.btn-primary{background:#00ff8815;border:1px solid #00ff8840;color:#00ff88;padding:7px 16px;border-radius:6px;font-family:monospace;font-size:.75rem;cursor:pointer;transition:all .2s;}
+.btn-primary:hover{background:#00ff8825;}
+.btn-secondary{background:#0d0d0d;border:1px solid #333;color:#888;padding:7px 16px;border-radius:6px;font-family:monospace;font-size:.75rem;cursor:pointer;transition:all .2s;}
+.btn-secondary:hover{border-color:#555;color:#ccc;}
+.status-bar{font-size:.72rem;font-family:monospace;padding:8px 12px;border-radius:6px;margin-top:10px;display:none;}
+.status-bar.ok{display:block;background:#00ff8810;color:#00ff88;border:1px solid #00ff8820;}
+.status-bar.err{display:block;background:#ff444410;color:#ff4444;border:1px solid #ff444420;}
+.status-bar.loading{display:block;background:#d2992210;color:#d29922;border:1px solid #d2992220;}
+.empty-state{font-size:.72rem;font-family:monospace;color:#333;padding:20px;text-align:center;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "pipeline", root: "./" };</script>
+<script src="antcpu.js"></script>
+<script src="nav.js"></script>
+<script src="antcpu-ai.js"></script>
+
+<div class="layout">
+  <div class="page-title">// pipeline</div>
+  <div class="page-sub">antcpu agent network · chain spine · sprint queue · vault gate</div>
+
+  <!-- CHAIN SPINE -->
+  <div class="panel">
+    <div class="section-title">// chain spine <span id="chainSummary">8 nodes · loop active</span></div>
+    <div class="chain-spine" id="chainSpine"></div>
+  </div>
+
+  <!-- SPRINT QUEUE -->
+  <div class="panel">
+    <div class="section-title">// sprint queue <span id="sprintCount">0 tasks</span></div>
+    <div id="sprintList"><div class="empty-state">// no tasks yet — add below</div></div>
+    <div class="add-task-row">
+      <input class="task-input" id="taskInput" placeholder="task description..." />
+      <select class="task-input" id="taskNode" style="max-width:160px;">
+      </select>
+      <button class="btn-primary" onclick="addTask()">+ add</button>
+    </div>
+    <div class="status-bar" id="sprintStatus"></div>
+  </div>
+
+  <!-- QUICK POOL -->
+  <div class="panel">
+    <div class="section-title">// quick pool <span>tag: session=quick</span></div>
+    <div id="quickPool"><div class="empty-state">// tasks tagged quick will appear here</div></div>
+  </div>
+
+  <!-- DEPLOY PANEL -->
+  <div class="panel">
+    <div class="section-title">// deploy <span>human gate — no auto-push</span></div>
+    <div style="font-size:.72rem;font-family:monospace;color:#555;margin-bottom:12px;">Select a node to generate updated live HTML. Preview locally before pushing to Ionos.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select class="task-input" id="deployNode" style="max-width:200px;"></select>
+      <button class="btn-primary" onclick="generateNodeHTML()">⚙ generate HTML</button>
+      <button class="btn-secondary" onclick="clearDeploy()">✕ clear</button>
+    </div>
+    <div class="status-bar" id="deployStatus"></div>
+    <pre id="deployPreview" style="display:none;margin-top:12px;background:#0d0d0d;border:1px solid #1f1f1f;border-radius:8px;padding:14px;font-size:.65rem;font-family:monospace;color:#c9d1d9;overflow-x:auto;white-space:pre-wrap;"></pre>
+  </div>
+
+</div>
+
+<script>
+(()=>{
+
+  // ── CHAIN DATA ─────────────────────────────────────────
+  const DEFAULT_CHAIN = [
+    { id:'node00', num:'00', name:'antcpu.com',        url:'antcpu.com',              path:'live.html',            version:'1.0.7', status:'active',  lastUpdated:'2026-04-22', next:'antcoin/live1.html',    nextLabel:'antcoin live1',    host:'Ionos', deploy:'manual HTML' },
+    { id:'node01', num:'01', name:'Amanda Photography',url:'antcpu.com/manda',        path:'live1.html',           version:'1.0.0', status:'standby', lastUpdated:'2026-04-15', next:'https://amandaland.vercel.app', nextLabel:'amandaland backend', host:'Ionos + Vercel', deploy:'manual HTML' },
+    { id:'node02', num:'02', name:'antcoin',           url:'antcpu.com/antcoin',      path:'antcoin/live1.html',   version:'0.3',   status:'standby', lastUpdated:'2026-04-15', next:'cloud/live2.html',      nextLabel:'cloud live2',      host:'Ionos', deploy:'manual HTML' },
+    { id:'node03', num:'03', name:'antcpu.cloud',      url:'antcpu.com/cloud',        path:'cloud/live2.html',     version:'1.0.0', status:'standby', lastUpdated:'2026-04-15', next:'turtle/live3.html',     nextLabel:'turtle live3',     host:'Ionos', deploy:'manual HTML' },
+    { id:'node04', num:'04', name:'Turtle Enterprises',url:'antcpu.com/turtle',       path:'turtle/live3.html',    version:'1.0.0', status:'active',  lastUpdated:'2026-04-15', next:'edu/live4.html',        nextLabel:'edu live4',        host:'Ionos', deploy:'manual HTML' },
+    { id:'node05', num:'05', name:'antcpu EDU',        url:'antcpu.com/edu',          path:'edu/live4.html',       version:'1.0.0', status:'active',  lastUpdated:'2026-04-15', next:'AI/live5.html',         nextLabel:'AI live5',         host:'Ionos', deploy:'manual HTML' },
+    { id:'node06', num:'06', name:'antcpu AI',         url:'antcpu.com/AI',           path:'AI/live5.html',        version:'1.0.0', status:'standby', lastUpdated:'2026-04-15', next:'TV/live6.html',         nextLabel:'TV live6',         host:'Ionos', deploy:'manual HTML' },
+    { id:'node07', num:'07', name:'antcpu TV',         url:'antcpu.com/TV',           path:'TV/live6.html',        version:'1.0.0', status:'standby', lastUpdated:'2026-04-15', next:'https://antcpu.com/live.html', nextLabel:'↺ back to node 00', host:'Ionos', deploy:'manual HTML' },
+  ];
+
+  const getChain = () => ANT.store.get('antcpu_chain', DEFAULT_CHAIN);
+  const saveChain = (c) => ANT.store.set('antcpu_chain', c);
+
+  // ── RENDER CHAIN ───────────────────────────────────────
+  const renderChain = () => {
+    const chain = getChain();
+    const spine = document.getElementById('chainSpine');
+    spine.innerHTML = chain.map((n,i) => `
+      <div class="chain-node ${n.status}" id="cn-${n.id}">
+        <div class="node-header" onclick="toggleNode('${n.id}')">
+          <div class="node-num">node ${n.num}</div>
+          <div class="node-name">${n.name}</div>
+          <div class="node-url">${n.url}</div>
+          <div class="node-version">v${n.version}</div>
+          <span class="node-badge ${n.status}">${n.status.toUpperCase()}</span>
+        </div>
+        <div class="node-detail" id="nd-${n.id}">
+          <div class="node-rows">
+            <div class="node-row"><span class="lbl">path</span><span class="val">${n.path}</span></div>
+            <div class="node-row"><span class="lbl">last updated</span><span class="val">${n.lastUpdated}</span></div>
+            <div class="node-row"><span class="lbl">host</span><span class="val">${n.host}</span></div>
+            <div class="node-row"><span class="lbl">deploy</span><span class="val">${n.deploy}</span></div>
+            <div class="node-row"><span class="lbl">next</span><span class="val yellow">${n.nextLabel}</span></div>
+          </div>
+          <a class="node-next-link" href="https://antcpu.com/${n.next}" target="_blank">→ ${n.nextLabel}</a>
+          <div class="node-actions">
+            <button class="btn-xs green" onclick="editNode('${n.id}')">✏ edit</button>
+            <button class="btn-xs yellow" onclick="vaultCheck('${n.id}')">🔐 vault check</button>
+            <button class="btn-xs" onclick="addTaskForNode('${n.id}')">+ task</button>
+            <button class="btn-xs" onclick="setDeployNode('${n.id}')">⚙ deploy</button>
+          </div>
+          <div class="vault-verdict" id="vault-${n.id}" style="display:none;"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // populate node selects
+    const opts = chain.map(n => `<option value="${n.id}">${n.num} — ${n.name}</option>`).join('');
+    document.getElementById('taskNode').innerHTML = opts;
+    document.getElementById('deployNode').innerHTML = opts;
+  };
+
+  window.toggleNode = (id) => {
+    const el = document.getElementById('nd-' + id);
+    el.classList.toggle('open');
+  };
+
+  // ── EDIT NODE ──────────────────────────────────────────
+  window.editNode = (id) => {
+    const chain = getChain();
+    const n = chain.find(x => x.id === id);
+    if (!n) return;
+    const version = prompt('Version:', n.version);
+    if (version === null) return;
+    const next = prompt('Next field (label):', n.nextLabel);
+    if (next === null) return;
+    const nextPath = prompt('Next path/URL:', n.next);
+    if (nextPath === null) return;
+    const status = prompt('Status (active/standby/blocked):', n.status);
+    if (status === null) return;
+    n.version = version;
+    n.nextLabel = next;
+    n.next = nextPath;
+    n.status = status;
+    n.lastUpdated = new Date().toISOString().slice(0,10);
+    saveChain(chain);
+    renderChain();
+  };
+
+  // ── VAULT CHECK ────────────────────────────────────────
+  window.vaultCheck = async (id) => {
+    const chain = getChain();
+    const n = chain.find(x => x.id === id);
+    const el = document.getElementById('vault-' + id);
+    el.style.display = 'block';
+    el.className = 'vault-verdict warn';
+    el.textContent = '🔐 VAULT checking...';
+    if (typeof ANTAI === 'undefined' || !ANTAI.PROVIDERS.google.key) {
+      el.className = 'vault-verdict warn';
+      el.textContent = '⚠ VAULT — API key not set. Manual check required.';
+      return;
+    }
+    try {
+      const prompt = `You are VAULT, antcpu Security Agent.
+Quick security check for chain node: ${n.name} (${n.url})
+Path: ${n.path} | Status: ${n.status} | Deploy: ${n.deploy}
+Flag any security concerns. Max 3 bullet points. Be brief.`;
+      const result = await ANTAI.ask('google', prompt, 'vault');
+      el.className = 'vault-verdict clear';
+      el.textContent = result;
+    } catch(e) {
+      el.className = 'vault-verdict flag';
+      el.textContent = '✗ VAULT error: ' + e.message;
+    }
+  };
+
+  // ── SPRINT TASKS ───────────────────────────────────────
+  const getTasks = () => ANT.store.get('antcpu_pipeline_tasks', []);
+  const saveTasks = (t) => ANT.store.set('antcpu_pipeline_tasks', t);
+
+  const renderTasks = () => {
+    const tasks = getTasks();
+    const chain = getChain();
+    const list = document.getElementById('sprintList');
+    document.getElementById('sprintCount').textContent = tasks.length + ' task' + (tasks.length !== 1 ? 's' : '');
+    if (!tasks.length) { list.innerHTML = '<div class="empty-state">// no tasks yet — add below</div>'; return; }
+    list.innerHTML = tasks.map((t,i) => {
+      const node = chain.find(n => n.id === t.nodeId);
+      return `
+        <div class="sprint-task">
+          <div class="sprint-task-header">
+            <div class="sprint-task-name">${t.text}</div>
+            <div class="sprint-task-node">${node ? node.num + ' — ' + node.name : t.nodeId}</div>
+          </div>
+          ${t.vault ? `<div class="vault-verdict ${t.vaultClass}">${t.vault}</div>` : ''}
+          <div class="sprint-task-actions">
+            <button class="btn-xs green" onclick="completeTask(${i})">✓ done</button>
+            <button class="btn-xs yellow" onclick="vaultTask(${i})">🔐 vault</button>
+            <button class="btn-xs" onclick="poolTask(${i})">⚡ quick pool</button>
+            <button class="btn-xs red" onclick="removeTask(${i})">✕</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    renderQuickPool();
+  };
+
+  window.addTask = () => {
+    const text = document.getElementById('taskInput').value.trim();
+    const nodeId = document.getElementById('taskNode').value;
+    if (!text) { ANT.status('sprintStatus','err','✗ enter a task first'); return; }
+    const tasks = getTasks();
+    tasks.push({ text, nodeId, status:'open', quick:false, vault:null, vaultClass:'', created:new Date().toISOString() });
+    saveTasks(tasks);
+    document.getElementById('taskInput').value = '';
+    renderTasks();
+    ANT.status('sprintStatus','ok','✓ task added');
+  };
+
+  window.addTaskForNode = (nodeId) => {
+    document.getElementById('taskNode').value = nodeId;
+    document.getElementById('taskInput').focus();
+  };
+
+  window.completeTask = (i) => {
+    const tasks = getTasks();
+    tasks.splice(i,1);
+    saveTasks(tasks);
+    renderTasks();
+  };
+
+  window.removeTask = (i) => {
+    const tasks = getTasks();
+    tasks.splice(i,1);
+    saveTasks(tasks);
+    renderTasks();
+  };
+
+  window.poolTask = (i) => {
+    const tasks = getTasks();
+    tasks[i].quick = true;
+    saveTasks(tasks);
+    renderTasks();
+  };
+
+  window.vaultTask = async (i) => {
+    const tasks = getTasks();
+    const t = tasks[i];
+    if (typeof ANTAI === 'undefined' || !ANTAI.PROVIDERS.google.key) {
+      t.vault = '⚠ API key not set — manual vault check required';
+      t.vaultClass = 'warn';
+      saveTasks(tasks); renderTasks(); return;
+    }
+    t.vault = '🔐 checking...'; t.vaultClass = 'warn';
+    saveTasks(tasks); renderTasks();
+    try {
+      const result = await ANTAI.ask('google',
+        `You are VAULT, antcpu Security Agent. Quick check this task: "${t.text}". Any security concerns? 1-2 sentences max.`, 'vault');
+      tasks[i].vault = result;
+      tasks[i].vaultClass = 'clear';
+    } catch(e) {
+      tasks[i].vault = '✗ ' + e.message;
+      tasks[i].vaultClass = 'flag';
+    }
+    saveTasks(tasks); renderTasks();
+  };
+
+  // ── QUICK POOL ─────────────────────────────────────────
+  const renderQuickPool = () => {
+    const tasks = getTasks().filter(t => t.quick);
+    const el = document.getElementById('quickPool');
+    if (!tasks.length) { el.innerHTML = '<div class="empty-state">// tasks tagged quick will appear here</div>'; return; }
+    el.innerHTML = tasks.map(t => `
+      <div class="sprint-task">
+        <div class="sprint-task-name">⚡ ${t.text}</div>
+        <div class="sprint-task-node" style="margin-top:4px;">${t.nodeId}</div>
+      </div>
+    `).join('');
+  };
+
+  // ── DEPLOY ─────────────────────────────────────────────
+  window.setDeployNode = (id) => {
+    document.getElementById('deployNode').value = id;
+    generateNodeHTML();
+  };
+
+  window.generateNodeHTML = () => {
+    const chain = getChain();
+    const id = document.getElementById('deployNode').value;
+    const n = chain.find(x => x.id === id);
+    if (!n) return;
+    const nextHref = n.next.startsWith('http') ? n.next : 'https://antcpu.com/' + n.next;
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live — ${n.name}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Segoe UI",sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
+header{background:#111;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1f1f1f;}
+header h1{font-size:1.1rem;color:#00ff88;letter-spacing:2px;font-family:monospace;}
+#clock{font-size:.85rem;color:#00ff88;font-family:monospace;}
+.layout{max-width:600px;margin:0 auto;padding:40px 24px;}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.72rem;font-family:monospace;font-weight:700;letter-spacing:1px;margin-bottom:24px;}
+.badge.live{background:#00ff8820;color:#00ff88;border:1px solid #00ff8840;}
+.site-name{font-size:2rem;font-weight:700;color:#e6edf3;margin-bottom:4px;}
+.site-url{font-size:.8rem;color:#555;font-family:monospace;margin-bottom:32px;}
+.row{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid #1a1a1a;}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;font-family:monospace;min-width:120px;}
+.value{font-size:.85rem;color:#c9d1d9;font-family:monospace;text-align:right;}
+.value.green{color:#00ff88;} .value.yellow{color:#d29922;}
+.next-btn{display:block;width:100%;margin-top:40px;padding:16px;background:#00ff8810;border:1px solid #00ff8830;border-radius:12px;color:#00ff88;font-family:monospace;font-size:.9rem;font-weight:700;text-align:center;text-decoration:none;letter-spacing:1px;transition:all .2s;}
+.next-btn:hover{background:#00ff8820;border-color:#00ff88;}
+.footer{margin-top:24px;text-align:center;font-size:.72rem;color:#333;font-family:monospace;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<header><h1>⬤ live</h1><span id="clock">--:--:--</span></header>
+<div class="layout">
+  <div class="badge live">● LIVE</div>
+  <div class="site-name">${n.name}</div>
+  <div class="site-url">${n.url} · ${n.host} · HTML</div>
+  <div class="row"><div class="label">status</div><div class="value green">${n.status}</div></div>
+  <div class="row"><div class="label">last updated</div><div class="value">${n.lastUpdated}</div></div>
+  <div class="row"><div class="label">version</div><div class="value">v${n.version}</div></div>
+  <div class="row"><div class="label">host</div><div class="value">${n.host}</div></div>
+  <div class="row"><div class="label">deploy</div><div class="value">${n.deploy}</div></div>
+  <div class="row"><div class="label">next</div><div class="value yellow">${n.nextLabel}</div></div>
+  <a class="next-btn" href="${nextHref}">→ ${n.nextLabel}</a>
+  <div class="footer">antcpu agent network · chain node ${n.num}</div>
+</div>
+<script>
+const tick=()=>document.getElementById("clock").textContent=new Date().toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",second:"2-digit"})+" EDT";
+tick();setInterval(tick,1000);
+</script>
+<script src="footer.js"></script>
+</body>
+</html>`;
+    const pre = document.getElementById('deployPreview');
+    pre.style.display = 'block';
+    pre.textContent = html;
+    ANT.status('deployStatus','ok','✓ HTML generated for ' + n.name + ' — review above then sftp put ' + n.path);
+  };
+
+  window.clearDeploy = () => {
+    document.getElementById('deployPreview').style.display = 'none';
+    document.getElementById('deployStatus').className = 'status-bar';
+  };
+
+  // ── BOOT ───────────────────────────────────────────────
+  renderChain();
+  renderTasks();
+
+})();
+</script>
+</body>
+</html>

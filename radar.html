@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar — antcpu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'SF Mono','Fira Code',monospace;background:#080810;color:#e8e8f0;min-height:100vh;display:flex;flex-direction:column;}
+
+.radar-wrap{flex:1;display:flex;flex-direction:column;padding:84px 14px 0;}
+
+/* HEADER */
+.radar-header{display:flex;justify-content:space-between;align-items:center;padding:10px 2px 8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:10px;flex-shrink:0;}
+.radar-title{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:#555570;}
+.radar-ts{font-size:.6rem;color:#333348;}
+
+/* GRID — fixed height, footer shows below */
+.radar-grid{display:grid;grid-template-columns:200px 1fr 1fr;gap:12px;margin-bottom:0;}
+
+/* PANEL */
+.panel{background:#0d0d1a;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;}
+
+/* SECTION TITLE */
+.st{font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;color:#555570;padding-bottom:7px;margin-bottom:9px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;}
+.st .accent{color:#c8f564;}
+.st .purple{color:#b388ff;}
+.st .blue{color:#4fc3f7;}
+
+/* COL 1 — STAT STACK */
+.stat-stack{display:flex;flex-direction:column;gap:8px;}
+.stat-block{background:#121220;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:12px;}
+.stat-val{font-size:1.6rem;font-weight:800;line-height:1;min-width:32px;}
+.stat-val.red{color:#ff5e5e;text-shadow:0 0 10px #ff5e5e44;}
+.stat-val.yellow{color:#f0c040;text-shadow:0 0 10px #f0c04044;}
+.stat-val.green{color:#c8f564;text-shadow:0 0 10px #c8f56444;}
+.stat-val.dim{color:#e8e8f0;}
+.stat-info{}
+.stat-label{font-size:.62rem;font-weight:700;color:#e8e8f0;letter-spacing:.04em;}
+.stat-desc{font-size:.55rem;color:#555570;margin-top:2px;line-height:1.3;}
+
+/* COL 2 — BLOCKERS */
+.blocker{border:1px solid rgba(255,255,255,0.05);border-radius:7px;padding:9px 11px;margin-bottom:7px;}
+.blocker:last-child{margin-bottom:0;}
+.blocker.locked{border-color:rgba(255,94,94,0.15);background:rgba(255,94,94,0.03);}
+.blocker.pending{border-color:rgba(240,192,64,0.15);background:rgba(240,192,64,0.03);}
+.blocker.clear{border-color:rgba(200,245,100,0.15);background:rgba(200,245,100,0.03);}
+.blocker-title{font-size:.7rem;font-weight:700;margin-bottom:2px;}
+.blocker-title.locked{color:#ff5e5e;}
+.blocker-title.pending{color:#f0c040;}
+.blocker-title.clear{color:#c8f564;}
+.blocker-desc{font-size:.6rem;color:#555570;line-height:1.4;margin-bottom:5px;}
+.blocker-bar{height:3px;background:#1a1a2e;border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.blocker-bar-fill{height:100%;border-radius:2px;}
+.blocker-bar-fill.locked{background:#ff5e5e;}
+.blocker-bar-fill.pending{background:#f0c040;}
+.blocker-bar-fill.clear{background:#c8f564;}
+.blocker-meta{font-size:.54rem;color:#333348;}
+.blocker-meta span{color:#444460;}
+.tag{display:inline-block;font-size:.5rem;padding:1px 5px;border-radius:3px;margin-right:3px;margin-bottom:3px;}
+.tag.system{background:rgba(79,195,247,0.08);color:#4fc3f7;border:1px solid rgba(79,195,247,0.2);}
+.tag.antcoin{background:rgba(200,245,100,0.08);color:#c8f564;border:1px solid rgba(200,245,100,0.2);}
+.tag.antchain{background:rgba(179,136,255,0.08);color:#b388ff;border:1px solid rgba(179,136,255,0.2);}
+.tag.marketing{background:rgba(79,195,247,0.08);color:#4fc3f7;border:1px solid rgba(79,195,247,0.2);}
+
+/* COL 3 — SATELLITE */
+.sat-row{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:flex-start;}
+.sat-row:last-child{border-bottom:none;}
+.sat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.sat-dot.conference{background:#b388ff;box-shadow:0 0 5px #b388ff;}
+.sat-dot.antcoin{background:#c8f564;box-shadow:0 0 5px #c8f564;}
+.sat-dot.antchain{background:#b388ff;box-shadow:0 0 5px #b388ff;}
+.sat-dot.marketing{background:#4fc3f7;box-shadow:0 0 5px #4fc3f7;}
+.sat-dot.radar{background:#f0c040;box-shadow:0 0 5px #f0c040;}
+.sat-body{flex:1;min-width:0;}
+.sat-name{font-size:.68rem;color:#e8e8f0;font-weight:600;margin-bottom:2px;}
+.sat-note{font-size:.58rem;color:#555570;line-height:1.3;}
+.sat-badge{display:inline-block;font-size:.5rem;padding:1px 5px;border-radius:3px;margin-top:3px;}
+.sat-badge.watching{background:rgba(179,136,255,0.1);color:#b388ff;border:1px solid rgba(179,136,255,0.2);}
+.sat-badge.open{background:rgba(79,195,247,0.1);color:#4fc3f7;border:1px solid rgba(79,195,247,0.2);}
+.sat-badge.active{background:rgba(200,245,100,0.1);color:#c8f564;border:1px solid rgba(200,245,100,0.2);}
+
+.empty{font-size:.62rem;color:#333348;padding:12px 0;text-align:center;}
+
+/* FOOTER BADGE OVERRIDE */
+.ant-footer-version { color: #c8f564 !important; font-weight: 700; }
+.ant-footer-count, .ant-footer-badge { color: #f0c040 !important; font-weight: 700; }
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "radar", root: "./" }</script>
+<script src="nav.js"></script>
+
+<div class="radar-wrap">
+
+  <div class="radar-header">
+    <span class="radar-title">📡 radar — antcpu</span>
+    <span class="radar-ts" id="radarTs">scanning...</span>
+  </div>
+
+  <div class="radar-grid">
+
+    <!-- COL 1 — STAT STACK -->
+    <div>
+      <div class="panel">
+        <div class="st">// scan <span class="accent">live</span></div>
+        <div class="stat-stack">
+          <div class="stat-block">
+            <div class="stat-val red" id="scanLocked">0</div>
+            <div class="stat-info">
+              <div class="stat-label">Locked</div>
+              <div class="stat-desc">Hard gates — not yet unlockable</div>
+            </div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-val yellow" id="scanPending">0</div>
+            <div class="stat-info">
+              <div class="stat-label">Pending</div>
+              <div class="stat-desc">In progress — conditions being met</div>
+            </div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-val green" id="scanClear">0</div>
+            <div class="stat-info">
+              <div class="stat-label">Clear</div>
+              <div class="stat-desc">Gate passed — path open</div>
+            </div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-val dim" id="scanTotal">0</div>
+            <div class="stat-info">
+              <div class="stat-label">Total</div>
+              <div class="stat-desc">Active blockers on radar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2 — BLOCKERS (top 3) -->
+    <div>
+      <div class="panel">
+        <div class="st">// blockers <span>phase gates</span></div>
+        <div id="blockerList"><div class="empty">// loading...</div></div>
+      </div>
+    </div>
+
+    <!-- COL 3 — SATELLITE (top 4) -->
+    <div>
+      <div class="panel">
+        <div class="st">// satellite signals <span class="purple">watching</span></div>
+        <div id="satList"><div class="empty">// loading...</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(()=>{
+
+  const BLOCKERS = [
+    {
+      id: "homepage-unlock",
+      status: "locked",
+      title: "antcpu.com Homepage",
+      desc: "Off limits until all pages are live and producing signal.",
+      progress: 0, target: 1, unit: "unlock",
+      tags: ["system"],
+      meta: { gate: "all pages live", eta: "TBD" }
+    },
+    {
+      id: "antcoin-mainnet",
+      status: "pending",
+      title: "Antcoin Genesis Seal",
+      desc: "Block #0 seals Aug 10, 2026. 0/100 wallets · 0/10 nodes · $0/$1,000.",
+      progress: 0, target: 100, unit: "wallets",
+      tags: ["antcoin"],
+      meta: { gate: "100 wallets + 10 nodes + $1,000", eta: "Aug 10 2026" }
+    },
+    {
+      id: "ads-live-demo",
+      status: "pending",
+      title: "Ads Network — First User",
+      desc: "antcpu-ads.vercel.app ready. Pricing tiers + Supabase auth needed.",
+      progress: 60, target: 100, unit: "%",
+      tags: ["marketing"],
+      meta: { gate: "first paying user", eta: "May 2026" }
+    },
+  ];
+
+  async function renderSatellite() {
+    try {
+      const d = await fetch("https://antcpu.com/data/radar.json").then(r=>r.json());
+      const scans = (d.scans||[]).filter(s => s.status !== "archived").slice(0,4);
+      if (!scans.length) {
+        document.getElementById("satList").innerHTML = '<div class="empty">// no signals</div>';
+        return;
+      }
+      document.getElementById("satList").innerHTML = scans.map(s => `
+        <div class="sat-row">
+          <div class="sat-dot ${s.type||"radar"}"></div>
+          <div class="sat-body">
+            <div class="sat-name">${s.name}</div>
+            <div class="sat-note">${(s.note||"").slice(0,80)}</div>
+            <span class="sat-badge ${s.status||"open"}">${s.status||"open"}</span>
+          </div>
+        </div>`).join("");
+    } catch(e) {
+      document.getElementById("satList").innerHTML = '<div class="empty">// fetch failed</div>';
+    }
+  }
+
+  function renderBlockers() {
+    const locked  = BLOCKERS.filter(b => b.status === "locked").length;
+    const pending = BLOCKERS.filter(b => b.status === "pending").length;
+    const clear   = BLOCKERS.filter(b => b.status === "clear").length;
+    document.getElementById("scanLocked").textContent  = locked;
+    document.getElementById("scanPending").textContent = pending;
+    document.getElementById("scanClear").textContent   = clear;
+    document.getElementById("scanTotal").textContent   = BLOCKERS.length;
+    document.getElementById("radarTs").textContent = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) + " ET";
+
+    document.getElementById("blockerList").innerHTML = BLOCKERS.map(b => {
+      const pct = b.target > 1 ? Math.round((b.progress/b.target)*100) : (b.status==="clear"?100:b.progress);
+      return `
+        <div class="blocker ${b.status}">
+          <div class="blocker-title ${b.status}">${b.title}</div>
+          <div class="blocker-desc">${b.desc}</div>
+          ${b.tags.map(t=>`<span class="tag ${t}">${t}</span>`).join("")}
+          <div class="blocker-bar"><div class="blocker-bar-fill ${b.status}" style="width:${pct}%"></div></div>
+          <div class="blocker-meta"><span>gate:</span> ${b.meta.gate} &nbsp;<span>eta:</span> ${b.meta.eta}</div>
+        </div>`;
+    }).join("");
+  }
+
+  renderBlockers();
+  renderSatellite();
+  setInterval(renderBlockers, 10000);
+  setInterval(renderSatellite, 60000);
+
+})();
+</script>
+<script src="footer.js"></script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Employees — antcpu</title>
+<style>
+.layout{max-width:1100px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:14px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.section-title span{color:#d29922;}
+.panel{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:20px;}
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.emp-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;transition:border-color .2s;position:relative;}
+.emp-card:hover{border-color:#333;}
+.emp-card.active{border-left:3px solid #00ff88;}
+.emp-card.standby{border-left:3px solid #d29922;}
+.emp-card.offline{border-left:3px solid #333;opacity:.6;}
+.emp-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.emp-avatar{font-size:1.6rem;flex-shrink:0;}
+.emp-info{flex:1;}
+.emp-name{font-size:.95rem;font-weight:700;color:#e6edf3;font-family:monospace;letter-spacing:1px;}
+.emp-role{font-size:.72rem;color:#555;font-family:monospace;margin-top:2px;}
+.emp-model{font-size:.65rem;color:#333;font-family:monospace;margin-top:2px;}
+.emp-status-badge{font-size:.62rem;font-weight:700;font-family:monospace;padding:2px 8px;border-radius:10px;}
+.emp-status-badge.active{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.emp-status-badge.standby{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+.emp-status-badge.offline{background:#1a1a1a;color:#555;border:1px solid #222;}
+.emp-tasks{margin-bottom:10px;}
+.emp-task{font-size:.72rem;font-family:monospace;color:#555;padding:3px 0;border-bottom:1px solid #111;}
+.emp-task::before{content:'→ ';color:#333;}
+.emp-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #1a1a1a;}
+.emp-ant{font-size:.75rem;font-family:monospace;color:#d29922;}
+.emp-last{font-size:.65rem;font-family:monospace;color:#333;}
+.emp-actions{display:flex;gap:6px;margin-top:10px;}
+.emp-btn{flex:1;padding:6px 10px;border-radius:6px;border:none;font-family:monospace;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.emp-btn-ask{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.emp-btn-ask:hover{background:#00ff8822;}
+.emp-btn-pay{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+.emp-btn-pay:hover{background:#d2992222;}
+.emp-btn-pay:disabled{opacity:.3;cursor:not-allowed;}
+.pay-queue-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#0d0d0d;border-radius:6px;margin-bottom:6px;font-family:monospace;font-size:.75rem;border-left:3px solid #d2992244;}
+.pay-queue-row.confirmed{border-left-color:#00ff8844;opacity:.6;}
+.pay-info{flex:1;}
+.pay-employee{color:#e6edf3;font-weight:700;}
+.pay-task{color:#555;font-size:.68rem;margin-top:2px;}
+.pay-amount{color:#d29922;font-weight:700;margin:0 12px;white-space:nowrap;}
+.pay-confirm-btn{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;padding:4px 12px;border-radius:6px;font-family:monospace;font-size:.7rem;font-weight:700;cursor:pointer;}
+.pay-confirm-btn:hover{background:#00ff8822;}
+.pay-status{font-size:.65rem;color:#555;font-family:monospace;}
+/* 3-OPTION MODAL */
+.ask-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;}
+.ask-modal.open{display:flex;}
+.ask-box{background:#111;border:1px solid #222;border-radius:12px;padding:24px;width:100%;max-width:580px;display:flex;flex-direction:column;gap:12px;max-height:90vh;overflow-y:auto;}
+.ask-header{display:flex;justify-content:space-between;align-items:center;}
+.ask-title{font-family:monospace;font-size:.9rem;color:#e6edf3;font-weight:700;}
+.ask-close{background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;padding:4px;}
+.ask-close:hover{color:#f85149;}
+.ask-employee{font-size:.75rem;font-family:monospace;color:#555;padding:8px 12px;background:#0d0d0d;border-radius:6px;}
+/* MODE SELECTOR */
+.mode-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.mode-btn{padding:12px 8px;border-radius:8px;border:1px solid #1f1f1f;background:#0d0d0d;color:#555;font-family:monospace;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;line-height:1.6;}
+.mode-btn:hover{border-color:#333;color:#e6edf3;}
+.mode-btn.selected{border-color:#00ff8844;color:#00ff88;background:#00ff8808;}
+.mode-icon{font-size:1.2rem;display:block;margin-bottom:4px;}
+/* PANELS */
+.mode-panel{display:none;flex-direction:column;gap:10px;}
+.mode-panel.active{display:flex;}
+.ask-textarea{width:100%;background:#0d0d0d;border:1px solid #222;border-radius:8px;color:#c9d1d9;font-family:monospace;font-size:.82rem;padding:10px 12px;outline:none;min-height:120px;resize:vertical;}
+.ask-textarea:focus{border-color:#00ff88;}
+.tpl-select-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;}
+.tpl-select-item{padding:10px 12px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:6px;cursor:pointer;font-family:monospace;font-size:.75rem;color:#555;transition:all .2s;}
+.tpl-select-item:hover{border-color:#333;color:#e6edf3;}
+.tpl-select-item.selected{border-color:#00ff8844;color:#00ff88;background:#00ff8808;}
+.tpl-select-name{font-weight:700;color:#e6edf3;margin-bottom:2px;}
+.tpl-select-desc{font-size:.65rem;color:#555;}
+.ai-prompt-input{width:100%;background:#0d0d0d;border:1px solid #222;border-radius:8px;color:#c9d1d9;font-family:monospace;font-size:.82rem;padding:10px 12px;outline:none;}
+.ai-prompt-input:focus{border-color:#00ff88;}
+.ask-response{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:12px;font-family:monospace;font-size:.78rem;color:#c9d1d9;line-height:1.6;min-height:60px;white-space:pre-wrap;display:none;}
+.ask-response.show{display:block;}
+.ask-send-btn{background:#00ff88;color:#0a0a0a;border:none;border-radius:8px;padding:10px;font-family:monospace;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.ask-send-btn:hover{background:#00cc6a;}
+.ask-send-btn:disabled{opacity:.4;cursor:not-allowed;}
+.stats-row{display:flex;gap:16px;flex-wrap:wrap;}
+.stat-box{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:12px 16px;flex:1;min-width:120px;}
+.stat-val{font-size:1.4rem;font-weight:700;font-family:monospace;color:#00ff88;}
+.stat-label{font-size:.65rem;font-family:monospace;color:#555;margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
+.api-notice{font-size:.72rem;font-family:monospace;color:#555;padding:10px 14px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;border-left:3px solid #d2992244;}
+.status-bar{display:none;font-size:.75rem;font-family:monospace;padding:8px 12px;border-radius:6px;}
+.status-bar.show{display:block;}
+.status-bar.ok{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.status-bar.err{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.status-bar.loading{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+
+/* SHIELD POD */
+.shield-pod{background:#0d0d0d;border:1px solid #00ff8820;border-radius:10px;padding:16px;margin-bottom:12px;}
+.shield-pod-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer;}
+.shield-pod-title{font-size:.85rem;font-family:monospace;font-weight:700;color:#00ff88;letter-spacing:2px;}
+.shield-pod-counter{font-size:1.1rem;font-family:monospace;font-weight:700;color:#00ff88;}
+.shield-pod-counter span{color:#555;}
+.shield-pod-sub{font-size:.6rem;font-family:monospace;color:#555;margin-top:2px;}
+.shield-agents{display:none;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;}
+.shield-agents.open{display:grid;}
+.shield-agent{background:#111;border:1px solid #1a1a1a;border-radius:6px;padding:10px 8px;text-align:center;transition:border-color .2s;}
+.shield-agent:hover{border-color:#00ff8830;}
+.shield-agent.running{border-color:#00ff8850;background:#00ff8808;}
+.shield-agent.task{border-color:#d2992250;background:#d2992208;}
+.shield-agent-id{font-size:.65rem;font-family:monospace;color:#00ff88;font-weight:700;margin-bottom:4px;}
+.shield-agent-mode{font-size:.55rem;font-family:monospace;color:#555;text-transform:uppercase;letter-spacing:1px;}
+.shield-agent-mode.running{color:#00ff88;}
+.shield-agent-mode.task{color:#d29922;}
+.shield-agent-jobs{font-size:.55rem;font-family:monospace;color:#333;margin-top:3px;}
+.shield-launch-btn{font-size:.6rem;font-family:monospace;padding:3px 8px;border-radius:3px;border:1px solid #00ff8830;background:transparent;color:#00ff88;cursor:pointer;margin-top:6px;transition:all .2s;}
+.shield-launch-btn:hover{background:#00ff8815;}
+@media(max-width:480px){.shield-agents{grid-template-columns:repeat(2,1fr);}}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "employees", root: "./" }</script>
+<script src="nav.js"></script>
+
+<div class="layout">
+
+  <!-- STATS -->
+  <div class="panel">
+    <div class="section-title">// virtual office <span id="office-status">loading...</span></div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="stat-active">0</div><div class="stat-label">active agents</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-standby">0</div><div class="stat-label">on standby</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#d29922" id="stat-ant">0</div><div class="stat-label">ANT earned total</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:#d29922" id="stat-pending">0</div><div class="stat-label">pay pending</div></div>
+    </div>
+  </div>
+
+  <!-- EMPLOYEE ROSTER -->
+  <div class="panel">
+    <div class="section-title">// employee roster <span>antcpu AI agents</span></div>
+    <script>
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        document.write('<div class="api-notice">⚠ AI responses require a Google AI Studio API key — set via ANTAI.config('google', { key: '...' }) in console</div>');
+      }
+    </script>
+    <br>
+    <div class="emp-grid" id="empGrid"></div>
+  </div>
+
+  <!-- ANT PAY QUEUE -->
+  <div class="panel">
+    <div class="section-title">// ANT pay queue <span>human-in-the-loop · antchain node confirmation</span></div>
+    <div id="payQueue"><div style="text-align:center;color:#333;font-size:.8rem;padding:20px;font-family:monospace;">// no pending pay events</div></div>
+  </div>
+
+</div>
+
+
+  <!-- SHIELD POD -->
+  <div class="panel">
+    <div class="section-title">// SHIELD pod <span id="shieldStatus">loading...</span></div>
+    <div class="shield-pod">
+      <div class="shield-pod-header" onclick="toggleShield()">
+        <div>
+          <div class="shield-pod-title">⬡ SHIELD</div>
+          <div class="shield-pod-sub">antchain hybrid agents · crypto-native · warehouse-resident</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="shield-pod-counter"><span>total </span>10<span> / working </span><span id="shieldWorking">0</span></div>
+          <div class="shield-pod-sub" id="shieldModeLabel">all idle · click to expand</div>
+        </div>
+      </div>
+      <div class="shield-agents" id="shieldAgents"></div>
+    </div>
+  </div>
+
+<!-- ASK MODAL — 3 OPTION FLOW -->
+<div class="ask-modal" id="askModal">
+  <div class="ask-box">
+
+    <!-- HEADER -->
+    <div class="ask-header">
+      <div class="ask-title" id="askTitle">// ask agent</div>
+      <button class="ask-close" onclick="closeAsk()">✕</button>
+    </div>
+    <div class="ask-employee" id="askEmployee"></div>
+
+    <!-- MODE SELECTOR -->
+    <div class="mode-row">
+      <button class="mode-btn selected" id="modeBlank" onclick="setMode('blank')">
+        <span class="mode-icon">📝</span>BLANK<br>START
+      </button>
+      <button class="mode-btn" id="modeTemplate" onclick="setMode('template')">
+        <span class="mode-icon">📋</span>USE<br>TEMPLATE
+      </button>
+      <button class="mode-btn" id="modeAI" onclick="setMode('ai')">
+        <span class="mode-icon">🤖</span>AI<br>ASSISTED
+      </button>
+    </div>
+
+    <!-- PANEL 1: BLANK -->
+    <div class="mode-panel active" id="panelBlank">
+      <textarea class="ask-textarea" id="askPromptBlank" placeholder="Type your message to this agent..."></textarea>
+    </div>
+
+    <!-- PANEL 2: TEMPLATE -->
+    <div class="mode-panel" id="panelTemplate">
+      <div class="tpl-select-list" id="tplSelectList">
+        <div style="color:#333;font-family:monospace;font-size:.75rem;padding:10px;">// loading templates...</div>
+      </div>
+      <textarea class="ask-textarea" id="askPromptTemplate" placeholder="Edit template before sending..." style="min-height:80px;"></textarea>
+    </div>
+
+    <!-- PANEL 3: AI ASSISTED -->
+    <div class="mode-panel" id="panelAI">
+      <input class="ai-prompt-input" id="aiPromptInput" type="text" placeholder="Describe what you need — e.g. follow up with a client who went quiet...">
+      <textarea class="ask-textarea" id="askPromptAI" placeholder="AI will generate draft here — review before sending..." style="min-height:80px;"></textarea>
+    </div>
+
+    <!-- RESPONSE -->
+    <div class="ask-response" id="askResponse"></div>
+    <div class="status-bar" id="askStatus"></div>
+
+    <!-- ACTIONS -->
+    <div style="display:flex;gap:8px;">
+      <button class="ask-send-btn" id="askSendBtn" onclick="sendAsk()" style="flex:1;">⚡ ask</button>
+      <button class="ask-send-btn" id="aiGenerateBtn" onclick="generateAI()" style="display:none;background:#d29922;flex:1;">✨ generate</button>
+    </div>
+
+  </div>
+</div>
+<script>
+(()=>{
+  let currentEmpId = null;
+  let currentMode  = 'blank';
+  let selectedTplId = null;
+
+  // ── MODE SWITCHER ──────────────────────────────────────
+  window.setMode = (mode) => {
+    currentMode = mode;
+    ['blank','template','ai'].forEach(m => {
+      document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('selected', m === mode);
+      document.getElementById('panel' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('active', m === mode);
+    });
+    document.getElementById('aiGenerateBtn').style.display = mode === 'ai' ? 'block' : 'none';
+    if (mode === 'template') loadTemplates();
+  };
+
+  // ── LOAD TEMPLATES INTO SELECTOR ──────────────────────
+  const loadTemplates = () => {
+    const templates = ANT.store.get('antcpu_templates', []);
+    const emp = currentEmpId ? (typeof ANTAI !== 'undefined' ? ANTAI.EMPLOYEES.find(e => e.id === currentEmpId) : null) : null;
+    const agentName = emp ? emp.id : null;
+    const filtered = agentName ? templates.filter(t => t.agent === agentName || t.type === 'email') : templates;
+    const list = document.getElementById('tplSelectList');
+    if (!filtered.length) {
+      list.innerHTML = '<div style="color:#333;font-family:monospace;font-size:.75rem;padding:10px;">// no templates found — <a href="templates.html" style="color:#d29922;">add templates</a></div>';
+      return;
+    }
+    list.innerHTML = filtered.map(t => `
+      <div class="tpl-select-item" id="tplitem-${t.id}" onclick="selectTpl('${t.id}','${(t.body||'').replace(/'/g,"\\'")}')">
+        <div class="tpl-select-name">${t.name}</div>
+        <div class="tpl-select-desc">${t.desc}</div>
+      </div>
+    `).join('');
+  };
+
+  window.selectTpl = (id, body) => {
+    selectedTplId = id;
+    document.querySelectorAll('.tpl-select-item').forEach(el => el.classList.remove('selected'));
+    const el = document.getElementById('tplitem-' + id);
+    if (el) el.classList.add('selected');
+    document.getElementById('askPromptTemplate').value = body;
+  };
+
+  // ── AI GENERATE ────────────────────────────────────────
+  window.generateAI = async () => {
+    const prompt = document.getElementById('aiPromptInput').value.trim();
+    if (!prompt) { ANT.status('askStatus','err','✗ enter a prompt first'); return; }
+    const btn = document.getElementById('aiGenerateBtn');
+    btn.disabled = true;
+    ANT.status('askStatus','loading','✨ generating draft...');
+    try {
+      if (typeof ANTAI !== 'undefined') {
+        const result = await ANTAI.employeeAsk(currentEmpId, 'Draft a response for: ' + prompt);
+        document.getElementById('askPromptAI').value = result.response;
+        ANT.status('askStatus','ok','✓ draft ready — review and send');
+      } else {
+        document.getElementById('askPromptAI').value = '// ANTAI not loaded — API key required';
+        ANT.status('askStatus','err','✗ ANTAI not available');
+      }
+    } catch(e) {
+      ANT.status('askStatus','err','✗ ' + e.message);
+    }
+    btn.disabled = false;
+  };
+
+  // ── GET ACTIVE PROMPT ──────────────────────────────────
+  const getPrompt = () => {
+    if (currentMode === 'blank')    return document.getElementById('askPromptBlank').value.trim();
+    if (currentMode === 'template') return document.getElementById('askPromptTemplate').value.trim();
+    if (currentMode === 'ai')       return document.getElementById('askPromptAI').value.trim();
+    return '';
+  };
+
+  // ── RENDER EMPLOYEES ───────────────────────────────────
+  function renderEmployees() {
+    if (typeof ANTAI === 'undefined') { setTimeout(renderEmployees, 200); return; }
+    const grid = document.getElementById('empGrid');
+    const emps = ANTAI.EMPLOYEES;
+    grid.innerHTML = emps.map(e => `
+      <div class="emp-card ${e.status}">
+        <div class="emp-top">
+          <div class="emp-avatar">${e.avatar}</div>
+          <div class="emp-info">
+            <div class="emp-name">${e.name}</div>
+            <div class="emp-role">${e.role}</div>
+            <div class="emp-model">// ${ANTAI.PROVIDERS[e.model]?.name || e.model}</div>
+          </div>
+          <span class="emp-status-badge ${e.status}">${e.status.toUpperCase()}</span>
+        </div>
+        <div class="emp-tasks">
+          ${e.tasks.map(t => `<div class="emp-task">${t}</div>`).join('')}
+        </div>
+        <div class="emp-footer">
+          <div class="emp-ant">⚡ ${e.ant_earned} ANT earned</div>
+          <div class="emp-last">${e.last_active ? 'last: ' + new Date(e.last_active).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : 'never active'}</div>
+        </div>
+        <div class="emp-actions">
+          <button class="emp-btn emp-btn-ask" onclick="openAsk('${e.id}')">💬 ask</button>
+          <button class="emp-btn emp-btn-pay" onclick="queuePay('${e.id}')" ${e.status==='offline'?'disabled':''}>⚡ pay ANT</button>
+          <button class="emp-btn" onclick="openAgentDrawer('${e.id}')" style="background:#58a6ff11;color:#58a6ff;border:1px solid #58a6ff33;">🔗 open</button>
+        </div>
+      </div>
+    `).join('');
+    updateStats();
+  }
+
+  function updateStats() {
+    if (typeof ANTAI === 'undefined') return;
+    const emps = ANTAI.EMPLOYEES;
+    document.getElementById('stat-active').textContent  = emps.filter(e=>e.status==='active').length;
+    document.getElementById('stat-standby').textContent = emps.filter(e=>e.status==='standby').length;
+    document.getElementById('stat-ant').textContent     = emps.reduce((s,e)=>s+e.ant_earned,0);
+    const queue = ANT.store.get('antcpu_ant_pay_queue',[]);
+    document.getElementById('stat-pending').textContent = queue.filter(p=>p.status==='pending').length;
+    document.getElementById('office-status').textContent = emps.filter(e=>e.status==='active').length + ' agents online';
+  }
+
+  function renderPayQueue() {
+    const queue = ANT.store.get('antcpu_ant_pay_queue',[]);
+    const el = document.getElementById('payQueue');
+    if (!queue.length) {
+      el.innerHTML = '<div style="text-align:center;color:#333;font-size:.8rem;padding:20px;font-family:monospace;">// no pending pay events</div>';
+      return;
+    }
+    el.innerHTML = queue.slice().reverse().map(p => `
+      <div class="pay-queue-row ${p.status}">
+        <div class="pay-info">
+          <div class="pay-employee">${p.employee} — ${p.role}</div>
+          <div class="pay-task">${p.task}</div>
+        </div>
+        <div class="pay-amount">⚡ ${p.amount} ANT</div>
+        ${p.status==='pending'
+          ? `<button class="pay-confirm-btn" onclick="confirmPay('${p.id}')">✓ confirm</button>`
+          : `<span class="pay-status">✅ confirmed</span>`}
+      </div>
+    `).join('');
+  }
+
+  // ── MODAL ──────────────────────────────────────────────
+  window.openAsk = (empId) => {
+    currentEmpId = empId;
+    selectedTplId = null;
+    if (typeof ANTAI === 'undefined') return;
+    const emp = ANTAI.EMPLOYEES.find(e=>e.id===empId);
+    document.getElementById('askTitle').textContent = '// ask ' + emp.name;
+    document.getElementById('askEmployee').textContent = emp.avatar + ' ' + emp.name + ' — ' + emp.role;
+    document.getElementById('askPromptBlank').value = '';
+    document.getElementById('askPromptTemplate').value = '';
+    document.getElementById('askPromptAI').value = '';
+    document.getElementById('aiPromptInput').value = '';
+    document.getElementById('askResponse').className = 'ask-response';
+    document.getElementById('askStatus').className = 'status-bar';
+    setMode('blank');
+    document.getElementById('askModal').classList.add('open');
+  };
+
+  window.closeAsk = () => {
+    document.getElementById('askModal').classList.remove('open');
+    currentEmpId = null;
+  };
+
+  window.sendAsk = async () => {
+    const prompt = getPrompt();
+    if (!prompt) { ANT.status('askStatus','err','✗ nothing to send'); return; }
+    const btn = document.getElementById('askSendBtn');
+    btn.disabled = true;
+    ANT.status('askStatus','loading','asking ' + currentEmpId + '...');
+    document.getElementById('askResponse').className = 'ask-response';
+    try {
+      const result = await ANTAI.employeeAsk(currentEmpId, prompt);
+      document.getElementById('askResponse').textContent = result.response;
+      document.getElementById('askResponse').className = 'ask-response show';
+      ANT.status('askStatus','ok','✓ response received');
+      setTimeout(()=>document.getElementById('askStatus').classList.remove('show'),3000);
+      renderEmployees();
+    } catch(e) {
+      ANT.status('askStatus','err','✗ ' + e.message);
+    }
+    btn.disabled = false;
+  };
+
+  window.queuePay = (empId) => {
+    if (typeof ANTAI === 'undefined') return;
+    const task = prompt('Describe the task this agent completed:');
+    if (!task) return;
+    ANTAI.queuePay(empId, task);
+    renderPayQueue();
+    updateStats();
+  };
+
+  window.confirmPay = (payId) => {
+    if (typeof ANTAI === 'undefined') return;
+    ANTAI.confirmPay(payId, 'human');
+    renderPayQueue();
+    renderEmployees();
+  };
+
+  document.getElementById('askModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('askModal')) closeAsk();
+  });
+
+  // boot
+  setTimeout(() => { renderEmployees(); renderPayQueue(); }, 300);
+  setInterval(() => { renderPayQueue(); updateStats(); }, 10000);
+
+  // ── SHIELD POD ─────────────────────────────────────────
+  const SHIELD_AGENTS = Array.from({length:10},(_,i)=>({
+    id: 'S-' + String(i+1).padStart(2,'0'),
+    mode: 'idle',
+    jobs: 0,
+  }));
+
+  const getShieldLedger = () => ANT.store.get('antcpu_shield_ledger', []);
+
+  const renderShield = () => {
+    const ledger  = getShieldLedger();
+    const working = SHIELD_AGENTS.filter(a => a.mode !== 'idle').length;
+    document.getElementById('shieldWorking').textContent = working;
+    document.getElementById('shieldStatus').textContent  = working + ' working · ' + (10 - working) + ' idle';
+    document.getElementById('shieldModeLabel').textContent = working > 0
+      ? working + ' agent' + (working>1?'s':'') + ' running · click to expand'
+      : 'all idle · click to expand';
+
+    SHIELD_AGENTS.forEach(a => {
+      a.jobs = ledger.filter(l => l.agent === a.id && l.action === 'mode_set' && l.detail !== 'idle').length;
+    });
+
+    const grid = document.getElementById('shieldAgents');
+    grid.innerHTML = SHIELD_AGENTS.map(a => `
+      <div class="shield-agent ${a.mode}">
+        <div class="shield-agent-id">${a.id}</div>
+        <div class="shield-agent-mode ${a.mode}">● ${a.mode}</div>
+        <div class="shield-agent-jobs">${a.jobs} job${a.jobs!==1?'s':''}</div>
+        <button class="shield-launch-btn" onclick="launchShield('${a.id}')">launch</button>
+      </div>
+    `).join('');
+  };
+
+  window.toggleShield = () => {
+    document.getElementById('shieldAgents').classList.toggle('open');
+  };
+
+  window.launchShield = (id) => {
+    window.location.href = 'antchain.html?agent=' + id;
+  };
+
+  renderShield();
+
+})();
+</script>
+<script src="footer.js"></script>
+
+<!-- AGENT DETAIL DRAWER -->
+<div id="agent-drawer-overlay" style="display:none;position:fixed;inset:0;background:#00000088;z-index:1000;" onclick="closeAgentDrawer()"></div>
+
+<div id="agent-drawer" style="
+  position:fixed; right:-420px; top:0; width:380px; height:100vh;
+  background:#0d0d0d; border-left:1px solid #1f1f1f;
+  z-index:1001; transition:right .25s cubic-bezier(.4,0,.2,1);
+  display:flex; flex-direction:column; font-family:monospace;
+  overflow-y:auto;
+">
+  <div style="padding:20px 20px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1a1a1a;">
+    <span style="font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:#555;">// agent</span>
+    <button onclick="closeAgentDrawer()" style="background:none;border:none;color:#555;cursor:pointer;font-size:1.1rem;padding:4px 8px;">✕</button>
+  </div>
+
+  <div style="padding:20px;flex:1;">
+    <!-- STATUS BAR -->
+    <div id="ad-status-bar" style="height:3px;border-radius:2px;margin-bottom:20px;"></div>
+
+    <!-- AVATAR + NAME -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <div id="ad-avatar" style="font-size:2rem;width:52px;height:52px;background:#111;border:1px solid #1f1f1f;border-radius:10px;display:flex;align-items:center;justify-content:center;"></div>
+      <div>
+        <div id="ad-name" style="font-size:1rem;font-weight:700;color:#e6edf3;"></div>
+        <div id="ad-role" style="font-size:.72rem;color:#555;margin-top:2px;"></div>
+        <div id="ad-model" style="font-size:.65rem;color:#333;margin-top:2px;"></div>
+      </div>
+      <span id="ad-badge" style="margin-left:auto;font-size:.62rem;padding:3px 9px;border-radius:10px;font-weight:700;"></span>
+    </div>
+
+    <!-- STATS ROW -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;">
+      <div style="background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+        <div id="ad-ant" style="font-size:1.1rem;font-weight:700;color:#d29922;">—</div>
+        <div style="font-size:.58rem;color:#555;margin-top:2px;">ANT earned</div>
+      </div>
+      <div style="background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+        <div id="ad-tasks-count" style="font-size:1.1rem;font-weight:700;color:#58a6ff;">—</div>
+        <div style="font-size:.58rem;color:#555;margin-top:2px;">tasks</div>
+      </div>
+      <div style="background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+        <div id="ad-last" style="font-size:.72rem;font-weight:700;color:#c9d1d9;">—</div>
+        <div style="font-size:.58rem;color:#555;margin-top:2px;">last active</div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div style="background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:20px;">
+      <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:10px;">// current tasks</div>
+      <div id="ad-tasks-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+
+    <!-- PROGRESS RING PLACEHOLDER -->
+    <div style="background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="22" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+        <circle id="ad-ring" cx="26" cy="26" r="22" fill="none" stroke="#00ff88" stroke-width="4"
+          stroke-dasharray="138" stroke-dashoffset="138"
+          stroke-linecap="round" transform="rotate(-90 26 26)"
+          style="transition:stroke-dashoffset .6s ease;"/>
+      </svg>
+      <div>
+        <div id="ad-progress-label" style="font-size:.85rem;color:#c9d1d9;font-weight:600;">— %</div>
+        <div style="font-size:.62rem;color:#555;margin-top:2px;">mission progress</div>
+        <div style="font-size:.58rem;color:#333;margin-top:4px;">// calendar feed coming</div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <a id="ad-open-btn" href="#" target="_blank" style="display:block;padding:11px 16px;background:#58a6ff10;border:1px solid #58a6ff30;border-radius:8px;color:#58a6ff;text-decoration:none;font-size:.82rem;text-align:center;">↗ Open Agent Page</a>
+      <button onclick="openAskFromDrawer()" style="padding:11px 16px;background:#00ff8810;border:1px solid #00ff8830;border-radius:8px;color:#00ff88;font-family:monospace;font-size:.82rem;cursor:pointer;">💬 Ask Agent</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@media (max-width: 600px) {
+  #agent-drawer {
+    right: auto !important;
+    left: 0 !important;
+    bottom: -100vh !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 80vh !important;
+    border-left: none !important;
+    border-top: 1px solid #1f1f1f !important;
+    border-radius: 16px 16px 0 0 !important;
+    transition: bottom .25s cubic-bezier(.4,0,.2,1) !important;
+  }
+  #agent-drawer.open { bottom: 0 !important; right: auto !important; }
+}
+</style>
+
+<script>
+(function(){
+  var statusColors = { active:'#00ff88', standby:'#d29922', offline:'#333' };
+  var statusBg     = { active:'#00ff8818', standby:'#d2992218', offline:'#ffffff08' };
+  var statusBorder = { active:'#00ff8833', standby:'#d2992233', offline:'#222' };
+  var currentAgentId = null;
+
+  window.openAgentDrawer = function(id) {
+    if (typeof ANTAI === 'undefined') return;
+    const e = ANTAI.EMPLOYEES.find(x => x.id === id);
+    if (!e) return;
+    currentAgentId = id;
+
+    var color  = statusColors[e.status] || '#333';
+    var pct    = e.status === 'active' ? 72 : e.status === 'standby' ? 35 : 10;
+    var offset = 138 - (138 * pct / 100);
+
+    document.getElementById('ad-status-bar').style.background = color;
+    document.getElementById('ad-avatar').textContent  = e.avatar;
+    document.getElementById('ad-name').textContent    = e.name;
+    document.getElementById('ad-role').textContent    = e.role;
+    document.getElementById('ad-model').textContent   = '// ' + (ANTAI.PROVIDERS[e.model]?.name || e.model);
+    document.getElementById('ad-ant').textContent     = e.ant_earned + ' ⚡';
+    document.getElementById('ad-tasks-count').textContent = e.tasks.length;
+    document.getElementById('ad-last').textContent    = e.last_active
+      ? new Date(e.last_active).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
+      : 'never';
+
+    // Badge
+    var badge = document.getElementById('ad-badge');
+    badge.textContent = e.status.toUpperCase();
+    badge.style.background = statusBg[e.status];
+    badge.style.color = color;
+    badge.style.border = '1px solid ' + statusBorder[e.status];
+
+    // Tasks
+    var tl = document.getElementById('ad-tasks-list');
+    tl.innerHTML = e.tasks.length
+      ? e.tasks.map(t => '<div style="font-size:.72rem;color:#888;padding:5px 8px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:5px;">▸ '+t+'</div>').join('')
+      : '<div style="font-size:.68rem;color:#333;">no tasks assigned</div>';
+
+    // Progress ring
+    document.getElementById('ad-ring').style.strokeDashoffset = offset;
+    document.getElementById('ad-ring').style.stroke = color;
+    document.getElementById('ad-progress-label').textContent = pct + '%';
+
+    // Open link
+    document.getElementById('ad-open-btn').href = 'agents/' + id + '/';
+
+    // Show drawer
+    var drawer  = document.getElementById('agent-drawer');
+    var overlay = document.getElementById('agent-drawer-overlay');
+    overlay.style.display = 'block';
+    requestAnimationFrame(function(){
+      drawer.style.right = '0px';
+      drawer.classList.add('open');
+    });
+  };
+
+  window.closeAgentDrawer = function() {
+    var drawer  = document.getElementById('agent-drawer');
+    var overlay = document.getElementById('agent-drawer-overlay');
+    if (window.innerWidth <= 600) {
+      drawer.style.bottom = '-100vh';
+    } else {
+      drawer.style.right = '-420px';
+    }
+    drawer.classList.remove('open');
+    setTimeout(function(){ overlay.style.display = 'none'; }, 260);
+  };
+
+  window.openAskFromDrawer = function() {
+    closeAgentDrawer();
+    setTimeout(function(){ if (currentAgentId) openAsk(currentAgentId); }, 280);
+  };
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeAgentDrawer();
+  });
+})();
+</script>
+
+</body>
+</html>

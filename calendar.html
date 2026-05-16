@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calendar — antcpu</title>
+<style>
+.layout{max-width:1100px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:14px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.section-title span{color:#d29922;}
+.panel{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:20px;}
+
+/* CALENDAR GRID */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-nav-btn{background:#0d0d0d;border:1px solid #1f1f1f;color:#555;font-family:monospace;font-size:.82rem;padding:6px 14px;border-radius:6px;cursor:pointer;}
+.cal-nav-btn:hover{color:#e6edf3;border-color:#333;}
+.cal-month{font-family:monospace;font-size:1rem;font-weight:700;color:#e6edf3;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{text-align:center;font-family:monospace;font-size:.65rem;color:#555;text-transform:uppercase;padding:6px 0;letter-spacing:1px;}
+.cal-day{min-height:64px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:6px;padding:6px;cursor:pointer;transition:border-color .2s;position:relative;}
+.cal-day:hover{border-color:#333;}
+.cal-day.today{border-color:#00ff8844;}
+.cal-day.other-month{opacity:.3;}
+.cal-day.has-events{border-color:#d2992244;}
+.cal-day-num{font-family:monospace;font-size:.72rem;color:#555;}
+.cal-day.today .cal-day-num{color:#00ff88;font-weight:700;}
+.cal-dot{width:6px;height:6px;border-radius:50%;background:#d29922;display:inline-block;margin:1px;}
+
+/* EVENT LIST */
+.event-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#0d0d0d;border-radius:6px;margin-bottom:6px;border-left:3px solid #d2992244;font-family:monospace;}
+.event-row.web{border-left-color:#58a6ff44;}
+.event-row.live{border-left-color:#00ff8844;}
+.event-row.aria{border-left-color:#bc8cff44;}
+.event-row.ai{border-left-color:#00ff8844;}
+.event-row.scout{border-left-color:#58a6ff44;}
+.event-info{flex:1;}
+.event-title{font-size:.82rem;color:#e6edf3;font-weight:700;}
+.event-meta{font-size:.65rem;color:#555;margin-top:2px;}
+.event-actions{display:flex;gap:6px;}
+.event-btn{padding:4px 10px;border-radius:6px;border:none;font-family:monospace;font-size:.68rem;font-weight:700;cursor:pointer;}
+.event-btn-edit{background:#1a1a1a;color:#555;border:1px solid #222;}
+.event-btn-edit:hover{color:#e6edf3;}
+.event-btn-del{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.event-btn-del:hover{background:#f8514922;}
+.empty-state{text-align:center;color:#333;font-size:.8rem;padding:30px;font-family:monospace;}
+
+/* MODAL */
+.cal-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;}
+.cal-modal.open{display:flex;}
+.cal-box{background:#111;border:1px solid #222;border-radius:12px;padding:24px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;}
+.cal-modal-header{display:flex;justify-content:space-between;align-items:center;}
+.cal-modal-title{font-family:monospace;font-size:.9rem;color:#e6edf3;font-weight:700;}
+.cal-close{background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;}
+.cal-close:hover{color:#f85149;}
+.cal-field{display:flex;flex-direction:column;gap:4px;}
+.cal-label{font-size:.65rem;font-family:monospace;color:#555;text-transform:uppercase;letter-spacing:1px;}
+.cal-input{background:#0d0d0d;border:1px solid #222;border-radius:6px;color:#c9d1d9;font-family:monospace;font-size:.82rem;padding:8px 12px;outline:none;width:100%;}
+.cal-input:focus{border-color:#00ff88;}
+.cal-select{background:#0d0d0d;border:1px solid #222;border-radius:6px;color:#c9d1d9;font-family:monospace;font-size:.82rem;padding:8px 12px;outline:none;width:100%;}
+.cal-modal-actions{display:flex;gap:8px;}
+.cal-modal-btn{flex:1;padding:10px;border-radius:8px;border:none;font-family:monospace;font-size:.82rem;font-weight:700;cursor:pointer;}
+.cal-modal-btn.primary{background:#00ff88;color:#0a0a0a;}
+.cal-modal-btn.primary:hover{background:#00cc6a;}
+.cal-modal-btn.secondary{background:#1a1a1a;color:#555;border:1px solid #222;}
+.cal-modal-btn.secondary:hover{color:#e6edf3;}
+.cal-modal-btn.danger{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.conflict-warn{background:#f8514911;color:#f85149;border:1px solid #f8514933;border-radius:6px;padding:8px 12px;font-family:monospace;font-size:.72rem;display:none;}
+.conflict-warn.show{display:block;}
+.status-bar{display:none;font-size:.75rem;font-family:monospace;padding:8px 12px;border-radius:6px;}
+.status-bar.show{display:block;}
+.status-bar.ok{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.status-bar.err{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.add-btn{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;padding:6px 16px;border-radius:8px;font-family:monospace;font-size:.75rem;font-weight:700;cursor:pointer;}
+.add-btn:hover{background:#00ff8822;}
+.scout-btn{background:#d2992211;color:#d29922;border:1px solid #d2992233;padding:6px 16px;border-radius:8px;font-family:monospace;font-size:.75rem;font-weight:700;cursor:pointer;}
+.scout-btn:hover{background:#d2992222;}
+
+/* DAY ZOOM VIEW */
+.day-view{display:none;flex-direction:column;gap:12px;}
+.day-view.open{display:flex;}
+.day-view-header{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+.day-view-back{background:#0d0d0d;border:1px solid #1f1f1f;color:#555;font-family:monospace;font-size:.75rem;padding:5px 12px;border-radius:6px;cursor:pointer;}
+.day-view-back:hover{color:#e6edf3;border-color:#333;}
+.day-view-title{font-family:monospace;font-size:1rem;font-weight:700;color:#e6edf3;}
+.day-view-sub{font-family:monospace;font-size:.65rem;color:#555;}
+.time-block{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #1a1a1a;}
+.time-block:last-child{border-bottom:none;}
+.time-label{font-family:monospace;font-size:.65rem;color:#555;min-width:44px;padding-top:2px;}
+.time-event{flex:1;background:#0d0d0d;border-radius:6px;padding:10px 12px;border-left:3px solid #d2992244;}
+.time-event.live{border-left-color:#00ff8844;}
+.time-event.web{border-left-color:#58a6ff44;}
+.time-event.aria{border-left-color:#bc8cff44;}
+.time-event.ai{border-left-color:#00ff8844;}
+.time-event.scout{border-left-color:#58a6ff44;}
+.time-event-title{font-family:monospace;font-size:.82rem;color:#e6edf3;font-weight:700;}
+.time-event-meta{font-family:monospace;font-size:.65rem;color:#555;margin-top:3px;}
+.time-event-actions{display:flex;gap:6px;margin-top:8px;}
+.time-empty{flex:1;background:#0d0d0d;border-radius:6px;padding:10px 12px;border:1px dashed #1a1a1a;font-family:monospace;font-size:.7rem;color:#333;cursor:pointer;transition:all .2s;}
+.time-empty:hover{border-color:#333;color:#555;}
+.day-no-events{background:#0d0d0d;border:1px dashed #1f1f1f;border-radius:8px;padding:24px;text-align:center;}
+.day-no-events-msg{font-family:monospace;font-size:.8rem;color:#444;margin-bottom:14px;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: 'calendar', root: './' }</script>
+<script src="nav.js"></script>
+
+<div class="layout">
+
+  <!-- CALENDAR -->
+  <div class="panel">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="prevMonth()">← prev</button>
+      <div class="cal-month" id="calMonth"></div>
+      <button class="cal-nav-btn" onclick="nextMonth()">next →</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- EVENTS -->
+  <div class="panel">
+    <div class="section-title">
+      // events <span id="evtCount">0 events</span>
+      <span style="display:flex;gap:8px;">
+        <button class="scout-btn" onclick="scoutScan()">🔭 scout scan</button>
+        <button class="add-btn" onclick="openAdd()">+ add event</button>
+      </span>
+    </div>
+    <div id="eventList"></div>
+  </div>
+
+</div>
+
+
+  <!-- DAY ZOOM VIEW -->
+  <div class="panel" id="dayViewPanel" style="display:none;">
+    <div class="day-view open" id="dayView">
+      <div class="day-view-header">
+        <button class="day-view-back" onclick="closeDayView()">← month</button>
+        <div>
+          <div class="day-view-title" id="dayViewTitle"></div>
+          <div class="day-view-sub" id="dayViewSub"></div>
+        </div>
+        <button class="add-btn" style="margin-left:auto;" onclick="openAddFromDay()">+ add event</button>
+      </div>
+      <div id="dayTimeBlocks"></div>
+    </div>
+  </div>
+
+<!-- EVENT MODAL -->
+<div class="cal-modal" id="calModal">
+  <div class="cal-box">
+    <div class="cal-modal-header">
+      <div class="cal-modal-title" id="calModalTitle">// add event</div>
+      <button class="cal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="cal-field">
+      <div class="cal-label">title</div>
+      <input class="cal-input" id="evtTitle" type="text" placeholder="Event title...">
+    </div>
+    <div class="cal-field">
+      <div class="cal-label">date</div>
+      <input class="cal-input" id="evtDate" type="date">
+    </div>
+    <div class="cal-field">
+      <div class="cal-label">time</div>
+      <input class="cal-input" id="evtTime" type="time">
+    </div>
+    <div class="cal-field">
+      <div class="cal-label">duration (minutes)</div>
+      <input class="cal-input" id="evtDuration" type="number" value="30" min="15" step="15">
+    </div>
+    <div class="cal-field">
+      <div class="cal-label">type</div>
+      <select class="cal-select" id="evtType">
+        <option value="live">🟢 Live Request</option>
+        <option value="web">🔵 Web Request</option>
+        <option value="aria">🟣 ARIA — Email / Meet</option>
+        <option value="other">⚪ Other</option>
+        <option value="ai">🟢 AI Build Session</option>
+        <option value="scout">🔵 Scout Planning</option>
+      </select>
+    </div>
+    <div class="cal-field">
+      <div class="cal-label">notes</div>
+      <input class="cal-input" id="evtNotes" type="text" placeholder="Optional notes...">
+    </div>
+    <div class="conflict-warn" id="conflictWarn">⚠ conflict detected — another event overlaps this time slot</div>
+    <div class="status-bar" id="calStatus"></div>
+    <div class="cal-modal-actions">
+      <button class="cal-modal-btn primary" onclick="saveEvent()">💾 save</button>
+      <button class="cal-modal-btn danger" id="deleteEvtBtn" onclick="deleteEvent()" style="display:none">🗑 delete</button>
+      <button class="cal-modal-btn secondary" onclick="closeModal()">✕ close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+  const STORE_KEY = 'antcpu_calendar';
+  let events = [];
+  let editingId = null;
+  let viewDate = new Date();
+
+  const load = () => { events = ANT.store.get(STORE_KEY, []); };
+  const save = () => ANT.store.set(STORE_KEY, events);
+
+  // ── CALENDAR RENDER ────────────────────────────────────
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const renderCal = () => {
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const today = new Date();
+    document.getElementById('calMonth').textContent = MONTHS[m] + ' ' + y;
+    const grid = document.getElementById('calGrid');
+    let html = DAYS.map(d => `<div class="cal-dow">${d}</div>`).join('');
+    const first = new Date(y, m, 1).getDay();
+    const days = new Date(y, m+1, 0).getDate();
+    const prevDays = new Date(y, m, 0).getDate();
+    // prev month padding
+    for (let i = first-1; i >= 0; i--) {
+      html += `<div class="cal-day other-month"><div class="cal-day-num">${prevDays-i}</div></div>`;
+    }
+    // current month
+    for (let d = 1; d <= days; d++) {
+      const dateStr = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const dayEvts = events.filter(e => e.date === dateStr);
+      const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===d;
+      html += `<div class="cal-day${isToday?' today':''}${dayEvts.length?' has-events':''}" data-date="${dateStr}" onclick="openDay(this.dataset.date)">
+        <div class="cal-day-num">${d}</div>
+        ${dayEvts.map(()=>'<span class="cal-dot"></span>').join('')}
+      </div>`;
+    }
+    grid.innerHTML = html;
+  };
+
+  // ── EVENT LIST ─────────────────────────────────────────
+  const renderList = () => {
+    const el = document.getElementById('eventList');
+    const sorted = [...events].sort((a,b) => (a.date+a.time) > (b.date+b.time) ? 1 : -1);
+    document.getElementById('evtCount').textContent = events.length + ' events';
+    if (!sorted.length) {
+      el.innerHTML = '<div class="empty-state">// no events scheduled</div>';
+      return;
+    }
+    el.innerHTML = sorted.map(e => `
+      <div class="event-row ${e.type}">
+        <div class="event-info">
+          <div class="event-title">${e.title}</div>
+          <div class="event-meta">${e.date} · ${e.time} · ${e.duration}min · ${e.type}${e.notes ? ' · ' + e.notes : ''}</div>
+        </div>
+        <div class="event-actions">
+          <button class="event-btn event-btn-edit" onclick="openEdit('${e.id}')">✏️</button>
+          <button class="event-btn event-btn-del" onclick="removeEvent('${e.id}')">🗑</button>
+        </div>
+      </div>
+    `).join('');
+  };
+
+  // ── CONFLICT CHECK ─────────────────────────────────────
+  const hasConflict = (date, time, duration, excludeId=null) => {
+    const start = new Date(date + 'T' + time);
+    const end   = new Date(start.getTime() + duration * 60000);
+    return events.some(e => {
+      if (e.id === excludeId) return false;
+      if (e.date !== date) return false;
+      const eStart = new Date(e.date + 'T' + e.time);
+      const eEnd   = new Date(eStart.getTime() + e.duration * 60000);
+      return start < eEnd && end > eStart;
+    });
+  };
+
+  // ── MODAL ──────────────────────────────────────────────
+  window.openAdd = (dateStr='') => {
+    editingId = null;
+    document.getElementById('calModalTitle').textContent = '// add event';
+    document.getElementById('evtTitle').value = '';
+    document.getElementById('evtDate').value = dateStr || ANT.dateToday();
+    document.getElementById('evtTime').value = '09:00';
+    document.getElementById('evtDuration').value = '30';
+    document.getElementById('evtType').value = 'live';
+    document.getElementById('evtNotes').value = '';
+    document.getElementById('conflictWarn').classList.remove('show');
+    document.getElementById('deleteEvtBtn').style.display = 'none';
+    document.getElementById('calStatus').className = 'status-bar';
+    document.getElementById('calModal').classList.add('open');
+  };
+
+  window.openEdit = (id) => {
+    const e = events.find(e => e.id === id);
+    if (!e) return;
+    editingId = id;
+    document.getElementById('calModalTitle').textContent = '// edit event';
+    document.getElementById('evtTitle').value = e.title;
+    document.getElementById('evtDate').value = e.date;
+    document.getElementById('evtTime').value = e.time;
+    document.getElementById('evtDuration').value = e.duration;
+    document.getElementById('evtType').value = e.type;
+    document.getElementById('evtNotes').value = e.notes || '';
+    document.getElementById('conflictWarn').classList.remove('show');
+    document.getElementById('deleteEvtBtn').style.display = 'block';
+    document.getElementById('calStatus').className = 'status-bar';
+    document.getElementById('calModal').classList.add('open');
+  };
+
+  window.closeModal = () => {
+    document.getElementById('calModal').classList.remove('open');
+    editingId = null;
+  };
+
+  window.saveEvent = () => {
+    const title    = document.getElementById('evtTitle').value.trim();
+    const date     = document.getElementById('evtDate').value;
+    const time     = document.getElementById('evtTime').value;
+    const duration = parseInt(document.getElementById('evtDuration').value) || 30;
+    const type     = document.getElementById('evtType').value;
+    const notes    = document.getElementById('evtNotes').value.trim();
+    if (!title || !date || !time) {
+      ANT.status('calStatus','err','✗ title, date and time required');
+      return;
+    }
+    if (hasConflict(date, time, duration, editingId)) {
+      document.getElementById('conflictWarn').classList.add('show');
+      return;
+    }
+    document.getElementById('conflictWarn').classList.remove('show');
+    if (editingId) {
+      const e = events.find(e => e.id === editingId);
+      if (e) { e.title=title; e.date=date; e.time=time; e.duration=duration; e.type=type; e.notes=notes; }
+    } else {
+      events.push({ id:'evt-'+Date.now(), title, date, time, duration, type, notes });
+    }
+    save(); renderCal(); renderList();
+    ANT.status('calStatus','ok','✓ event saved');
+    setTimeout(closeModal, 1000);
+  };
+
+  window.deleteEvent = () => {
+    if (!editingId) return;
+    if (!confirm('Delete this event?')) return;
+    events = events.filter(e => e.id !== editingId);
+    save(); renderCal(); renderList(); closeModal();
+  };
+
+  window.removeEvent = (id) => {
+    if (!confirm('Delete this event?')) return;
+    events = events.filter(e => e.id !== id);
+    save(); renderCal(); renderList();
+  };
+
+
+  // ── DAY ZOOM VIEW ──────────────────────────────────────
+  let activeDayStr = '';
+
+  window.openDay = (dateStr) => {
+    activeDayStr = dateStr;
+    const dayEvts = events.filter(e => e.date === dateStr).sort((a,b) => a.time > b.time ? 1 : -1);
+    const d = new Date(dateStr + 'T12:00:00');
+    const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('dayViewTitle').textContent = DAYS_FULL[d.getDay()] + ', ' + MONTHS_FULL[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    document.getElementById('dayViewSub').textContent = dayEvts.length + ' event' + (dayEvts.length !== 1 ? 's' : '');
+    const blocks = document.getElementById('dayTimeBlocks');
+    if (!dayEvts.length) {
+      blocks.innerHTML = `
+        <div class="day-no-events">
+          <div class="day-no-events-msg">// no events for this day</div>
+          <button class="add-btn" onclick="openAddFromDay()">+ add first event</button>
+        </div>`;
+    } else {
+      blocks.innerHTML = dayEvts.map(e => `
+        <div class="time-block">
+          <div class="time-label">${e.time}</div>
+          <div class="time-event ${e.type}">
+            <div class="time-event-title">${e.title}</div>
+            <div class="time-event-meta">${e.duration}min · ${e.type}${e.notes ? ' · ' + e.notes : ''}</div>
+            <div class="time-event-actions">
+              <button class="event-btn event-btn-edit" onclick="openEdit('${e.id}')">✏️</button>
+              <button class="event-btn event-btn-del" onclick="removeEventDay('${e.id}')">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    document.getElementById('dayViewPanel').style.display = 'block';
+    document.getElementById('dayViewPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+  };
+
+  window.closeDayView = () => {
+    document.getElementById('dayViewPanel').style.display = 'none';
+    activeDayStr = '';
+  };
+
+  window.openAddFromDay = () => {
+    openAdd(activeDayStr);
+  };
+
+  window.removeEventDay = (id) => {
+    if (!confirm('Delete this event?')) return;
+    events = events.filter(e => e.id !== id);
+    save(); renderCal(); renderList();
+    if (activeDayStr) openDay(activeDayStr);
+  };
+
+  // patch saveEvent to refresh day view if open
+  const _origSave = window.saveEvent;
+  window.saveEvent = () => {
+    _origSave();
+    if (activeDayStr) setTimeout(() => openDay(activeDayStr), 1100);
+  };
+
+  // ── NAV ────────────────────────────────────────────────
+  window.prevMonth = () => { viewDate.setMonth(viewDate.getMonth()-1); renderCal(); };
+  window.nextMonth = () => { viewDate.setMonth(viewDate.getMonth()+1); renderCal(); };
+
+  // ── SCOUT SCAN (stub) ──────────────────────────────────
+  window.scoutScan = () => {
+    alert('🔭 SCOUT — gap scan coming soon.\nSCOUT will surface open slots and suggest actions.');
+  };
+
+  // close on backdrop
+  document.getElementById('calModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('calModal')) closeModal();
+  });
+
+  // boot
+  setTimeout(() => { load(); renderCal(); renderList(); }, 50);
+
+})();
+</script>
+<script>
+  // ── AI SESSION SYNC ───────────────────────────────────
+  // Pull sessions from progress.html localStorage → calendar events
+  const syncAiSessions = () => {
+    const AI_SESSION_KEY = 'antcpu_ai_sessions';
+    const SESSION_TYPES = {
+      build  : { label:'🔧 AI Build Session',   type:'ai' },
+      test   : { label:'🧪 AI Test Session',    type:'ai' },
+      content: { label:'📣 AI Content Session', type:'scout' }
+    };
+    const sessions = JSON.parse(localStorage.getItem(AI_SESSION_KEY) || '[]');
+    if (!sessions.length) return;
+
+    // get existing calendar events
+    const stored = localStorage.getItem('antcpu_calendar_events');
+    const events = stored ? JSON.parse(stored) : [];
+
+    let added = 0;
+    sessions.forEach(s => {
+      const id = 'ai-' + s.date + '-' + s.type;
+      if (events.find(e => e.id === id)) return; // already exists
+      const t = SESSION_TYPES[s.type] || SESSION_TYPES.build;
+      events.push({
+        id,
+        title   : t.label,
+        date    : s.date,
+        time    : s.time || '10:00',
+        duration: 120,
+        type    : t.type,
+        notes   : 'auto — from progress.html'
+      });
+      added++;
+    });
+
+    if (added > 0) {
+      localStorage.setItem('antcpu_calendar_events', JSON.stringify(events));
+      if (typeof renderCalendar === 'function') renderCalendar();
+      if (typeof renderEventList === 'function') renderEventList();
+      console.log('[CALENDAR] synced ' + added + ' AI sessions');
+    }
+  };
+
+  // run sync on load
+  setTimeout(syncAiSessions, 500);
+</script>
+<script src="footer.js"></script>
+</body>
+</html>
