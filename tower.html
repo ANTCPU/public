@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📡 Tower — antcpu</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d0f0e;
+    color: #c9d1d9;
+    font-family: monospace;
+    padding: 28px 32px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  * { position: relative; z-index: 1; }
+
+
+  /* SECTION LABELS */
+  .section-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #2a3a30;
+    margin-bottom: 14px;
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #1a1f1c;
+  }
+
+  /* STAT PANELS */
+  .panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .panel {
+    background: #111614;
+    border: 1px solid #1a1f1c;
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .panel:hover {
+    border-color: #00ff8830;
+    box-shadow: 0 0 20px rgba(0,255,136,0.05);
+  }
+
+  .panel-title {
+    color: #4a5568;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 14px;
+  }
+
+  .panel-value {
+    color: #00ff88;
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(0,255,136,0.3);
+    letter-spacing: -1px;
+  }
+
+  .panel-sub { color: #4a5568; font-size: 0.72rem; margin-top: 8px; }
+  .panel.gold .panel-value { color: #c9a84c; text-shadow: 0 0 30px rgba(201,168,76,0.3); }
+  .panel.gold:hover { border-color: #c9a84c30; box-shadow: 0 0 20px rgba(201,168,76,0.05); }
+  .panel.btc .panel-value { color: #f7931a; text-shadow: 0 0 30px rgba(247,147,26,0.3); }
+  .panel.btc:hover { border-color: #f7931a30; }
+  .panel.xlm .panel-value { color: #7ec8e3; text-shadow: 0 0 30px rgba(126,200,227,0.3); }
+  .panel.xlm:hover { border-color: #7ec8e330; }
+  .panel.pi .panel-value { color: #bc8cff; text-shadow: 0 0 30px rgba(188,140,255,0.3); }
+  .panel.pi:hover { border-color: #bc8cff30; }
+  .panel.hours .panel-value { color: #00ff88; text-shadow: 0 0 30px rgba(0,255,136,0.3); }
+  .panel.hours:hover { border-color: #00ff8830; }
+  .panel.blue .panel-value { color: #7d9ccf; }
+  .panel.clickable { cursor: pointer; }
+
+  /* GENESIS BLOCK */
+  .genesis-block {
+    background: #111614;
+    border: 1px solid #2a2000;
+    border-radius: 10px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .genesis-block::before {
+    content: '🧬';
+    position: absolute;
+    right: 20px; top: 16px;
+    font-size: 3rem;
+    opacity: 0.06;
+  }
+
+  .genesis-title {
+    color: #c9a84c;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
+
+  .genesis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+  }
+
+  .genesis-label { color: #4a5568; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; }
+  .genesis-val { color: #f0f0f0; font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+  .progress-bar { background: #1a1a1a; border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; background: #c9a84c; transition: width 0.8s ease; box-shadow: 0 0 8px rgba(201,168,76,0.4); }
+  .progress-fill.green { background: #00ff88; box-shadow: 0 0 8px rgba(0,255,136,0.4); }
+  .countdown { color: #c9a84c; font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; text-shadow: 0 0 20px rgba(201,168,76,0.4); }
+  .countdown-sub { color: #4a5568; font-size: 0.68rem; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ANTCOIN RADAR */
+  .antcoin-block {
+    background: #111614;
+    border: 1px solid #2a1f00;
+    border-radius: 10px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .antcoin-block::before {
+    content: '🐜';
+    position: absolute;
+    right: 20px; top: 16px;
+    font-size: 3rem;
+    opacity: 0.06;
+  }
+
+  .antcoin-title {
+    color: #f59e0b;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(245,158,11,0.3);
+  }
+
+  .antcoin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+  }
+
+  .ac-label { color: #4a5568; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; }
+  .ac-value { color: #f59e0b; font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; text-shadow: 0 0 20px rgba(245,158,11,0.3); }
+  .ac-sub { color: #4a5568; font-size: 0.7rem; margin-top: 6px; }
+  .ac-link { color: #4a5568; font-size: 0.72rem; text-decoration: none; margin-top: 4px; display: block; }
+  .ac-link:hover { color: #f59e0b; }
+
+  /* ANTCHAIN RADAR */
+  .antchain-block {
+    background: #111614;
+    border: 1px solid #0a1a2e;
+    border-radius: 10px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .antchain-block::before {
+    content: '⛓️';
+    position: absolute;
+    right: 20px; top: 16px;
+    font-size: 3rem;
+    opacity: 0.06;
+  }
+
+  .antchain-title {
+    color: #58a6ff;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(88,166,255,0.3);
+  }
+
+  .antchain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+  }
+
+  .ch-label { color: #4a5568; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; }
+  .ch-value { color: #58a6ff; font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; text-shadow: 0 0 20px rgba(88,166,255,0.3); }
+  .ch-sub { color: #4a5568; font-size: 0.7rem; margin-top: 6px; }
+
+  /* STATUS DOTS */
+  .status-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .status-dot.live { background: #00ff88; box-shadow: 0 0 6px #00ff88; animation: pulse 2s infinite; }
+  .status-dot.pending { background: #c9a84c; }
+  .status-dot.offline { background: #333; }
+
+  /* NODES */
+  .nodes-block {
+    background: #111614;
+    border: 1px solid #1a1f1c;
+    border-radius: 10px;
+    padding: 24px;
+  }
+
+  .nodes-title { color: #00ff88; font-size: 0.85rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 20px; }
+  .nodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+
+  .node-card {
+    background: #0d0f0e;
+    border: 1px solid #1a1f1c;
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.2s;
+  }
+
+  .node-card:hover { border-color: #00ff8820; }
+  .node-card.live { border-left: 3px solid #00ff88; }
+  .node-card.active { border-left: 3px solid #4caf7d; }
+  .node-card.planned { border-left: 3px solid #c9a84c; }
+  .node-card.parked { border-left: 3px solid #333; }
+  .node-card.future { border-left: 3px solid #222; opacity: 0.4; }
+
+  .node-name { color: #c9d1d9; font-size: 0.82rem; }
+  .node-type { color: #4a5568; font-size: 0.7rem; margin-top: 3px; }
+  .node-badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 8px; text-transform: uppercase; }
+  .node-badge.live { background: #0a2e1a; color: #00ff88; }
+  .node-badge.active { background: #0f2e1a; color: #4caf7d; }
+  .node-badge.planned { background: #2e2000; color: #c9a84c; }
+  .node-badge.parked { background: #1a1a1a; color: #555; }
+  .node-badge.future { background: #111; color: #333; }
+
+  /* REWARDS */
+  .rewards-block {
+    background: #111614;
+    border: 1px solid #2a2000;
+    border-radius: 10px;
+    padding: 24px;
+  }
+
+  .rewards-title { color: #c9a84c; font-size: 0.85rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 20px; }
+  .reward-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #1a1a1a; }
+  .reward-item:last-child { border-bottom: none; }
+  .reward-label { color: #c9d1d9; font-size: 0.82rem; flex: 1; }
+  .reward-note { color: #4a5568; font-size: 0.7rem; margin-top: 3px; }
+  .reward-amt { color: #c9a84c; font-size: 1rem; font-weight: 700; white-space: nowrap; margin-left: 12px; }
+  .reward-total { color: #00ff88; font-size: 1.2rem; font-weight: 700; text-align: right; margin-top: 14px; padding-top: 14px; border-top: 1px solid #1e1e1e; text-shadow: 0 0 20px rgba(0,255,136,0.3); }
+
+  /* LOGS */
+  .section-title { color: #4a5568; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px; }
+  .controls { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+  .controls input { background: #111614; border: 1px solid #1a1f1c; color: #00ff88; padding: 9px 14px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; outline: none; width: 240px; }
+  .controls input:focus { border-color: #00ff8840; }
+  .controls select { background: #111614; border: 1px solid #1a1f1c; color: #c9d1d9; padding: 9px 12px; border-radius: 8px; font-family: monospace; font-size: 0.82rem; outline: none; }
+  .count { color: #4a5568; font-size: 0.8rem; margin-left: auto; }
+
+  .log-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 40px; }
+  .log-item { background: #111614; border: 1px solid #1a1f1c; border-radius: 8px; padding: 14px 16px; transition: border-color 0.2s; }
+  .log-item:hover { border-color: #00ff8820; }
+  .log-item.priority-1 { border-left: 3px solid #00ff88; }
+  .log-item.priority-2 { border-left: 3px solid #c9a84c; }
+  .log-item.priority-3 { border-left: 3px solid #1a1f1c; }
+
+  .log-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .log-action { color: #00ff88; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.15em; }
+  .log-time { color: #2a3a30; font-size: 0.72rem; }
+  .log-message { color: #c9d1d9; font-size: 0.88rem; line-height: 1.6; }
+  .log-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+  .tag { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; background: #1a1f1c; color: #4a5568; }
+  .tag.active { background: #0f2e1a; color: #4caf7d; }
+  .tag.done { background: #0a1a2e; color: #58a6ff; }
+  .tag.warn { background: #2e1a0a; color: #f59e0b; }
+  .tag.milestone { background: #2e2000; color: #c9a84c; }
+  .tag.session-close { background: #1a1a2e; color: #7d9ccf; }
+
+  .empty { color: #2a3a30; text-align: center; padding: 48px; font-size: 0.9rem; }
+
+  #refreshBtn { background: #111614; border: 1px solid #1a1f1c; color: #4a5568; padding: 9px 14px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+  #refreshBtn:hover { border-color: #00ff8840; color: #00ff88; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #111614; border: 1px solid #1a1f1c; border-radius: 12px; padding: 28px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+  .modal-title { color: #00ff88; font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { color: #4a5568; cursor: pointer; font-size: 1.2rem; background: none; border: none; font-family: monospace; }
+  .modal-close:hover { color: #00ff88; }
+  .wallet-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #1a1a1a; }
+  .wallet-row:last-child { border-bottom: none; }
+  .wallet-label { color: #f0f0f0; font-size: 0.88rem; }
+  .wallet-id { color: #2a3a30; font-size: 0.7rem; margin-top: 3px; }
+  .wallet-right { text-align: right; }
+  .wallet-bal { color: #c9a84c; font-size: 0.95rem; font-weight: 700; }
+  .wallet-type { color: #4a5568; font-size: 0.7rem; margin-top: 3px; }
+
+  /* NAV OVERRIDE */
+  .ant-nav { padding-right: 40px !important; }
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body style="padding-top: 84px;">
+
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">
+      <span>👛 Genesis Wallets</span>
+      <button class="modal-close" onclick="document.getElementById('walletModal').classList.remove('open')">✕</button>
+    </div>
+    <div id="modalWalletList"></div>
+  </div>
+</div>
+
+<!-- STAT PANELS -->
+<div class="section-label">// live stats</div>
+<div class="panels" id="statPanels">
+  <div class="panel gold">
+    <div class="panel-title">⚡ ANT Earned</div>
+    <div class="panel-value" id="antEarned">—</div>
+    <div class="panel-sub">rewards pool total</div>
+  </div>
+  <div class="panel clickable" onclick="openWalletModal()">
+    <div class="panel-title">👛 Wallets</div>
+    <div class="panel-value" id="walletCount">—</div>
+    <div class="panel-sub">active genesis wallets</div>
+  </div>
+  <div class="panel clickable" onclick="openWalletModal()">
+    <div class="panel-title">🔗 Nodes</div>
+    <div class="panel-value" id="nodeCount">—</div>
+    <div class="panel-sub">chain nodes seeded</div>
+  </div>
+  <div class="panel hours">
+    <div class="panel-title">⏱ Build Hours</div>
+    <div class="panel-value" id="buildHours">—</div>
+    <div class="panel-sub">logged proof of work</div>
+  </div>
+</div>
+
+<!-- TREASURY -->
+<div class="section-label">// treasury · internal</div>
+<div class="panels" id="treasuryPanels">
+  <div class="panel btc">
+    <div class="panel-title">₿ Bitcoin · W1</div>
+    <div class="panel-value" id="btcSats1">12,000+</div>
+    <div class="panel-sub">satoshi · internal</div>
+  </div>
+  <div class="panel btc">
+    <div class="panel-title">₿ Bitcoin · W2</div>
+    <div class="panel-value" id="btcSats2">—</div>
+    <div class="panel-sub">satoshi · internal</div>
+  </div>
+  <div class="panel xlm">
+    <div class="panel-title">✦ Stellar</div>
+    <div class="panel-value" id="xlmBal">10</div>
+    <div class="panel-sub">XLM · internal</div>
+  </div>
+  <div class="panel pi">
+    <div class="panel-title">π Pi Network</div>
+    <div class="panel-value" id="piBal">100</div>
+    <div class="panel-sub">Pi coins · internal</div>
+  </div>
+</div>
+</div>
+
+<!-- GENESIS BLOCK -->
+<div class="section-label">// genesis block #0</div>
+<div class="genesis-block">
+  <div class="genesis-title">🧬 Genesis Block #0 — Seals Aug 10, 2026</div>
+  <div class="genesis-grid">
+    <div class="genesis-item">
+      <div class="genesis-label">Wallets</div>
+      <div class="genesis-val" id="gWallets">0 / 100</div>
+      <div class="progress-bar"><div class="progress-fill" id="gWalletsBar" style="width:0%"></div></div>
+    </div>
+    <div class="genesis-item">
+      <div class="genesis-label">Nodes</div>
+      <div class="genesis-val" id="gNodes">0 / 10</div>
+      <div class="progress-bar"><div class="progress-fill green" id="gNodesBar" style="width:0%"></div></div>
+    </div>
+    <div class="genesis-item">
+      <div class="genesis-label">Funding</div>
+      <div class="genesis-val" id="gFunding">$0 / $1,000</div>
+      <div class="progress-bar"><div class="progress-fill" id="gFundingBar" style="width:0%"></div></div>
+    </div>
+    <div class="genesis-item">
+      <div class="genesis-label">Countdown to Seal</div>
+      <div class="countdown" id="genesisCountdown">—</div>
+      <div class="countdown-sub">days · hours · mins</div>
+    </div>
+  </div>
+</div>
+
+<!-- ANTCOIN RADAR -->
+<div class="section-label">// antcoin radar</div>
+<div class="antcoin-block">
+  <div class="antcoin-title">🐜 ANTCOIN — Genesis Membership Tracker</div>
+  <div class="antcoin-grid">
+    <div class="antcoin-item">
+      <div class="ac-label">Members</div>
+      <div class="ac-value" id="acMembers">—</div>
+      <div class="ac-sub">$9.99 early access</div>
+    </div>
+    <div class="antcoin-item">
+      <div class="ac-label">Wallet Slots</div>
+      <div class="ac-value" id="acSlots">0 / 10</div>
+      <div class="ac-sub">genesis slots claimed</div>
+    </div>
+    <div class="antcoin-item">
+      <div class="ac-label">Community</div>
+      <div class="ac-value">650+</div>
+      <div class="ac-sub">facebook members</div>
+    </div>
+    <div class="antcoin-item">
+      <div class="ac-label">Live Demo</div>
+      <div class="ac-value" style="font-size:1rem;padding-top:6px;">
+        <span class="status-dot live"></span>antchain
+      </div>
+      <a class="ac-link" href="https://antchain.vercel.app" target="_blank">antchain.vercel.app ↗</a>
+      <div class="ac-sub">mainnet v1 · wallet dashboard</div>
+    </div>
+    <div class="antcoin-item">
+      <div class="ac-label">Next Milestone</div>
+      <div class="ac-value" style="font-size:1.1rem;padding-top:4px;color:#4a5568;">v0.5</div>
+      <div class="ac-sub">mainnet working demo · May 1</div>
+    </div>
+    <div class="antcoin-item">
+      <div class="ac-label">Public Launch</div>
+      <div class="ac-value" style="font-size:1.1rem;padding-top:4px;color:#c9a84c;">Aug 10</div>
+      <div class="ac-sub">after genesis block seals</div>
+    </div>
+  </div>
+</div>
+
+<!-- ANTCHAIN RADAR -->
+<div class="section-label">// antchain radar</div>
+<div class="antchain-block">
+  <div class="antchain-title">⛓️ ANTCHAIN — Network Health</div>
+  <div class="antchain-grid">
+    <div class="antchain-item">
+      <div class="ch-label">Chain Status</div>
+      <div class="ch-value" style="font-size:1rem;padding-top:6px;">
+        <span class="status-dot live"></span>MAINNET v1
+      </div>
+      <div class="ch-sub">live on vercel</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Nodes Seeded</div>
+      <div class="ch-value" id="chainNodes">—</div>
+      <div class="ch-sub">of 10 target</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Wallets Created</div>
+      <div class="ch-value" id="chainWallets">—</div>
+      <div class="ch-sub">on-chain accounts</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Block #0 Seal</div>
+      <div class="ch-value" style="font-size:1.1rem;padding-top:4px;color:#c9a84c;">Aug 10</div>
+      <div class="ch-sub">2026 · founder's genesis</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Explorer</div>
+      <div class="ch-value" style="font-size:1rem;padding-top:6px;color:#4a5568;">v0.5</div>
+      <div class="ch-sub">on-chain explorer · coming soon</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Agent v2 Payments</div>
+      <div class="ch-value" style="font-size:1rem;padding-top:6px;color:#4a5568;">v1.0</div>
+      <div class="ch-sub">ai-powered · settled in ANT</div>
+    </div>
+  </div>
+</div>
+
+<!-- NODES -->
+<div class="section-label">// chain nodes</div>
+<div class="nodes-block">
+  <div class="nodes-title">🔗 Chain Nodes</div>
+  <div class="nodes-grid" id="nodesGrid"></div>
+</div>
+
+<!-- REWARDS -->
+<div class="section-label">// rewards pool</div>
+<div class="rewards-block">
+  <div class="rewards-title">⚡ Rewards Pool</div>
+  <div id="rewardsList"></div>
+  <div class="reward-total" id="rewardTotal"></div>
+</div>
+
+
+<!-- BUILD STATUS -->
+<div class="section-label">// forge · build status</div>
+<div class="antchain-block" id="buildBlock" style="border-color:#1a1f1c;">
+  <div class="antchain-title" style="color:#00ff88;">🔧 FORGE — Last Build Event</div>
+  <div class="antchain-grid">
+    <div class="antchain-item">
+      <div class="ch-label">Repository</div>
+      <div class="ch-value" id="buildRepo" style="font-size:1rem;padding-top:6px;color:#c9d1d9;">—</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Status</div>
+      <div class="ch-value" id="buildStatus" style="font-size:1rem;padding-top:6px;">—</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Branch · Commit</div>
+      <div class="ch-value" id="buildBranch" style="font-size:1rem;padding-top:6px;color:#c9d1d9;">—</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Failed Jobs</div>
+      <div class="ch-value" id="buildJobs" style="font-size:1rem;padding-top:6px;color:#f59e0b;">—</div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Run</div>
+      <div id="buildLink" style="padding-top:6px;"><span style="color:#4a5568;font-size:.8rem;">—</span></div>
+    </div>
+    <div class="antchain-item">
+      <div class="ch-label">Detected</div>
+      <div class="ch-value" id="buildTime" style="font-size:.85rem;padding-top:6px;color:#4a5568;">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGS -->
+
+<!-- SHADOW AGENT -->
+<div class="section-label">// shadow agent · tower logger</div>
+<div class="antchain-block" id="shadowBlock" style="border-color:#1a1f1c;">
+  <div class="antchain-title" style="color:#00ff88;">🧠 TOWER — Shadow Agent Status</div>
+  <div class="ch-grid">
+    <div class="ch-item"><div class="ch-label">Agent</div><div class="ch-value" id="shadowName">—</div></div>
+    <div class="ch-item"><div class="ch-label">Status</div><div class="ch-value" id="shadowStatus">—</div></div>
+    <div class="ch-item"><div class="ch-label">Note</div><div class="ch-value" id="shadowNote" style="font-size:.8rem;">—</div></div>
+    <div class="ch-item"><div class="ch-label">Checkpoint</div><div class="ch-value" id="shadowCheckpoint" style="font-size:.8rem;">—</div></div>
+    <div class="ch-item"><div class="ch-label">Active Run</div><div class="ch-value" id="shadowRun">—</div></div>
+    <div class="ch-item"><div class="ch-label">Run Started</div><div class="ch-value" id="shadowRunStart" style="font-size:.8rem;">—</div></div>
+  </div>
+  <div style="margin-top:16px;">
+    <div class="ch-label" style="margin-bottom:8px;">Recent Runs</div>
+    <div id="shadowHistory" style="font-size:.78rem;color:#4a5568;">—</div>
+  </div>
+</div>
+
+<!-- SAMPLECOIN -->
+<div class="section-label">// samplecoin · build tracker</div>
+<div class="antchain-block" id="sampleBlock" style="border-color:#1a1f1c;">
+  <div class="antchain-title" style="color:#00ff88;">⬡ SAMPLECOIN — Real-Time Build Ledger</div>
+  <div class="ch-grid">
+    <div class="ch-item"><div class="ch-label">Total Earned</div><div class="ch-value" id="sampleTotal" style="color:#00ff88;">—</div></div>
+    <div class="ch-item"><div class="ch-label">Transactions</div><div class="ch-value" id="sampleCount">—</div></div>
+    <div class="ch-item"><div class="ch-label">Currency</div><div class="ch-value" style="color:#c9a84c;">SMPL</div></div>
+    <div class="ch-item"><div class="ch-label">Tracking</div><div class="ch-value" style="font-size:.8rem;color:#4a5568;">every task = 1 coin</div></div>
+  </div>
+  <div style="margin-top:16px;">
+    <div class="ch-label" style="margin-bottom:8px;">Last Transactions</div>
+    <div id="sampleList" style="font-size:.78rem;">—</div>
+  </div>
+</div>
+
+<div class="section-label">// tower log</div>
+<div class="section-title">📋 Tower Log</div>
+<div class="controls">
+  <input type="text" id="search" placeholder="🔍 search logs..." oninput="render()">
+  <select id="statusFilter" onchange="render()">
+    <option value="">all status</option>
+    <option value="active">active</option>
+    <option value="done">done</option>
+    <option value="warn">warn</option>
+  </select>
+  <select id="limitFilter" onchange="loadLogs()">
+    <option value="20">20 logs</option>
+    <option value="50">50 logs</option>
+    <option value="100">100 logs</option>
+  </select>
+  <button id="refreshBtn" onclick="loadAll()">↻ refresh</button>
+  <span class="count" id="count"></span>
+</div>
+<div class="log-list" id="logList"></div>
+
+<script src="footer.js"></script>
+
+<script>
+  let logs = [];
+
+  // clock handled by nav.js
+
+  // GENESIS COUNTDOWN
+  function updateCountdown() {
+    const seal = new Date('2026-08-10T00:00:00');
+    const now = new Date();
+    const diff = seal - now;
+    if (diff <= 0) {
+      document.getElementById('genesisCountdown').textContent = 'SEALED';
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    document.getElementById('genesisCountdown').textContent = d + 'd ' + h + 'h ' + m + 'm';
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
+
+  // LOAD WALLETS
+  function loadWallets() {
+    fetch('/api/wallets')
+      .then(r => r.json())
+      .then(data => {
+        window._wallets = data;
+        const active = data.filter(w => w.status === 'active').length;
+        document.getElementById('walletCount').textContent = active;
+        document.getElementById('gWallets').textContent = active + ' / 100';
+        document.getElementById('gWalletsBar').style.width = Math.min((active/100)*100,100) + '%';
+        document.getElementById('acSlots').textContent = active + ' / 10';
+        document.getElementById('chainWallets').textContent = active;
+        const btc = data.find(w => w.currency === 'BTC');
+        if (btc) document.getElementById('btcBal').textContent = btc.balance;
+      })
+      .catch(() => {});
+  }
+
+  // LOAD BUILD HOURS — from Supabase via launcher
+  function loadBuildHours() {
+    fetch('/api/timeclock/supabase/history?identity=antcpu')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.sessions) return;
+        const total = d.sessions.reduce((s, r) => s + (r.duration_mins || 0), 0);
+        const hrs = (total / 60).toFixed(1);
+        const el = document.getElementById('buildHours');
+        if (el) el.textContent = hrs + 'h';
+      })
+      .catch(() => {});
+  }
+
+  // LOAD NODES
+  function loadNodes() {
+    fetch('/api/nodes')
+      .then(r => r.json())
+      .then(data => {
+        const live = data.filter(n => n.status === 'live' || n.status === 'active').length;
+        document.getElementById('nodeCount').textContent = live;
+        document.getElementById('gNodes').textContent = live + ' / 10';
+        document.getElementById('gNodesBar').style.width = Math.min((live/10)*100,100) + '%';
+        document.getElementById('chainNodes').textContent = live;
+        const grid = document.getElementById('nodesGrid');
+        grid.innerHTML = data.map(n => `
+          <div class="node-card ${n.status}">
+            <div>
+              <div class="node-name">${n.label || n.id}</div>
+              <div class="node-type">${n.type || 'node'}</div>
+            </div>
+            <span class="node-badge ${n.status}">${n.status}</span>
+          </div>
+        `).join('');
+      })
+      .catch(() => {});
+  }
+
+  // LOAD REWARDS
+  function loadRewards() {
+    fetch('/api/rewards')
+      .then(r => r.json())
+      .then(data => {
+        const total = data.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+        document.getElementById('antEarned').textContent = total.toFixed(2);
+        document.getElementById('rewardTotal').textContent = '⚡ Total: ' + total.toFixed(2) + ' ANT';
+        document.getElementById('rewardsList').innerHTML = data.map(r => `
+          <div class="reward-item">
+            <div>
+              <div class="reward-label">${r.action || r.label}</div>
+              <div class="reward-note">${r.note || ''}</div>
+            </div>
+            <div class="reward-amt">${r.amount} ${r.token || 'ANT'}</div>
+          </div>
+        `).join('');
+      })
+      .catch(() => {});
+  }
+
+  // LOAD MEMBERS (antcoin)
+  function loadMembers() {
+    fetch('/api/members')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('acMembers').textContent = data.count || data.length || '—';
+      })
+      .catch(() => {
+        document.getElementById('acMembers').textContent = '—';
+      });
+  }
+
+  // LOAD FUNDING
+  function loadFunding() {
+    fetch('/api/funding')
+      .then(r => r.json())
+      .then(data => {
+        const amt = parseFloat(data.total || 0);
+        document.getElementById('gFunding').textContent = '$' + amt.toFixed(0) + ' / $1,000';
+        document.getElementById('gFundingBar').style.width = Math.min((amt/1000)*100,100) + '%';
+      })
+      .catch(() => {});
+  }
+
+  // LOAD LOGS
+  function loadLogs() {
+    const limit = document.getElementById('limitFilter').value;
+    fetch('/api/tower?limit=' + limit)
+      .then(r => r.json())
+      .then(data => {
+        logs = data.logs || data;
+        render();
+      })
+      .catch(() => {});
+  }
+
+  // RENDER LOGS
+  function render() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const s = document.getElementById('statusFilter').value;
+    let filtered = logs.filter(l => {
+      const matchQ = !q || (l.message||'').toLowerCase().includes(q) || (l.action||'').toLowerCase().includes(q);
+      const matchS = !s || l.status === s;
+      return matchQ && matchS;
+    });
+    document.getElementById('count').textContent = filtered.length + ' logs';
+    const list = document.getElementById('logList');
+    if (!filtered.length) {
+      list.innerHTML = '<div class="empty">no logs found</div>';
+      return;
+    }
+    list.innerHTML = filtered.map(l => `
+      <div class="log-item priority-${l.priority || 3}">
+        <div class="log-top">
+          <span class="log-action">${l.action || 'log'}</span>
+          <span class="log-time" style="color:#c9d1d9;">${l.created_at ? new Date(l.created_at).toLocaleString('en-US', {timeZone:'America/New_York', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : l.date || ''}</span>
+        </div>
+        <div class="log-message">${l.message || ''}</div>
+        <div class="log-meta">
+          <span class="tag ${l.status}">${l.status || 'active'}</span>
+          ${l.sprint_id ? `<span class="tag">${l.sprint_id}</span>` : ''}
+          ${l.session_id ? `<span class="tag">${l.session_id}</span>` : ''}
+          ${l.reward ? `<span class="tag milestone">⚡ ${l.reward} ${l.reward_token||''}</span>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+
+  // LOAD BUILD STATUS
+  function loadBuildStatus() {
+    fetch('/api/webhook/resend-inbound/latest')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) return;
+        const failed = data.failed;
+        const block = document.getElementById('buildBlock');
+        block.style.borderColor = failed ? '#f59e0b50' : '#00ff8830';
+
+        document.getElementById('buildRepo').textContent = data.repo || '—';
+
+        const statusEl = document.getElementById('buildStatus');
+        statusEl.textContent = failed ? '⚠ FAILED' : '✓ PASSED';
+        statusEl.style.color = failed ? '#f59e0b' : '#00ff88';
+
+        document.getElementById('buildBranch').textContent =
+          (data.branch || '—') + ' · ' + (data.commit || '—');
+
+        const jobs = (data.jobs || []).filter(j => j.failed).map(j => j.name).join(', ');
+        document.getElementById('buildJobs').textContent = jobs || (failed ? 'unknown' : 'none');
+
+        const linkEl = document.getElementById('buildLink');
+        if (data.runUrl) {
+          linkEl.innerHTML = '<a href="' + data.runUrl + '" target="_blank" style="color:#58a6ff;font-size:.8rem;font-family:monospace;">→ view run ↗</a>';
+        }
+
+        const t = data.stored_at ? new Date(data.stored_at).toLocaleString('en', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+        document.getElementById('buildTime').textContent = t;
+      })
+      .catch(() => {});
+  }
+
+
+  // LOAD SHADOW AGENT
+  function loadShadow() {
+    fetch("/api/shadow")
+      .then(r => r.json())
+      .then(data => {
+        if (data.agent) {
+          document.getElementById("shadowName").textContent = data.agent.name || "—";
+          document.getElementById("shadowStatus").textContent = data.agent.status || "—";
+          document.getElementById("shadowNote").textContent = data.agent.note || "—";
+        }
+        if (data.checkpoint) {
+          document.getElementById("shadowCheckpoint").textContent = data.checkpoint.last_task || "—";
+        }
+        if (data.active) {
+          document.getElementById("shadowRun").textContent = data.active.slot + " · " + data.active.status;
+          document.getElementById("shadowRunStart").textContent = data.active.started_at || "—";
+        } else {
+          document.getElementById("shadowRun").textContent = "no active run";
+        }
+        if (data.history) {
+          document.getElementById("shadowHistory").innerHTML = data.history.map(r =>
+            "<div style='padding:4px 0;border-bottom:1px solid #1a1f1c;'>" +
+            "<span style='color:#00ff88;'>" + r.slot + "</span> · " +
+            r.status + " · ok:" + r.ok + " failed:" + r.failed +
+            " · <span style='color:#4a5568;'>" + (r.started_at||"").slice(0,16) + "</span></div>"
+          ).join("");
+        }
+      }).catch(() => {});
+  }
+
+  // LOAD SAMPLECOIN
+  function loadSamplecoin() {
+    fetch("/api/samplecoin/ledger")
+      .then(r => r.json())
+      .then(data => {
+        const rows = data.entries || [];
+        const total = rows.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+        document.getElementById("sampleTotal").textContent = total.toFixed(1);
+        document.getElementById("sampleCount").textContent = rows.length;
+        document.getElementById("sampleList").innerHTML = rows.slice(0,6).map(r =>
+          "<div style='padding:4px 0;border-bottom:1px solid #1a1f1c;'>" +
+          "<span style='color:#00ff88;'>+" + r.amount + " SMPL</span> · " +
+          "<span style='color:#c9d1d9;'>" + (r.note||"") + "</span>" +
+          "<span style='color:#4a5568;float:right;'>" + (r.confirmed_at||"").slice(0,10) + "</span></div>"
+        ).join("");
+      }).catch(() => {});
+  }
+
+  function loadAll() {
+    loadWallets();
+    loadBuildHours();
+    loadNodes();
+    loadRewards();
+    loadMembers();
+    loadFunding();
+    loadBuildStatus();
+    loadShadow();
+    loadSamplecoin();
+    loadLogs();
+  }
+
+  function openWalletModal() {
+    const modal = document.getElementById('walletModal');
+    const list = document.getElementById('modalWalletList');
+    const wallets = window._wallets || [];
+    list.innerHTML = wallets.length ? wallets.map(w => `
+      <div class="wallet-row">
+        <div>
+          <div class="wallet-label">${w.label || w.id}</div>
+          <div class="wallet-id">${w.id}</div>
+        </div>
+        <div class="wallet-right">
+          <div class="wallet-bal">${w.balance} ${w.currency}</div>
+          <div class="wallet-type">${w.wallet_type} · ${w.status}</div>
+        </div>
+      </div>
+    `).join('') : '<div class="empty">no wallets found</div>';
+    modal.classList.add('open');
+  }
+
+  function closeModal(e) {
+    if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+  }
+
+  loadAll();
+  setInterval(loadAll, 30000);
+</script>
+
+<script>window.ANT_PAGE = { title: 'Tower', root: './' }</script>
+<script src="nav.js"></script>
+</body>
+</html>

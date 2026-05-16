@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samplecoin Ledger — antcpu</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; color: #e0e0e0; font-family: 'Courier New', monospace; padding: 2rem; }
+  h1 { color: #00ff88; font-size: 1.4rem; margin-bottom: 0.25rem; }
+  .sub { color: #666; font-size: 0.85rem; margin-bottom: 2rem; }
+  .balance-block { background: #111; border: 1px solid #00ff88; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; display: inline-block; min-width: 260px; }
+  .balance-label { color: #666; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; }
+  .balance-amount { color: #00ff88; font-size: 2.5rem; font-weight: bold; margin-top: 0.25rem; }
+  .balance-currency { color: #444; font-size: 0.85rem; }
+  .section-title { color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { color: #555; text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #222; font-weight: normal; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }
+  td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+  tr:hover td { background: #111; }
+  .type-earn { color: #00ff88; }
+  .type-spend { color: #ff4444; }
+  .type-transfer { color: #4488ff; }
+  .amount-earn { color: #00ff88; }
+  .amount-spend { color: #ff4444; }
+  .daily-total { background: #111; border: 1px solid #222; border-radius: 6px; padding: 1rem; margin-bottom: 2rem; }
+  .daily-row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid #1a1a1a; font-size: 0.85rem; }
+  .daily-row:last-child { border-bottom: none; }
+  .loading { color: #444; font-size: 0.85rem; }
+  .footer-link { margin-top: 2rem; font-size: 0.8rem; color: #444; }
+  .footer-link a { color: #555; text-decoration: none; }
+  .footer-link a:hover { color: #00ff88; }
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+
+<h1>⬡ Samplecoin Ledger</h1>
+<p class="sub">Every transaction from zero. Real activity only.</p>
+
+<div class="balance-block">
+  <div class="balance-label">Current Balance</div>
+  <div class="balance-amount" id="balance">—</div>
+  <div class="balance-currency">SAMPLECOIN</div>
+</div>
+
+<div style="margin-bottom:2rem;">
+  <div class="section-title">Daily Totals</div>
+  <div class="daily-total" id="daily-totals">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="section-title">Transaction Log</div>
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Type</th>
+      <th>Amount</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody id="ledger-body">
+    <tr><td colspan="4" class="loading">Loading...</td></tr>
+  </tbody>
+</table>
+
+<div class="footer-link">
+  <a href="/live.html">← live.html</a> &nbsp;·&nbsp;
+  <a href="/tower.html">tower →</a>
+</div>
+
+<script>
+async function load() {
+  try {
+    const res = await fetch('/api/samplecoin/ledger');
+    const data = await res.json();
+    if (!data.ok) return;
+
+    document.getElementById('balance').textContent = data.balance.toFixed(1);
+
+    const dailyEl = document.getElementById('daily-totals');
+    if (data.daily && data.daily.length) {
+      dailyEl.innerHTML = data.daily.map(d =>
+        `<div class="daily-row"><span>${d.date}</span><span class="amount-earn">+${d.total.toFixed(1)} SC</span></div>`
+      ).join('');
+    } else {
+      dailyEl.innerHTML = '<div class="loading">No daily data yet.</div>';
+    }
+
+    const tbody = document.getElementById('ledger-body');
+    if (data.transactions && data.transactions.length) {
+      tbody.innerHTML = data.transactions.map(tx => `
+        <tr>
+          <td>${tx.date}</td>
+          <td class="type-${tx.type}">${tx.type}</td>
+          <td class="amount-${tx.type === 'earn' ? 'earn' : 'spend'}">
+            ${tx.type === 'earn' ? '+' : '-'}${tx.amount.toFixed(1)}
+          </td>
+          <td>${tx.note || '—'}</td>
+        </tr>
+      `).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" class="loading">No transactions yet.</td></tr>';
+    }
+  } catch(e) {
+    console.error('Samplecoin load error:', e);
+  }
+}
+load();
+setInterval(load, 30000);
+</script>
+<script>window.ANT_PAGE = { title: "samplecoin", root: "./" }</script>
+<script src="nav.js"></script>
+<script src="footer.js"></script>
+</body>
+</html>

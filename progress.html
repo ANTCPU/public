@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Progress — antcpu</title>
+<style>
+.layout{max-width:1000px;margin:0 auto;padding:72px 24px 24px;display:flex;flex-direction:column;gap:20px;}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:14px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.section-title span{color:#d29922;}
+#modeToggle{color:#c8f564 !important;border-color:rgba(200,245,100,0.4) !important;background:rgba(200,245,100,0.08) !important;min-width:100px !important;padding:6px 16px !important;font-size:.75rem !important;line-height:1.4 !important;text-align:center !important;}
+.panel{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:20px;}
+.panel-gold{border-color:#d2992233;}
+.panel-green{border-color:#00ff8833;}
+
+/* STATS ROW */
+.stats-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
+.stat-box{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:14px 18px;flex:1;min-width:110px;}
+.stat-val{font-size:1.6rem;font-weight:700;font-family:monospace;color:#00ff88;}
+.stat-val.gold{color:#d29922;}
+.stat-val.blue{color:#5865F2;}
+.stat-label{font-size:.65rem;font-family:monospace;color:#555;margin-top:3px;text-transform:uppercase;letter-spacing:1px;}
+
+/* MONTHLY BUCKETS */
+.bucket-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a1a;}
+.bucket-row:last-child{border-bottom:none;}
+.bucket-ver{font-size:.72rem;font-family:monospace;color:#d29922;min-width:36px;}
+.bucket-label{font-size:.75rem;font-family:monospace;color:#555;min-width:110px;}
+.bucket-bar{flex:1;background:#1a1a1a;border-radius:20px;height:8px;overflow:hidden;}
+.bucket-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#00ff88,#d29922);transition:width .6s ease;}
+.bucket-pct{font-size:.72rem;font-family:monospace;color:#555;min-width:36px;text-align:right;}
+.bucket-pct.active{color:#00ff88;font-weight:700;}
+.bucket-target{font-size:.65rem;font-family:monospace;color:#5865F2;margin-left:6px;white-space:nowrap;}
+.bucket-row.current{background:#00ff8806;border-radius:6px;padding:10px 8px;margin:0 -8px;}
+
+/* WEEK/DAY */
+.period-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.period-grid{grid-template-columns:1fr;}}
+.period-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:14px;}
+.period-title{font-size:.65rem;font-family:monospace;color:#555;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;}
+.period-bar{background:#1a1a1a;border-radius:20px;height:10px;overflow:hidden;margin-bottom:8px;}
+.period-fill{height:100%;border-radius:20px;transition:width .6s ease;}
+.period-fill.week{background:linear-gradient(90deg,#5865F2,#00ff88);}
+.period-fill.day{background:linear-gradient(90deg,#d29922,#00ff88);}
+.period-stats{display:flex;justify-content:space-between;font-size:.72rem;font-family:monospace;color:#555;}
+.period-pct{font-size:1.2rem;font-weight:700;font-family:monospace;color:#00ff88;margin-bottom:6px;}
+
+/* SPOTLIGHTS */
+.spotlight-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #1a1a1a;font-family:monospace;font-size:.75rem;}
+.spotlight-row:last-child{border-bottom:none;}
+.spotlight-dot{width:6px;height:6px;border-radius:50%;background:#d29922;flex-shrink:0;margin-top:5px;}
+.spotlight-action{color:#e6edf3;flex:1;}
+.spotlight-note{color:#555;font-size:.68rem;margin-top:2px;}
+.spotlight-date{color:#333;font-size:.65rem;white-space:nowrap;}
+
+/* QUICK POOL */
+.quick-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0d0d0d;border-radius:6px;margin-bottom:5px;font-family:monospace;font-size:.75rem;}
+.quick-action{color:#d29922;min-width:100px;}
+.quick-msg{color:#555;flex:1;}
+.quick-sched{color:#333;font-size:.65rem;white-space:nowrap;}
+
+/* SATELLITE */
+.sat-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0d0d0d;border-radius:6px;margin-bottom:5px;font-family:monospace;font-size:.75rem;border-left:3px solid #1a1a1a;}
+.sat-row.high{border-left-color:#f8514944;}
+.sat-row.med{border-left-color:#d2992244;}
+.sat-row.low{border-left-color:#5865F244;}
+.sat-name{color:#e6edf3;font-weight:700;min-width:120px;}
+.sat-type{color:#555;font-size:.68rem;min-width:70px;}
+.sat-signal{color:#00ff88;flex:1;}
+.sat-threat{font-size:.65rem;padding:1px 6px;border-radius:8px;font-weight:700;}
+.sat-threat.high{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.sat-threat.med{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+.sat-threat.low{background:#5865F211;color:#5865F2;border:1px solid #5865F233;}
+
+.empty{text-align:center;color:#333;font-size:.78rem;padding:20px;font-family:monospace;}
+.refresh-btn{background:none;border:1px solid #222;color:#555;padding:4px 12px;border-radius:6px;font-family:monospace;font-size:.72rem;cursor:pointer;transition:all .2s;}
+.refresh-btn:hover{color:#00ff88;border-color:#00ff8833;}
+.last-fetch{font-size:.65rem;font-family:monospace;color:#333;}
+
+/* SHIELD RUNNING PANEL */
+.shield-running-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
+.shield-run-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:6px;padding:10px 8px;text-align:center;}
+.shield-run-card.active{border-color:#00ff8840;background:#00ff8806;}
+.shield-run-card.task{border-color:#d2992240;background:#d2992206;}
+.shield-run-id{font-size:.65rem;font-family:monospace;color:#00ff88;font-weight:700;}
+.shield-run-mode{font-size:.55rem;font-family:monospace;color:#555;text-transform:uppercase;margin-top:2px;}
+.shield-run-mode.running{color:#00ff88;}
+.shield-run-mode.task{color:#d29922;}
+.shield-run-jobs{font-size:.55rem;font-family:monospace;color:#333;margin-top:2px;}
+.shield-stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.shield-stat{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:6px;padding:10px 14px;flex:1;min-width:80px;}
+.shield-stat-val{font-size:1.2rem;font-family:monospace;font-weight:700;color:#00ff88;}
+.shield-stat-label{font-size:.58rem;font-family:monospace;color:#555;margin-top:2px;}
+.shield-feed{max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.shield-feed::-webkit-scrollbar{width:3px;}
+.shield-feed::-webkit-scrollbar-thumb{background:#1f1f1f;}
+.shield-feed-item{font-size:.68rem;font-family:monospace;color:#555;padding:4px 8px;background:#0d0d0d;border-radius:4px;border-left:2px solid #1a1a1a;}
+.shield-feed-item.active{border-left-color:#00ff8840;color:#c9d1d9;}
+.shield-feed-empty{font-size:.72rem;font-family:monospace;color:#333;text-align:center;padding:16px;}
+@media(max-width:480px){.shield-running-grid{grid-template-columns:repeat(2,1fr);}}
+
+  .ai-session-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0d0d0d;border-radius:6px;border-left:3px solid #00ff8844;font-family:monospace;}
+  .ai-session-row.test{border-left-color:#d2992244;}
+  .ai-session-row.content{border-left-color:#bc8cff44;}
+  .ai-session-dot{width:8px;height:8px;border-radius:50%;background:#00ff88;flex-shrink:0;}
+  .ai-session-row.test .ai-session-dot{background:#d29922;}
+  .ai-session-row.content .ai-session-dot{background:#bc8cff;}
+  .ai-session-info{flex:1;}
+  .ai-session-title{font-size:.78rem;color:#e6edf3;font-weight:700;}
+  .ai-session-meta{font-size:.63rem;color:#555;margin-top:2px;}
+  .ai-session-del{font-size:.65rem;color:#333;cursor:pointer;padding:2px 6px;border-radius:4px;border:1px solid #1f1f1f;background:none;}
+  .ai-session-del:hover{color:#f85149;border-color:#f8514933;}
+  .agent-bar-row{display:flex;align-items:center;gap:8px;}
+  .agent-bar-label{font-size:.65rem;font-family:monospace;color:#555;min-width:52px;}
+  .agent-bar-wrap{flex:1;background:#1a1a1a;border-radius:10px;height:5px;overflow:hidden;}
+  .agent-bar-fill{height:100%;border-radius:10px;background:#d29922;transition:width .4s;}
+  .agent-bar-count{font-size:.63rem;font-family:monospace;color:#333;min-width:24px;text-align:right;}
+
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "progress", root: "./" }</script>
+<script src="nav.js"></script>
+
+<div class="layout">
+
+  <!-- HEADER STATS -->
+  <div class="panel panel-green">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #1f1f1f;padding-bottom:8px;">
+      <span style="font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;font-family:monospace;">// v0.1 → v1.0 roadmap</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="last-fetch" id="lastFetch" style="font-size:.65rem;font-family:monospace;color:#333;">—</span>
+        <button id="modeToggle" onclick="toggleMode()" style="background:rgba(200,245,100,0.08);border:1px solid rgba(200,245,100,0.4);color:#c8f564;font-family:monospace;font-size:.75rem;padding:6px 16px;border-radius:6px;cursor:pointer;letter-spacing:1px;font-weight:700;min-width:100px;text-align:center;line-height:1.4;display:inline-block;">⚡ local</button>
+        <button class="refresh-btn" onclick="loadProgress()" style="background:#0d0d0d;border:1px solid #1f1f1f;color:#555;font-family:monospace;font-size:.68rem;padding:3px 10px;border-radius:4px;cursor:pointer;">↻</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-month-pct">—</div>
+        <div class="stat-label">this month</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val blue" id="stat-week-pct">—</div>
+        <div class="stat-label">this week</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val gold" id="stat-day-pct">—</div>
+        <div class="stat-label">today</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-genesis" style="color:#f85149;">—</div>
+        <div class="stat-label">days to genesis</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY BUCKETS -->
+  <div class="panel panel-gold">
+    <div class="section-title">// monthly buckets <span>v0.1 → v0.9</span></div>
+    <div id="bucketList"><div class="empty">// loading...</div></div>
+  </div>
+
+  <!-- WEEK + DAY -->
+  <div class="period-grid">
+    <div class="panel">
+      <div class="section-title">// this week</div>
+      <div class="period-pct" id="week-pct">—%</div>
+      <div class="period-bar"><div class="period-fill week" id="week-bar" style="width:0%"></div></div>
+      <div class="period-stats">
+        <span id="week-complete">0 complete</span>
+        <span id="week-total">0 total</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="section-title">// today</div>
+      <div class="period-pct" id="day-pct">—%</div>
+      <div class="period-bar"><div class="period-fill day" id="day-bar" style="width:0%"></div></div>
+      <div class="period-stats">
+        <span id="day-complete">0 complete</span>
+        <span id="day-total">0 total</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPOTLIGHTS -->
+  <div class="panel">
+    <div class="section-title">// spotlights <span>— recent highlights</span></div>
+    <div id="spotlightList"><div class="empty">// no spotlights yet</div></div>
+  </div>
+
+  <!-- QUICK POOL -->
+  <!-- SHIELD RUNNING PANEL -->
+  <div class="panel panel-green" id="shieldPanel">
+    <div class="section-title">// SHIELD running <span id="shieldRunStatus">loading...</span></div>
+
+    <!-- STATS -->
+    <div class="shield-stats-row">
+      <div class="shield-stat"><div class="shield-stat-val" id="srWorking">0</div><div class="shield-stat-label">working</div></div>
+      <div class="shield-stat"><div class="shield-stat-val" id="srIdle">10</div><div class="shield-stat-label">idle</div></div>
+      <div class="shield-stat"><div class="shield-stat-val" id="srJobsToday">0</div><div class="shield-stat-label">jobs today</div></div>
+      <div class="shield-stat"><div class="shield-stat-val" style="color:#d29922;" id="srAntEarned">0</div><div class="shield-stat-label">ANT earned</div></div>
+    </div>
+
+    <!-- AGENT GRID -->
+    <div class="shield-running-grid" id="srAgentGrid"></div>
+
+    <!-- LIVE FEED -->
+    <div class="section-title" style="margin-top:8px;">// live feed <span id="srFeedCount">0 events</span></div>
+    <div class="shield-feed" id="srFeed">
+      <div class="shield-feed-empty">// no activity yet — launch a SHIELD agent to begin</div>
+    </div>
+  </div>
+
+  <!-- TASKS PANEL -->
+  <div class="panel panel-green" id="tasksPanel">
+    <div class="section-title">// tasks <span id="tasksCount">0 active</span><button onclick="ANT.modal.open('task')" style="background:none;border:1px solid #00ff88;color:#00ff88;font-family:monospace;font-size:.7rem;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px;">+ task</button></div>
+    <div id="tasksList"><div class="empty">// no tasks yet — add one to start tracking progress</div></div>
+  </div>
+
+  <div class="panel panel-gold" id="quickPoolPanel">
+    <div class="section-title">// quick pool <span>— sprints &amp; hackathons</span><button onclick="ANT.modal.open('sprint')" style="background:none;border:1px solid #d29922;color:#d29922;font-family:monospace;font-size:.7rem;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px;">+ sprint</button></div>
+    <div id="quickList"><div class="empty">// no sprints yet — launch one to begin</div></div>
+  </div>
+
+
+  <!-- BULLPEN -->
+  <div class="panel panel-gold" id="bullpenPanel">
+    <div class="section-title">// bullpen <span id="bullpenCount">0 ideas</span><button onclick="ANT.modal.open('bullpen')" style="background:none;border:1px solid #d29922;color:#d29922;font-family:monospace;font-size:.7rem;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px;">+ add</button></div>
+    <div id="bullpenList"><div class="empty">// no ideas yet</div></div>
+    <div style="margin-top:8px;"><a href="/bullpen" style="font-size:.7rem;font-family:monospace;color:#555;text-decoration:none;">// view all →</a></div>
+  </div>
+
+  <!-- BACKLOG -->
+  <div class="panel" id="backlogPanel">
+    <div class="section-title">// backlog <span id="backlogCount">0 items</span><button onclick="ANT.modal.open('backlog')" style="background:none;border:1px solid #555;color:#888;font-family:monospace;font-size:.7rem;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px;">+ add</button></div>
+    <div id="backlogList"><div class="empty">// nothing parked</div></div>
+    <div style="margin-top:8px;"><a href="/backlog" style="font-size:.7rem;font-family:monospace;color:#555;text-decoration:none;">// view all →</a></div>
+  </div>
+
+  <!-- BULLPEN MODAL -->
+  <div id="modalBullpen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;">
+    <div style="background:#111;border:1px solid #d2992255;border-radius:12px;padding:28px;width:90%;max-width:560px;font-family:monospace;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <span style="color:#d29922;font-size:.8rem;text-transform:uppercase;letter-spacing:2px;">// bullpen — idea capture</span>
+        <button onclick="ANT.modal.close('bullpen')" style="background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;">x</button>
+      </div>
+      <input id="bullpenTitle" placeholder="// idea title" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:10px;box-sizing:border-box;">
+      <textarea id="bullpenDesc" placeholder="// one line description" rows="2" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:14px;box-sizing:border-box;resize:none;"></textarea>
+      <button onclick="submitBullpen()" style="background:#d29922;border:none;color:#000;font-family:monospace;font-size:.8rem;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">+ capture idea</button>
+      <div style="margin-top:18px;border-top:1px solid #1f1f1f;padding-top:14px;">
+        <div style="font-size:.7rem;color:#555;margin-bottom:8px;">// all ideas</div>
+        <div id="bullpenModalList"><div class="empty">// loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKLOG MODAL -->
+  <div id="modalBacklog" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;">
+    <div style="background:#111;border:1px solid #33333355;border-radius:12px;padding:28px;width:90%;max-width:560px;font-family:monospace;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <span style="color:#888;font-size:.8rem;text-transform:uppercase;letter-spacing:2px;">// backlog — parked items</span>
+        <button onclick="ANT.modal.close('backlog')" style="background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;">x</button>
+      </div>
+      <input id="backlogTitle" placeholder="// item title" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:10px;box-sizing:border-box;">
+      <textarea id="backlogDesc" placeholder="// why parked" rows="2" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:14px;box-sizing:border-box;resize:none;"></textarea>
+      <button onclick="submitBacklog()" style="background:#333;border:1px solid #555;color:#c9d1d9;font-family:monospace;font-size:.8rem;padding:8px 20px;border-radius:6px;cursor:pointer;">+ park item</button>
+      <div style="margin-top:18px;border-top:1px solid #1f1f1f;padding-top:14px;">
+        <div style="font-size:.7rem;color:#555;margin-bottom:8px;">// all parked</div>
+        <div id="backlogModalList"><div class="empty">// loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASK MODAL -->
+  <div id="modalTask" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;">
+    <div style="background:#111;border:1px solid #00ff8833;border-radius:12px;padding:28px;width:90%;max-width:580px;font-family:monospace;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <span style="color:#00ff88;font-size:.8rem;text-transform:uppercase;letter-spacing:2px;">// new task</span>
+        <button onclick="ANT.modal.close('task')" style="background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;">x</button>
+      </div>
+      <input id="taskName" placeholder="// task name (e.g. Monday Marketing)" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:10px;box-sizing:border-box;">
+      <textarea id="taskDesc" placeholder="// description — what needs to happen?" rows="2" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:10px;box-sizing:border-box;resize:none;"></textarea>
+      <select id="taskSubcount" onchange="renderSubtaskInputs()" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:14px;box-sizing:border-box;">
+        <option value="5">// 5 subtasks — ~30 min</option>
+        <option value="10">// 10 subtasks — ~1 hour</option>
+      </select>
+      <div id="subtaskInputs" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
+      <button onclick="submitTask()" style="background:#00ff88;border:none;color:#000;font-family:monospace;font-size:.8rem;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">+ create task</button>
+    </div>
+  </div>
+
+  <!-- SPRINT MODAL -->
+  <div id="modalSprint" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;">
+    <div style="background:#111;border:1px solid #d2992255;border-radius:12px;padding:28px;width:90%;max-width:560px;font-family:monospace;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <span style="color:#d29922;font-size:.8rem;text-transform:uppercase;letter-spacing:2px;">// quick pool — sprint launcher</span>
+        <button onclick="ANT.modal.close('sprint')" style="background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;">x</button>
+      </div>
+      <input id="sprintTitle" placeholder="// sprint name" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:10px;box-sizing:border-box;">
+      <textarea id="sprintDesc" placeholder="// goal — what does done look like?" rows="2" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:10px;box-sizing:border-box;resize:none;"></textarea>
+      <select id="sprintType" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:10px;color:#c9d1d9;font-family:monospace;font-size:.8rem;margin-bottom:14px;box-sizing:border-box;">
+        <option value="sprint">// sprint</option>
+        <option value="hackathon">// hackathon</option>
+        <option value="fix">// fix run</option>
+        <option value="deploy">// deploy run</option>
+      </select>
+      <button onclick="submitSprint()" style="background:#d29922;border:none;color:#000;font-family:monospace;font-size:.8rem;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">+ launch sprint</button>
+      <div style="margin-top:18px;border-top:1px solid #1f1f1f;padding-top:14px;">
+        <div style="font-size:.7rem;color:#555;margin-bottom:8px;">// active sprints</div>
+        <div id="sprintModalList"><div class="empty">// loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+<!-- AI PANELS — contained in layout -->
+  <div class="panel" id="aiUsagePanel">
+    <div class="section-title">// agent usage today
+      <span id="aiUsageLabel">loading...</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;" id="agentUsageBars">
+      <div style="background:#1a1a1a;border-radius:20px;height:8px;overflow:hidden;">
+        <div id="aiTotalBar" style="height:100%;background:#00ff88;width:0%;transition:width .4s;border-radius:20px;"></div>
+      </div>
+      <div style="font-size:.65rem;font-family:monospace;color:#555;">10 calls/hour per model · resets every 60 min</div>
+      <div id="perAgentBars" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
+    </div>
+  </div>
+
+  <!-- AI SESSION SCHEDULE PANEL -->
+  <div class="panel" style="margin-top:20px;">
+    <div class="section-title">// ai sessions this week
+      <span style="color:#58a6ff;cursor:pointer;font-size:.65rem;" onclick="window.location.href='calendar.html'">→ calendar</span>
+    </div>
+    <div id="aiSessionList" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="font-family:monospace;font-size:.75rem;color:#444;">// loading sessions...</div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button onclick="scheduleAiSession('build')" style="background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;border-radius:6px;padding:6px 14px;font-family:monospace;font-size:.72rem;font-weight:700;cursor:pointer;">+ build session</button>
+      <button onclick="scheduleAiSession('test')" style="background:#d2992211;color:#d29922;border:1px solid #d2992233;border-radius:6px;padding:6px 14px;font-family:monospace;font-size:.72rem;font-weight:700;cursor:pointer;">+ test session</button>
+      <button onclick="scheduleAiSession('content')" style="background:#bc8cff11;color:#bc8cff;border:1px solid #bc8cff33;border-radius:6px;padding:6px 14px;font-family:monospace;font-size:.72rem;font-weight:700;cursor:pointer;">+ content session</button>
+    </div>
+  </div>
+
+  <!-- SATELLITE -->
+  <div class="panel">
+    <div class="section-title">// satellite signals <span>radar</span></div>
+    <div id="satList"><div class="empty">// no signals</div></div>
+  </div>
+
+</div>
+
+<script>
+async function submitBullpen() {
+  const title = document.getElementById('bullpenTitle').value.trim();
+  const desc  = document.getElementById('bullpenDesc').value.trim();
+  if (!title) return;
+  await ANT.api.post('tower/log', { action:'bullpen_idea', message: title + (desc ? ' — ' + desc : ''), node_id:'bullpen', priority:2, reward:'1' });
+  document.getElementById('bullpenTitle').value = '';
+  document.getElementById('bullpenDesc').value = '';
+  loadModalList('bullpen');
+}
+async function submitBacklog() {
+  const title = document.getElementById('backlogTitle').value.trim();
+  const desc  = document.getElementById('backlogDesc').value.trim();
+  if (!title) return;
+  await ANT.api.post('tower/log', { action:'backlog', message: title + (desc ? ' — ' + desc : ''), node_id:'backlog', priority:4, reward:'0' });
+  document.getElementById('backlogTitle').value = '';
+  document.getElementById('backlogDesc').value = '';
+  loadModalList('backlog');
+}
+async function submitSprint() {
+  const title = document.getElementById('sprintTitle').value.trim();
+  const desc  = document.getElementById('sprintDesc').value.trim();
+  const type  = document.getElementById('sprintType').value;
+  if (!title) return;
+  await ANT.api.post('tower/log', { action:'sprint_launch', message: '[' + type + '] ' + title + (desc ? ' — ' + desc : ''), node_id:'quickpool', priority:1, reward:'5' });
+  document.getElementById('sprintTitle').value = '';
+  document.getElementById('sprintDesc').value = '';
+  loadSprintList();
+}
+
+async function loadSprintList() {
+  const rows = await ANT.api.get('tower_log');
+  const filtered = (rows || []).filter(r => r.action === 'sprint_launch').slice(0,5);
+  const el = document.getElementById('sprintModalList');
+  if (!el) return;
+  el.innerHTML = filtered.length
+    ? filtered.map(r => `<div style="padding:6px 0;border-bottom:1px solid #1a1a1a;font-size:.73rem;font-family:monospace;color:#c9d1d9;">${ANT.esc(r.message)}</div>`).join('')
+    : '<div class="empty">// no sprints yet</div>';
+  // update quick pool panel
+  const ql = document.getElementById('quickList');
+  if (ql) ql.innerHTML = filtered.length
+    ? filtered.slice(0,3).map(r => `<div style="padding:6px 0;border-bottom:1px solid #1a1a1a;font-size:.73rem;font-family:monospace;color:#c9d1d9;">${ANT.esc(r.message)}</div>`).join('')
+    : '<div class="empty">// no sprints yet — launch one to begin</div>';
+}
+
+async function loadModalList(type) {
+  const action  = type === 'bullpen' ? 'bullpen_idea' : 'backlog';
+  const listId  = type === 'bullpen' ? 'bullpenModalList' : 'backlogModalList';
+  const panelId = type === 'bullpen' ? 'bullpenList' : 'backlogList';
+  const countId = type === 'bullpen' ? 'bullpenCount' : 'backlogCount';
+  try {
+    const rows = await ANT.api.get('tower_log');
+    const filtered = rows.filter(r => r.action === action).sort((a,b) => b.created_at > a.created_at ? 1 : -1);
+    const label = type === 'bullpen' ? 'ideas' : 'items';
+    document.getElementById(countId).textContent = filtered.length + ' ' + label;
+    const html = filtered.length ? filtered.map(r => `
+      <div style="padding:8px 0;border-bottom:1px solid #1a1a1a;font-size:.75rem;">
+        <div style="color:#e6edf3;margin-bottom:2px;">${ANT.esc(r.message)}</div>
+        <div style="color:#555;font-size:.65rem;">${ANT.esc(r.created_at ? r.created_at.slice(0,10) : '')}</div>
+      </div>`).join('') : '<div class="empty">// empty</div>';
+    document.getElementById(listId).innerHTML = html;
+    document.getElementById(panelId).innerHTML = filtered.slice(0,3).length
+      ? filtered.slice(0,3).map(r => `<div style="padding:6px 0;border-bottom:1px solid #1a1a1a;font-size:.73rem;font-family:monospace;color:#c9d1d9;">${ANT.esc(r.message)}</div>`).join('')
+      : '<div class="empty">// empty</div>';
+  } catch(e) { console.error('loadModalList failed:', e); }
+}
+</script>
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ── MODE TOGGLE ──────────────────────────────────────────
+let ANT_MODE = 'public'; // 'local' | 'public' — default public for live, toggle to local for dev
+
+function toggleMode() {
+  ANT_MODE = ANT_MODE === 'local' ? 'public' : 'local';
+  const btn = document.getElementById('modeToggle');
+  if (ANT_MODE === 'public') {
+    btn.textContent = '🌐 public';
+    btn.style.borderColor = '#00ff88';
+    btn.style.color = '#00ff88';
+    // gray out local-only panels
+    ['shieldPanel','aiUsagePanel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = '0.3'; el.style.pointerEvents = 'none'; }
+    });
+  } else {
+    btn.textContent = '⚡ local';
+    btn.style.borderColor = '#555';
+    btn.style.color = '#888';
+    ['shieldPanel','aiUsagePanel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
+    });
+  }
+  loadProgress();
+}
+
+async function fetchProgress() {
+  if (ANT_MODE === 'local') {
+    try {
+      const r = await fetch('http://localhost:3000/api/progress');
+      if (r.ok) return await r.json();
+    } catch(e) {}
+    // fallback to public
+  }
+  return fetch('https://antcpu.com/data/progress.json').then(r=>r.json());
+}
+
+(()=>{
+
+  async function loadProgress() {
+    try {
+      const d = await fetchProgress();
+
+      // genesis countdown
+      const genesis = Math.ceil((new Date('2026-08-10') - new Date()) / (1000*60*60*24));
+      document.getElementById('stat-genesis').textContent = genesis + 'd';
+
+      // current month bucket
+      const now = new Date();
+      const curMonth = now.toISOString().slice(0,7);
+      const curBucket = d.monthly.find(b => b.month === curMonth);
+      document.getElementById('stat-month-pct').textContent = (curBucket?.pct ?? 0) + '%';
+
+      // week + day
+      document.getElementById('stat-week-pct').textContent = d.weekly.pct + '%';
+      document.getElementById('stat-day-pct').textContent  = d.daily.pct + '%';
+
+      document.getElementById('week-pct').textContent      = d.weekly.pct + '%';
+      document.getElementById('week-bar').style.width      = d.weekly.pct + '%';
+      document.getElementById('week-complete').textContent = d.weekly.complete + ' complete';
+      document.getElementById('week-total').textContent    = d.weekly.total + ' total';
+
+      document.getElementById('day-pct').textContent       = d.daily.pct + '%';
+      document.getElementById('day-bar').style.width       = d.daily.pct + '%';
+      document.getElementById('day-complete').textContent  = d.daily.complete + ' complete';
+      document.getElementById('day-total').textContent     = d.daily.total + ' total';
+
+      // monthly buckets
+      document.getElementById('bucketList').innerHTML = d.monthly.map(b => {
+        const isCur = b.month === curMonth;
+        return `
+          <div class="bucket-row ${isCur?'current':''}">
+            <div class="bucket-ver">${esc(b.version)}</div>
+            <div class="bucket-label">${esc(b.label)}</div>
+            <div class="bucket-bar"><div class="bucket-fill" style="width:${b.pct}%"></div></div>
+            <div class="bucket-pct ${isCur?'active':''}">${b.pct}%</div>
+            ${b.target ? `<div class="bucket-target">⚑ ${esc(b.target)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      // spotlights
+      document.getElementById('spotlightList').innerHTML = d.spotlights.length
+        ? d.spotlights.map(s=>`
+            <div class="spotlight-row">
+              <div class="spotlight-dot"></div>
+              <div style="flex:1">
+                <div class="spotlight-action">${esc(s.action)}</div>
+                <div class="spotlight-note">${esc(s.spotlight||'')}</div>
+              </div>
+              <div class="spotlight-date">${esc(s.date)}</div>
+            </div>
+          `).join('')
+        : '<div class="empty">// no spotlights yet</div>';
+
+      // quick pool
+      document.getElementById('quickList').innerHTML = d.quickPool.length
+        ? d.quickPool.map(q=>`
+            <div class="quick-row">
+              <div class="quick-action">${esc(q.action)}</div>
+              <div class="quick-msg">${esc(q.message||'')}</div>
+              <div class="quick-sched">${esc(q.schedule||'')}</div>
+            </div>
+          `).join('')
+        : '<div class="empty">// empty</div>';
+
+      // satellite
+      document.getElementById('satList').innerHTML = d.satellite.length
+        ? d.satellite.map(s=>`
+            <div class="sat-row ${s.threat_level||'low'}">
+              <div class="sat-name">${esc(s.name)}</div>
+              <div class="sat-type">${esc(s.type||'')}</div>
+              <div class="sat-signal">${esc(s.signal||s.intel||'watching')}</div>
+              ${s.threat_level ? `<span class="sat-threat ${s.threat_level}">${s.threat_level.toUpperCase()}</span>` : ''}
+            </div>
+          `).join('')
+        : '<div class="empty">// no signals</div>';
+
+      document.getElementById('lastFetch').textContent = 'updated ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'});
+
+    } catch(e) {
+      console.error('progress load failed:', e);
+    }
+  }
+
+  loadProgress();
+  setInterval(loadProgress, 30000);
+
+  // ── SHIELD RUNNING PANEL ───────────────────────────────
+  const renderShieldRunning = () => {
+    const ledger = ANT.store.get('antcpu_shield_ledger', []);
+    const today  = new Date().toISOString().slice(0,10);
+
+    // agent states from ledger
+    const agentModes = {};
+    ledger.forEach(l => { if (l.action === 'mode_set') agentModes[l.agent] = l.detail; });
+
+    const agents   = Array.from({length:10},(_,i) => 'S-' + String(i+1).padStart(2,'0'));
+    const working  = agents.filter(a => agentModes[a] && agentModes[a] !== 'idle').length;
+    const jobsToday = ledger.filter(l => l.ts && l.ts.startsWith(today) && l.action === 'mode_set' && l.detail !== 'idle').length;
+    const antEarned = ledger.filter(l => l.ts && l.ts.startsWith(today)).length;
+
+    document.getElementById('srWorking').textContent   = working;
+    document.getElementById('srIdle').textContent      = 10 - working;
+    document.getElementById('srJobsToday').textContent = jobsToday;
+    document.getElementById('srAntEarned').textContent = antEarned;
+    document.getElementById('shieldRunStatus').textContent = working + ' active · ' + jobsToday + ' jobs today';
+
+    // agent grid
+    document.getElementById('srAgentGrid').innerHTML = agents.map(a => {
+      const mode = agentModes[a] || 'idle';
+      const jobs = ledger.filter(l => l.agent === a && l.action === 'mode_set' && l.detail !== 'idle').length;
+      return `
+        <div class="shield-run-card ${mode !== 'idle' ? mode : ''}">
+          <div class="shield-run-id">${a}</div>
+          <div class="shield-run-mode ${mode}">● ${mode}</div>
+          <div class="shield-run-jobs">${jobs} jobs</div>
+        </div>`;
+    }).join('');
+
+    // live feed — last 10 events
+    const feed = document.getElementById('srFeed');
+    const recent = ledger.slice(-10).reverse();
+    if (!recent.length) return;
+    document.getElementById('srFeedCount').textContent = ledger.length + ' events';
+    feed.innerHTML = recent.map(l => `
+      <div class="shield-feed-item ${l.action === 'heartbeat' || l.action === 'agent_reply' ? 'active' : ''}">
+        <span style="color:#555;">${l.ts ? l.ts.slice(11,19) : '--'}</span>
+        · <span style="color:#00ff88;">${l.agent}</span>
+        · ${l.action}
+        · <span style="color:#888;">${String(l.detail).slice(0,40)}</span>
+      </div>
+    `).join('');
+  };
+
+  renderShieldRunning();
+
+
+
+  // ── BULLPEN + BACKLOG ─────────────────────────────────
+
+  function openModal(type) {
+    const el = document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1));
+    el.style.display = 'flex';
+    loadModalList(type);
+    document.addEventListener('keydown', escHandler);
+  }
+
+  function closeModal(type) {
+    const el = document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1));
+    el.style.display = 'none';
+    document.removeEventListener('keydown', escHandler);
+  }
+
+  function escHandler(e) {
+    if (e.key === 'Escape') { closeModal('bullpen'); closeModal('backlog'); }
+  }
+
+  // close on overlay click
+  document.getElementById('modalBullpen').addEventListener('click', function(e){ if(e.target===this) closeModal('bullpen'); });
+  document.getElementById('modalBacklog').addEventListener('click', function(e){ if(e.target===this) closeModal('backlog'); });
+  document.getElementById('modalSprint').addEventListener('click', function(e){ if(e.target===this) ANT.modal.close('sprint'); });
+
+
+
+
+
+  // register modal open callbacks
+
+  // ── TASK ENGINE ──────────────────────────────────────────
+  const TASK_KEY = 'antcpu_tasks';
+
+  function getTasks() { return ANT.store.get(TASK_KEY, []); }
+  function saveTasks(t) { ANT.store.set(TASK_KEY, t); }
+
+  function renderSubtaskInputs() {
+    const count = parseInt(document.getElementById('taskSubcount').value);
+    const el = document.getElementById('subtaskInputs');
+    el.innerHTML = Array.from({length: count}, (_, i) =>
+      `<input placeholder="// subtask ${i+1}" data-idx="${i}" style="width:100%;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:6px;padding:8px 10px;color:#c9d1d9;font-family:monospace;font-size:.75rem;box-sizing:border-box;">`
+    ).join('');
+  }
+
+  function submitTask() {
+    const name = document.getElementById('taskName').value.trim();
+    const desc = document.getElementById('taskDesc').value.trim();
+    const count = parseInt(document.getElementById('taskSubcount').value);
+    if (!name) return;
+    const inputs = document.querySelectorAll('#subtaskInputs input');
+    const subtasks = Array.from(inputs).map((el, i) => ({
+      label: el.value.trim() || 'subtask ' + (i+1),
+      done: false
+    }));
+    const tasks = getTasks();
+    tasks.unshift({
+      id: Date.now(),
+      name,
+      desc,
+      subtasks,
+      created_at: new Date().toISOString()
+    });
+    saveTasks(tasks);
+    document.getElementById('taskName').value = '';
+    document.getElementById('taskDesc').value = '';
+    renderSubtaskInputs();
+    ANT.modal.close('task');
+    renderTasks();
+  }
+
+  function toggleSubtask(taskId, idx) {
+    const tasks = getTasks();
+    const t = tasks.find(t => t.id === taskId);
+    if (!t) return;
+    t.subtasks[idx].done = !t.subtasks[idx].done;
+    saveTasks(tasks);
+    renderTasks();
+  }
+
+  function deleteTask(taskId) {
+    saveTasks(getTasks().filter(t => t.id !== taskId));
+    renderTasks();
+  }
+
+  function renderTasks() {
+    const tasks = getTasks();
+    const el = document.getElementById('tasksList');
+    const countEl = document.getElementById('tasksCount');
+    if (!el) return;
+    const active = tasks.filter(t => {
+      const done = t.subtasks.filter(s => s.done).length;
+      return done < t.subtasks.length;
+    });
+    if (countEl) countEl.textContent = active.length + ' active';
+    if (!tasks.length) {
+      el.innerHTML = '<div class="empty">// no tasks yet — add one to start tracking progress</div>';
+      return;
+    }
+    el.innerHTML = tasks.map(t => {
+      const total = t.subtasks.length;
+      const done  = t.subtasks.filter(s => s.done).length;
+      const pct   = Math.round((done / total) * 100);
+      const mins  = total === 5 ? 30 : 60;
+      const color = pct === 100 ? '#00ff88' : pct > 50 ? '#d29922' : '#5865F2';
+      return `<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="color:#e6edf3;font-size:.8rem;font-weight:700;">${ANT.esc(t.name)}</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="color:#555;font-size:.65rem;">~${mins}min</span>
+            <button onclick="deleteTask(${t.id})" style="background:none;border:none;color:#333;cursor:pointer;font-size:.7rem;padding:0 4px;">✕</button>
+          </div>
+        </div>
+        ${t.desc ? `<div style="color:#555;font-size:.68rem;margin-bottom:8px;">${ANT.esc(t.desc)}</div>` : ''}
+        <div style="background:#1a1a1a;border-radius:20px;height:6px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;background:${color};width:${pct}%;transition:width .4s;border-radius:20px;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="font-size:.65rem;color:${color};">${pct}% complete</span>
+          <span style="font-size:.65rem;color:#555;">${done}/${total} subtasks</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          ${t.subtasks.map((s, i) => `
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;">
+              <input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleSubtask(${t.id},${i})" style="accent-color:#00ff88;cursor:pointer;">
+              <span style="font-size:.72rem;color:${s.done ? '#555' : '#c9d1d9'};${s.done ? 'text-decoration:line-through;' : ''}">${ANT.esc(s.label)}</span>
+            </label>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // init subtask inputs on modal open
+  ANT.modal.onOpen('task', () => {
+    renderSubtaskInputs();
+    document.getElementById('taskName').focus();
+  });
+
+  document.getElementById('modalTask').addEventListener('click', function(e){ if(e.target===this) ANT.modal.close('task'); });
+
+  // render on load
+  ANT.ready(() => { renderTasks(); });
+
+  ANT.modal.onOpen('bullpen', () => loadModalList('bullpen'));
+  ANT.modal.onOpen('backlog', () => loadModalList('backlog'));
+  ANT.modal.onOpen('sprint', () => loadSprintList());
+
+  // load compact panels on page load
+  ANT.ready(() => {
+    loadModalList('bullpen');
+    loadModalList('backlog');
+    loadSprintList();
+  });
+
+
+  // ── AI USAGE ──────────────────────────────────────────
+  const AGENT_COLORS = {
+    aria:'#bc8cff', forge:'#58a6ff', scout:'#00ff88',
+    ledger:'#d29922', herald:'#ff7b72', vault:'#f85149'
+  };
+
+  const loadAiUsage = async () => {
+    try {
+      const [ratesRes, towerRes] = await Promise.all([
+        fetch('/api/gemini/rates'),
+        fetch('/api/tower?limit=200')
+      ]);
+      const rates = await ratesRes.json();
+      const tower = await towerRes.json();
+
+      const used  = rates.count || 0;
+      const limit = rates.limit || 10;
+      const pct   = Math.min((used / limit) * 100, 100);
+
+      document.getElementById('aiTotalBar').style.width = pct + '%';
+      document.getElementById('aiTotalBar').style.background =
+        pct > 80 ? '#f85149' : pct > 60 ? '#d29922' : '#00ff88';
+      document.getElementById('aiUsageLabel').textContent =
+        used + ' / ' + limit + ' calls this hour';
+
+      // per-agent breakdown from tower_log
+      const logs  = tower.logs || [];
+      const today = new Date().toISOString().slice(0,10);
+      const counts = {};
+      logs.filter(l => l.action === 'gemini_call' && (l.created_at||'').slice(0,10) === today)
+          .forEach(l => {
+            const agent = (l.node_id || 'unknown');
+            counts[agent] = (counts[agent] || 0) + 1;
+          });
+
+      const agents = ['aria','forge','scout','ledger','herald','vault'];
+      const maxCount = Math.max(...agents.map(a => counts[a] || 0), 1);
+      document.getElementById('perAgentBars').innerHTML = agents.map(a => {
+        const c = counts[a] || 0;
+        const w = (c / maxCount) * 100;
+        return `<div class="agent-bar-row">
+          <div class="agent-bar-label">${a.toUpperCase()}</div>
+          <div class="agent-bar-wrap"><div class="agent-bar-fill" style="width:${w}%;background:${AGENT_COLORS[a]};"></div></div>
+          <div class="agent-bar-count">${c}</div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      document.getElementById('aiUsageLabel').textContent = 'unavailable';
+    }
+  };
+
+  // ── AI SESSIONS ───────────────────────────────────────
+  const AI_SESSION_KEY = 'antcpu_ai_sessions';
+
+  const SESSION_TYPES = {
+    build  : { label:'🔧 Build Session',   color:'#00ff88', note:'satellite-route + gemini context' },
+    test   : { label:'🧪 Test Session',    color:'#d29922', note:'agent trial runs + approval' },
+    content: { label:'📣 Content Session', color:'#bc8cff', note:'herald + feed pipeline' }
+  };
+
+  const renderAiSessions = () => {
+    const sessions = ANT.store.get(AI_SESSION_KEY, []);
+    const now = new Date();
+    const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7);
+    const upcoming = sessions
+      .filter(s => new Date(s.date) >= now && new Date(s.date) <= weekEnd)
+      .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    const el = document.getElementById('aiSessionList');
+    if (!upcoming.length) {
+      el.innerHTML = '<div style="font-family:monospace;font-size:.75rem;color:#444;">// no sessions scheduled this week — add one below</div>';
+      return;
+    }
+    el.innerHTML = upcoming.map((s,i) => {
+      const t = SESSION_TYPES[s.type] || SESSION_TYPES.build;
+      const d = new Date(s.date);
+      const label = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      const time  = s.time || '10:00 AM';
+      return `<div class="ai-session-row ${s.type}">
+        <div class="ai-session-dot"></div>
+        <div class="ai-session-info">
+          <div class="ai-session-title">${t.label}</div>
+          <div class="ai-session-meta">${label} · ${time} · ${t.note}</div>
+        </div>
+        <button class="ai-session-del" onclick="deleteAiSession(${i})">✕</button>
+      </div>`;
+    }).join('');
+  };
+
+  window.scheduleAiSession = (type) => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const date = prompt('Date for session (YYYY-MM-DD):', d.toISOString().slice(0,10));
+    if (!date) return;
+    const time = prompt('Time (e.g. 10:00 AM):', '10:00 AM');
+    const sessions = ANT.store.get(AI_SESSION_KEY, []);
+    sessions.push({ type, date, time: time || '10:00 AM', created_at: new Date().toISOString() });
+    ANT.store.set(AI_SESSION_KEY, sessions);
+    renderAiSessions();
+    // also post to calendar as event
+    fetch('/api/tower_log', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'ai_session_scheduled',
+        message: SESSION_TYPES[type].label + ' — ' + date + ' ' + (time||'10:00 AM'),
+        priority: 2,
+        date: date,
+        session: 'scout'
+      })
+    }).catch(()=>{});
+  };
+
+  window.deleteAiSession = (idx) => {
+    const sessions = ANT.store.get(AI_SESSION_KEY, []);
+    sessions.splice(idx, 1);
+    ANT.store.set(AI_SESSION_KEY, sessions);
+    renderAiSessions();
+  };
+
+  ANT.ready(() => {
+    loadAiUsage();
+    setInterval(loadAiUsage, 60000);
+    renderAiSessions();
+  });
+
+})();
+</script>
+
+<script src="footer.js"></script>
+</body>
+</html>

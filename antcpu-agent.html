@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>antcpu — Owner Cockpit</title>
+<style>
+.layout{max-width:1100px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:14px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.section-title span{color:#d29922;}
+.panel{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:20px;}
+/* IDENTITY CARD */
+.identity{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.identity-avatar{font-size:3.5rem;}
+.identity-info{flex:1;}
+.identity-name{font-size:1.6rem;font-weight:700;color:#00ff88;font-family:monospace;letter-spacing:2px;}
+.identity-role{font-size:.78rem;color:#555;font-family:monospace;margin-top:4px;}
+.identity-goal{font-size:.72rem;color:#d29922;font-family:monospace;margin-top:6px;line-height:1.6;}
+.identity-badge{display:inline-block;font-size:.62rem;font-weight:700;font-family:monospace;padding:4px 12px;border-radius:10px;background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;margin-top:8px;}
+/* AGENT OVERVIEW GRID */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.agent-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:14px;transition:border-color .2s;}
+.agent-card:hover{border-color:#333;}
+.agent-card.active{border-left:3px solid #00ff88;}
+.agent-card.standby{border-left:3px solid #d29922;}
+.agent-card.offline{border-left:3px solid #333;opacity:.5;}
+.agent-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.agent-avatar{font-size:1.4rem;}
+.agent-info{flex:1;}
+.agent-name{font-size:.88rem;font-weight:700;color:#e6edf3;font-family:monospace;}
+.agent-role{font-size:.65rem;color:#555;font-family:monospace;margin-top:2px;}
+.agent-badge{font-size:.58rem;font-weight:700;font-family:monospace;padding:2px 8px;border-radius:10px;}
+.agent-badge.active{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.agent-badge.standby{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+.agent-badge.offline{background:#1a1a1a;color:#555;border:1px solid #222;}
+.agent-score{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a;}
+.agent-score-val{font-size:1.1rem;font-weight:700;font-family:monospace;color:#d29922;}
+.agent-score-label{font-size:.62rem;font-family:monospace;color:#333;text-transform:uppercase;letter-spacing:1px;}
+.agent-last{font-size:.62rem;font-family:monospace;color:#333;}
+.score-bar-wrap{height:4px;background:#1a1a1a;border-radius:2px;margin-top:6px;overflow:hidden;}
+.score-bar{height:4px;border-radius:2px;background:#d29922;transition:width .6s;}
+/* TRIAL RUN */
+.trial-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.trial-date{background:#0d0d0d;border:1px solid #222;border-radius:6px;color:#c9d1d9;font-family:monospace;font-size:.82rem;padding:8px 12px;outline:none;}
+.trial-date:focus{border-color:#00ff88;}
+.btn-primary{background:#00ff88;color:#0a0a0a;border:none;border-radius:8px;padding:10px 20px;font-family:monospace;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-primary:hover{background:#00cc6a;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-secondary{background:#1a1a1a;color:#555;border:1px solid #222;border-radius:8px;padding:10px 20px;font-family:monospace;font-size:.82rem;font-weight:700;cursor:pointer;}
+.btn-secondary:hover{color:#e6edf3;border-color:#333;}
+.trial-results{display:flex;flex-direction:column;gap:12px;}
+.trial-agent-block{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;}
+.trial-agent-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.trial-agent-name{font-family:monospace;font-size:.85rem;font-weight:700;color:#e6edf3;}
+.trial-agent-output{font-family:monospace;font-size:.75rem;color:#c9d1d9;line-height:1.7;white-space:pre-wrap;background:#111;border:1px solid #1f1f1f;border-radius:6px;padding:12px;margin-bottom:10px;min-height:60px;}
+.trial-agent-actions{display:flex;gap:8px;}
+.trial-btn{padding:6px 14px;border-radius:6px;border:none;font-family:monospace;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.trial-btn-approve{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.trial-btn-approve:hover{background:#00ff8822;}
+.trial-btn-reject{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.trial-btn-reject:hover{background:#f8514922;}
+.trial-btn-suggest{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+.trial-btn-suggest:hover{background:#d2992222;}
+.trial-rating{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.rating-star{font-size:1rem;cursor:pointer;color:#333;transition:color .15s;}
+.rating-star.lit{color:#d29922;}
+.trial-note{font-size:.68rem;font-family:monospace;color:#555;margin-top:4px;}
+.trial-note.approved{color:#00ff88;}
+.trial-note.rejected{color:#f85149;}
+/* STATUS */
+.status-bar{display:none;font-size:.75rem;font-family:monospace;padding:8px 12px;border-radius:6px;}
+.status-bar.show{display:block;}
+.status-bar.ok{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.status-bar.err{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.status-bar.loading{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+.empty-state{text-align:center;color:#333;font-size:.8rem;padding:30px;font-family:monospace;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "antcpu-agent", root: "./" }</script>
+<script src="nav.js"></script>
+
+<div class="layout">
+
+  <!-- PANEL 1: IDENTITY -->
+  <div class="panel">
+    <div class="section-title">// owner cockpit <span id="cockpit-time"></span></div>
+    <div class="identity">
+      <div class="identity-avatar">🧠</div>
+      <div class="identity-info">
+        <div class="identity-name">ANTCPU</div>
+        <div class="identity-role">Antony Ciccone — Founder · Builder · Decision Maker</div>
+        <div class="identity-goal">Build Goal: antcpu-agent oversees all 6 agents · simulates trial runs · rates performance · iterates</div>
+        <div class="identity-badge">● OWNER — ONLINE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: AGENT OVERVIEW -->
+  <div class="panel">
+    <div class="section-title">// agent overview <span id="agent-summary">loading...</span></div>
+    <div class="agent-grid" id="agentGrid"></div>
+  </div>
+
+  <!-- PANEL 3: TRIAL RUN -->
+  <div class="panel">
+    <div class="section-title">// trial run <span>simulate next day</span></div>
+    <div class="trial-controls">
+      <input class="trial-date" type="date" id="trialDate">
+      <button class="btn-primary" id="trialRunBtn" onclick="runTrial()">▶ run trial</button>
+      <button class="btn-secondary" onclick="clearTrial()">✕ clear</button>
+    </div>
+    <div class="status-bar" id="trialStatus"></div>
+    <div class="trial-results" id="trialResults">
+      <div class="empty-state">// select a date and run trial to simulate what each agent would do</div>
+    </div>
+  </div>
+
+
+  <!-- USAGE COUNTER -->
+  <div class="panel" style="margin-top:16px;">
+    <div class="section-title">// ai usage today <span id="usageLabel">loading...</span></div>
+    <div style="background:#0d0d0d;border-radius:6px;height:8px;overflow:hidden;margin-bottom:8px;">
+      <div id="usageBar" style="height:100%;background:#00ff88;width:0%;transition:width .4s;"></div>
+    </div>
+    <div style="font-size:.65rem;font-family:monospace;color:#555;">1,500 requests/day free tier · resets midnight UTC</div>
+  </div>
+
+  <!-- SCHEDULE BUILDER -->
+  <div class="panel" style="margin-top:16px;">
+    <div class="section-title">// schedule builder <span>plan your day hour by hour</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+      <input class="trial-date" type="date" id="schedDate">
+      <select id="schedDayType" style="background:#0d0d0d;border:1px solid #333;color:#ccc;padding:6px 10px;border-radius:6px;font-family:monospace;font-size:.75rem;">
+        <option value="build">🔧 Build Day</option>
+        <option value="marketing">📣 Marketing Day</option>
+        <option value="deploy">🚀 Deploy Day</option>
+        <option value="outreach">📧 Outreach Day</option>
+        <option value="custom">⚙ Custom</option>
+      </select>
+      <button class="btn-primary" onclick="autoFillSchedule()">⚡ auto-fill</button>
+      <button class="btn-primary" onclick="runSchedule()" id="schedRunBtn">▶ run 8-hour chain</button>
+      <button class="btn-secondary" onclick="clearSchedule()">✕ clear</button>
+      <button class="btn-secondary" onclick="savePlan()" style="border-color:#00ff8844;color:#00ff88;">💾 save plan</button>
+      <button class="btn-secondary" onclick="loadPlan()" style="border-color:#d2992244;color:#d29922;">📂 load plan</button>
+      <div id="planSavedLabel" style="font-size:.65rem;font-family:monospace;color:#555;"></div>
+    </div>
+    <div id="schedGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-bottom:14px;"></div>
+    <div class="status-bar" id="schedStatus"></div>
+    <div id="schedResults"></div>
+  </div>
+
+</div>
+<script>
+(()=>{
+
+  // ── CLOCK ──────────────────────────────────────────────
+  const tick = () => {
+    document.getElementById('cockpit-time').textContent =
+      new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  };
+  tick(); setInterval(tick, 1000);
+
+  // ── TRIAL SIMULATIONS PER AGENT ───────────────────────
+  const SIMULATIONS = {
+    aria: (date) => `📧 ARIA — Communications\n\n→ Review inbox for ${date}\n→ Surface 3 priority emails needing response\n→ Queue day-1 follow-up for new leads\n→ Send Google Meet invite to 2 warm prospects\n→ Flag any day-3 or day-7 sequences due today`,
+    forge: (date) => `🔨 FORGE — Builder\n\n→ Review active build queue for ${date}\n→ Check pipeline.html for pending tasks\n→ Flag any blocked builds\n→ Suggest next page to build based on ROADMAP.md\n→ Estimate time to complete current sprint`,
+    scout: (date) => `🔭 SCOUT — Radar\n\n→ Scan calendar for gaps on ${date}\n→ Surface open time slots\n→ Suggest actions for each gap (follow-up / build / outreach)\n→ Flag any scheduling conflicts\n→ Report threat or blocker changes from radar.html`,
+    ledger: (date) => `📒 LEDGER — Finance\n\n→ Review ANT pay queue for ${date}\n→ Confirm pending payments\n→ Log any new expenses or income\n→ Report current funding vs $1,000 genesis goal\n→ Flag any overdue items`,
+    herald: (date, hour=null) => `📣 HERALD — Content & Marketing\n\n→ Review content calendar for ${date}\n→ Draft 1 blog post outline\n→ Suggest 1 social post based on recent builds\n→ Check feed.xml for last entry date\n→ Flag any content gaps this week\n→ Review campaign performance\n→ Identify 1 growth opportunity\n→ Queue 1 outreach email via ARIA`,
+    vault: (date) => `🔐 VAULT — Security\n\n→ Review access log for ${date}\n→ Check all API keys — flag any expiring soon\n→ Verify SFTP credentials still valid\n→ Scan for any exposed secrets in recent builds\n→ Report overall security posture`,
+  };
+
+  // ── AGENT OVERVIEW ─────────────────────────────────────
+  const renderAgents = () => {
+    if (typeof ANTAI === 'undefined') { setTimeout(renderAgents, 200); return; }
+    const emps = ANTAI.EMPLOYEES;
+    const grid = document.getElementById('agentGrid');
+    const scores = ANT.store.get('antcpu_agent_scores', {});
+    document.getElementById('agent-summary').textContent =
+      emps.filter(e=>e.status==='active').length + ' active · ' +
+      emps.filter(e=>e.status==='standby').length + ' standby';
+    grid.innerHTML = emps.map(e => {
+      const score = scores[e.id] || 0;
+      const pct   = (score / 5) * 100;
+      return `
+        <div class="agent-card ${e.status}">
+          <div class="agent-top">
+            <div class="agent-avatar">${e.avatar}</div>
+            <div class="agent-info">
+              <div class="agent-name">${e.name}</div>
+              <div class="agent-role">${e.role}</div>
+            </div>
+            <span class="agent-badge ${e.status}">${e.status.toUpperCase()}</span>
+          </div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%"></div></div>
+          <div class="agent-score">
+            <div>
+              <div class="agent-score-val">${score > 0 ? score.toFixed(1) + ' / 5' : '— unrated'}</div>
+              <div class="agent-score-label">performance score</div>
+            </div>
+            <div class="agent-last">${e.last_active ? 'last: ' + new Date(e.last_active).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : 'never active'}</div>
+          </div>
+          <a href="agents/${e.id}/" style="display:block;margin-top:10px;text-align:center;padding:6px;border-radius:6px;font-size:.68rem;font-family:monospace;text-decoration:none;background:#58a6ff11;color:#58a6ff;border:1px solid #58a6ff33;transition:all .2s;" onmouseover="this.style.background='#58a6ff22'" onmouseout="this.style.background='#58a6ff11'">🔗 open agent</a>
+        </div>
+      `;
+    }).join('');
+  };
+
+  // ── TRIAL RUN ──────────────────────────────────────────
+  window.runTrial = () => {
+    const date = document.getElementById('trialDate').value;
+    if (!date) { ANT.status('trialStatus','err','✗ select a date first'); return; }
+    if (typeof ANTAI === 'undefined') { ANT.status('trialStatus','err','✗ ANTAI not loaded'); return; }
+    const btn = document.getElementById('trialRunBtn');
+    btn.disabled = true;
+    ANT.status('trialStatus','loading','▶ simulating trial run for ' + date + '...');
+    const scores = ANT.store.get('antcpu_agent_scores', {});
+    const results = document.getElementById('trialResults');
+    setTimeout(() => {
+      results.innerHTML = ANTAI.EMPLOYEES.map(e => {
+        const output = SIMULATIONS[e.id] ? SIMULATIONS[e.id](date) : '// no simulation defined for ' + e.id;
+        const score  = scores[e.id] || 0;
+        return `
+          <div class="trial-agent-block" id="trial-${e.id}">
+            <div class="trial-agent-header">
+              <div class="trial-agent-name">${e.avatar} ${e.name} — ${e.role}</div>
+              <span class="agent-badge ${e.status}">${e.status.toUpperCase()}</span>
+            </div>
+            <div class="trial-agent-output">${output}</div>
+            <div class="trial-rating" id="stars-${e.id}">
+              ${[1,2,3,4,5].map(n=>`<span class="rating-star${score>=n?' lit':''}" onclick="rateStar('${e.id}',${n})">★</span>`).join('')}
+              <span style="font-size:.65rem;font-family:monospace;color:#555;margin-left:6px;">rate this agent</span>
+            </div>
+            <div class="trial-agent-actions">
+              <button class="trial-btn trial-btn-approve" onclick="trialAction('${e.id}','approve')">✓ approve</button>
+              <button class="trial-btn trial-btn-reject"  onclick="trialAction('${e.id}','reject')">✗ reject</button>
+              <button class="trial-btn trial-btn-suggest" onclick="trialAction('${e.id}','suggest')">💡 suggest fix</button>
+            </div>
+            <div class="trial-note" id="note-${e.id}"></div>
+          </div>
+        `;
+      }).join('');
+      ANT.status('trialStatus','ok','✓ trial run complete — review each agent below');
+      btn.disabled = false;
+    }, 800);
+  };
+
+  window.clearTrial = () => {
+    document.getElementById('trialResults').innerHTML =
+      '<div class="empty-state">// select a date and run trial to simulate what each agent would do</div>';
+    document.getElementById('trialStatus').className = 'status-bar';
+  };
+
+  // ── RATING ─────────────────────────────────────────────
+  window.rateStar = (empId, n) => {
+    const scores = ANT.store.get('antcpu_agent_scores', {});
+    scores[empId] = n;
+    ANT.store.set('antcpu_agent_scores', scores);
+    const stars = document.querySelectorAll(`#stars-${empId} .rating-star`);
+    stars.forEach((s,i) => s.classList.toggle('lit', i < n));
+    renderAgents();
+  };
+
+  // ── APPROVE / REJECT / SUGGEST ─────────────────────────
+  window.trialAction = (empId, action) => {
+    const note = document.getElementById('note-' + empId);
+    if (action === 'approve') {
+      note.className = 'trial-note approved';
+      note.textContent = '✓ approved — logged';
+    } else if (action === 'reject') {
+      note.className = 'trial-note rejected';
+      note.textContent = '✗ rejected — flagged for improvement';
+    } else {
+      const suggestion = prompt('Suggest an improvement for this agent:');
+      if (!suggestion) return;
+      note.className = 'trial-note';
+      note.style.color = '#d29922';
+      note.textContent = '💡 suggestion logged: ' + suggestion;
+      const suggestions = ANT.store.get('antcpu_agent_suggestions', []);
+      suggestions.push({ agent: empId, suggestion, date: new Date().toISOString() });
+      ANT.store.set('antcpu_agent_suggestions', suggestions);
+    }
+    const log = ANT.store.get('antcpu_trial_log', []);
+    log.push({ agent: empId, action, date: new Date().toISOString() });
+    ANT.store.set('antcpu_trial_log', log);
+  };
+
+  // ── SET DEFAULT DATE TO TOMORROW ───────────────────────
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('trialDate').value = tomorrow.toISOString().split('T')[0];
+
+  // boot
+  renderAgents();
+
+  // ── USAGE COUNTER ──────────────────────────────────────
+  const loadUsage = async () => {
+    try {
+      const today = new Date().toISOString().slice(0,10);
+      const r = await fetch('/api/tower?limit=500');
+      const d = await r.json();
+      const count = (d.logs || []).filter(l => l.action === 'ai_ask' && l.date === today).length;
+      const pct = Math.min((count / 1500) * 100, 100);
+      document.getElementById('usageBar').style.width = pct + '%';
+      document.getElementById('usageLabel').textContent = count + ' / 1,500 today';
+      if (pct > 80) document.getElementById('usageBar').style.background = '#ff4444';
+      else if (pct > 60) document.getElementById('usageBar').style.background = '#d29922';
+    } catch(e) { document.getElementById('usageLabel').textContent = 'unavailable'; }
+  };
+  loadUsage(); setInterval(loadUsage, 30000);
+
+  // ── SCHEDULE BUILDER ───────────────────────────────────
+  const AGENTS = ['aria','forge','scout','ledger','herald','vault'];
+  const DAY_PRESETS = {
+    build    : ['forge','forge','forge','scout','forge','forge','herald','vault'],
+    marketing: ['herald','herald','aria','herald','scout','aria','herald','ledger'],
+    deploy   : ['forge','forge','vault','forge','aria','herald','scout','ledger'],
+    outreach : ['aria','aria','herald','aria','scout','aria','ledger','vault'],
+    custom   : ['aria','forge','scout','ledger','herald','vault','forge','aria']
+  };
+  const HOUR_LABELS = ['9am','10am','11am','12pm','1pm','2pm','3pm','4pm'];
+
+  let scheduleSlots = Array(8).fill(null).map((_,i) => ({ hour: i, agent: AGENTS[i % AGENTS.length] }));
+
+  const renderScheduleGrid = () => {
+    const grid = document.getElementById('schedGrid');
+    grid.innerHTML = scheduleSlots.map((slot, i) => `
+      <div style="background:#0d0d0d;border:1px solid #1f1f1f;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px;">
+        <div style="font-family:monospace;font-size:.65rem;color:#555;min-width:36px;">${HOUR_LABELS[i]}</div>
+        <select onchange="scheduleSlots[${i}].agent=this.value" style="flex:1;background:#111;border:1px solid #333;color:#ccc;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:.72rem;">
+          ${AGENTS.map(a => {
+            const emp = typeof ANTAI !== 'undefined' ? ANTAI.EMPLOYEES.find(e=>e.id===a) : null;
+            const label = emp ? emp.avatar + ' ' + emp.name : a.toUpperCase();
+            return `<option value="${a}" ${slot.agent===a?'selected':''}>${label}</option>`;
+          }).join('')}
+        </select>
+      </div>
+    `).join('');
+  };
+
+  window.autoFillSchedule = () => {
+    const type = document.getElementById('schedDayType').value;
+    const preset = DAY_PRESETS[type] || DAY_PRESETS.custom;
+    scheduleSlots = scheduleSlots.map((s,i) => ({ ...s, agent: preset[i] || AGENTS[i % AGENTS.length] }));
+    renderScheduleGrid();
+  };
+
+  window.clearSchedule = () => {
+    document.getElementById('schedResults').innerHTML = '';
+    document.getElementById('schedStatus').className = 'status-bar';
+  };
+
+  window.runSchedule = async () => {
+    const date = document.getElementById('schedDate').value;
+    if (!date) { ANT.status('schedStatus','err','✗ select a date first'); return; }
+    if (typeof ANTAI === 'undefined') { ANT.status('schedStatus','err','✗ ANTAI not loaded'); return; }
+    const btn = document.getElementById('schedRunBtn');
+    btn.disabled = true;
+    const results = document.getElementById('schedResults');
+    results.innerHTML = '';
+    ANT.status('schedStatus','loading','▶ running 8-hour chain...');
+
+    for (let i = 0; i < scheduleSlots.length; i++) {
+      const slot = scheduleSlots[i];
+      const emp = ANTAI.EMPLOYEES.find(e => e.id === slot.agent);
+      if (!emp) continue;
+      ANT.status('schedStatus','loading', `▶ hour ${i+1}/8 — ${emp.name} running...`);
+      const prompt = `You are ${emp.name}, ${emp.role} at antcpu.
+Style: ${emp.prompt_style}
+Date: ${date}, Hour: ${HOUR_LABELS[i]}
+Day type: ${document.getElementById('schedDayType').value}
+
+What are your top 5 specific actions for this hour? Be concrete, actionable, antcpu-specific.
+Format as a numbered list. Max 120 words.`;
+
+      let output = '';
+      try {
+        output = await ANTAI.ask(emp.model, prompt, emp.id);
+      } catch(e) {
+        output = '⚠ ' + e.message;
+      }
+
+      const block = document.createElement('div');
+      block.className = 'trial-agent-block';
+      block.style.marginTop = '10px';
+      block.innerHTML = `
+        <div class="trial-agent-header">
+          <div class="trial-agent-name">${emp.avatar} ${HOUR_LABELS[i]} — ${emp.name} (${emp.role})</div>
+          <span class="agent-badge ${emp.status}">${emp.status.toUpperCase()}</span>
+        </div>
+        <div class="trial-agent-output" style="white-space:pre-wrap;">${output}</div>
+        <div class="trial-agent-actions">
+          <button class="trial-btn trial-btn-approve" onclick="trialAction('${emp.id}-h${i}','approve')">✓ approve</button>
+          <button class="trial-btn trial-btn-reject"  onclick="trialAction('${emp.id}-h${i}','reject')">✗ reject</button>
+          <button class="trial-btn trial-btn-suggest" onclick="trialAction('${emp.id}-h${i}','suggest')">💡 suggest fix</button>
+        </div>
+        <div class="trial-note" id="note-${emp.id}-h${i}"></div>
+      `;
+      results.appendChild(block);
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    ANT.status('schedStatus','ok','✓ 8-hour chain complete — review + approve each hour');
+    btn.disabled = false;
+    loadUsage();
+  };
+
+  // ── SET DEFAULT SCHEDULE DATE TO TOMORROW ──────────────
+  const schedTomorrow = new Date();
+  schedTomorrow.setDate(schedTomorrow.getDate() + 1);
+  document.getElementById('schedDate').value = schedTomorrow.toISOString().split('T')[0];
+
+  // ── SAVE / LOAD PLAN ──────────────────────────────────
+  window.savePlan = () => {
+    const date = document.getElementById('schedDate').value;
+    const type = document.getElementById('schedDayType').value;
+    const plan = {
+      date,
+      type,
+      slots: scheduleSlots.map(s => ({ hour: s.hour, agent: s.agent })),
+      saved_at: new Date().toISOString()
+    };
+    const plans = ANT.store.get('antcpu_day_plans', {});
+    plans[date] = plan;
+    ANT.store.set('antcpu_day_plans', plans);
+    const label = document.getElementById('planSavedLabel');
+    label.textContent = '✓ plan saved for ' + date;
+    setTimeout(() => { label.textContent = ''; }, 3000);
+  };
+
+  window.loadPlan = () => {
+    const date = document.getElementById('schedDate').value;
+    if (!date) { alert('Select a date first'); return; }
+    const plans = ANT.store.get('antcpu_day_plans', {});
+    const plan = plans[date];
+    if (!plan) {
+      const label = document.getElementById('planSavedLabel');
+      label.style.color = '#ff4444';
+      label.textContent = '✗ no saved plan for ' + date;
+      setTimeout(() => { label.textContent = ''; label.style.color = '#555'; }, 3000);
+      return;
+    }
+    document.getElementById('schedDayType').value = plan.type;
+    scheduleSlots = plan.slots;
+    renderScheduleGrid();
+    const label = document.getElementById('planSavedLabel');
+    label.style.color = '#00ff88';
+    label.textContent = '✓ plan loaded — saved ' + new Date(plan.saved_at).toLocaleDateString();
+    setTimeout(() => { label.textContent = ''; label.style.color = '#555'; }, 3000);
+  };
+
+  // Auto-load plan for tomorrow on boot
+  const autoLoadTomorrow = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tDate = tomorrow.toISOString().split('T')[0];
+    const plans = ANT.store.get('antcpu_day_plans', {});
+    if (plans[tDate]) {
+      document.getElementById('schedDate').value = tDate;
+      document.getElementById('schedDayType').value = plans[tDate].type;
+      scheduleSlots = plans[tDate].slots;
+      renderScheduleGrid();
+      const label = document.getElementById('planSavedLabel');
+      label.style.color = '#d29922';
+      label.textContent = '⚡ tomorrow plan auto-loaded';
+      setTimeout(() => { label.textContent = ''; }, 4000);
+    }
+  };
+
+  // boot schedule grid
+  setTimeout(() => { renderScheduleGrid(); autoLoadTomorrow(); }, 300);
+
+
+})();
+</script>
+<script src="footer.js"></script>
+</body>
+</html>

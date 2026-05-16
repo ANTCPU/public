@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AntCPU - AI Interface System</title>
+    <meta name="description" content="AntCPU AI Interface System. Same day creatives, web design, and development tools. The blueprint for future AI advancements.">
+    <meta name="keywords" content="AI, Web Design, Creatives, AntCPU, Artificial Intelligence, Web Development">
+    
+    <!-- Tailwind CSS (No build step required) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons (Standalone script) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Custom scrollbar for a technical feel */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Mobile menu animation helper */
+        .mobile-menu-enter { opacity: 0; transform: translateY(-10px); }
+        .mobile-menu-enter-active { opacity: 1; transform: translateY(0); transition: all 200ms ease-out; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
+                    <i data-lucide="cpu" class="h-8 w-8 text-blue-600"></i>
+                    <span class="font-bold text-xl tracking-tighter text-slate-800">AntCPU</span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="text-slate-600 hover:text-blue-600 transition-colors duration-200 font-medium text-sm">Home</a>
+                    <a href="#services" class="text-slate-600 hover:text-blue-600 transition-colors duration-200 font-medium text-sm">Services</a>
+                    <a href="#mission" class="text-slate-600 hover:text-blue-600 transition-colors duration-200 font-medium text-sm">Mission</a>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md text-sm font-semibold transition-all shadow-md hover:shadow-lg">
+                        Login
+                    </button>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-blue-600 focus:outline-none p-2" aria-label="Toggle menu">
+                        <i data-lucide="menu" class="h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden absolute w-full bg-white border-b border-slate-200 shadow-lg">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="#" class="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors">Home</a>
+                <a href="#services" class="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors">Services</a>
+                <a href="#mission" class="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors">Mission</a>
+                <div class="pt-4 border-t border-slate-100">
+                    <button class="w-full bg-blue-600 text-white px-5 py-3 rounded-md text-base font-semibold hover:bg-blue-700 transition-colors">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col w-full">
+        
+        <!-- Hero Section -->
+        <section class="w-full py-8 md:py-12 px-4 max-w-7xl mx-auto">
+            <div class="relative w-full aspect-video md:aspect-[21/9] bg-slate-900 rounded-xl overflow-hidden shadow-2xl group border border-slate-800">
+                <!-- Background Image Placeholder -->
+                <img src="https://picsum.photos/1200/600?grayscale" alt="AI Interface Background" class="w-full h-full object-cover opacity-50 group-hover:opacity-40 transition-opacity duration-500">
+                
+                <!-- Overlay -->
+                <div class="absolute inset-0 flex flex-col justify-center items-center text-center p-6">
+                    <span class="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-blue-300 uppercase bg-blue-900/50 rounded-full border border-blue-700 backdrop-blur-sm">
+                        System Online v1.0
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
+                        AntCPU Blueprint
+                    </h1>
+                    <p class="text-slate-300 max-w-2xl mb-8 text-sm md:text-base drop-shadow-md">
+                        Primary Interface Loaded. Awaiting strategic advancements. <br class="hidden md:block" /> Access daily intelligence logs and system updates below.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <button class="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+                            <i data-lucide="play-circle" class="w-5 h-5"></i>
+                            <span>Latest Briefing</span>
+                        </button>
+                        <button class="flex items-center gap-2 bg-transparent border border-white/30 text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm">
+                            <i data-lucide="newspaper" class="w-5 h-5"></i>
+                            <span>System Logs</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Grid -->
+        <section id="services" class="w-full px-4 pb-12 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Creative Service -->
+                <div class="relative flex flex-col p-8 rounded-xl border border-slate-200 bg-white hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 transition-all duration-300">
+                    <div class="mb-6 p-3 bg-yellow-50 rounded-lg w-fit border border-yellow-100 shadow-sm">
+                        <i data-lucide="zap" class="w-10 h-10 text-yellow-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Same Day Creatives</h3>
+                    <p class="text-slate-600 leading-relaxed flex-grow text-sm">
+                        High-velocity graphic design execution. Logos, social assets, and one-pagers processed with a 24-hour turnaround protocol.
+                    </p>
+                    <div class="mt-8 pt-6 border-t border-slate-100">
+                        <a href="#" class="text-blue-600 font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                            Initialize Request <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Web Dev Service -->
+                <div class="relative flex flex-col p-8 rounded-xl border border-slate-200 bg-white hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 transition-all duration-300">
+                    <div class="mb-6 p-3 bg-blue-50 rounded-lg w-fit border border-blue-100 shadow-sm">
+                        <i data-lucide="layout" class="w-10 h-10 text-blue-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Web Design & Dev</h3>
+                    <p class="text-slate-600 leading-relaxed flex-grow text-sm">
+                        Full-stack development architecture. Access our repository of free tools and templates to accelerate your digital infrastructure.
+                    </p>
+                    <div class="mt-8 pt-6 border-t border-slate-100">
+                        <a href="#" class="text-blue-600 font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                            Access Tools <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Coming Soon Placeholder -->
+                <div class="relative flex flex-col p-8 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50">
+                    <div class="mb-6 p-3 bg-slate-100 rounded-lg w-fit border border-slate-200">
+                        <i data-lucide="hammer" class="w-10 h-10 text-slate-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-500 mb-3">System Expansion</h3>
+                    <p class="text-slate-500 leading-relaxed flex-grow text-sm">
+                        Reserved for strategic module 3. Advertising space and beta features will initialize in this sector shortly.
+                    </p>
+                    <div class="mt-8 pt-6 border-t border-slate-200/50">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            Construction in Progress
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Mission Statement -->
+        <section id="mission" class="w-full bg-white border-t border-slate-200 py-16 px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">System Mission</h2>
+                <p class="text-lg text-slate-600 mb-12 leading-relaxed">
+                    AntCPU is a living blueprint for the democratization of artificial intelligence. We bridge human creativity with machine efficiency. This hub functions as a public utility, providing free access to fundamental digital tools while we construct the autonomous systems of tomorrow.
+                </p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 text-left mt-12">
+                    <div class="flex flex-col items-center sm:items-start p-4">
+                        <i data-lucide="target" class="w-8 h-8 text-blue-600 mb-4"></i>
+                        <h4 class="font-bold text-slate-900 mb-2">Precision</h4>
+                        <p class="text-sm text-slate-500 text-center sm:text-left">Calibrated for exact results.</p>
+                    </div>
+                    <div class="flex flex-col items-center sm:items-start p-4">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-blue-600 mb-4"></i>
+                        <h4 class="font-bold text-slate-900 mb-2">Security</h4>
+                        <p class="text-sm text-slate-500 text-center sm:text-left">Enterprise-grade privacy protocols.</p>
+                    </div>
+                    <div class="flex flex-col items-center sm:items-start p-4">
+                        <i data-lucide="globe" class="w-8 h-8 text-blue-600 mb-4"></i>
+                        <h4 class="font-bold text-slate-900 mb-2">Accessibility</h4>
+                        <p class="text-sm text-slate-500 text-center sm:text-left">Open access for the public.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-slate-900 text-slate-400 py-8 px-4 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-sm font-medium">
+                &copy; 2025 AntCPU. All rights reserved.
+            </div>
+            <div class="flex gap-6 text-sm">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                <a href="#" class="hover:text-white transition-colors">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Mobile Menu Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = mobileMenuBtn.querySelector('i'); // The icon element
+
+        mobileMenuBtn.addEventListener('click', () => {
+            const isHidden = mobileMenu.classList.contains('hidden');
+            
+            if (isHidden) {
+                // Open Menu
+                mobileMenu.classList.remove('hidden');
+                mobileMenu.classList.add('mobile-menu-enter-active');
+                // Change icon to X (close)
+                menuIcon.setAttribute('data-lucide', 'x');
+            } else {
+                // Close Menu
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('mobile-menu-enter-active');
+                // Change icon back to Menu
+                menuIcon.setAttribute('data-lucide', 'menu');
+            }
+            lucide.createIcons(); // Re-render icons after attribute change
+        });
+
+        // Close mobile menu when clicking a link
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                menuIcon.setAttribute('data-lucide', 'menu');
+                lucide.createIcons();
+            });
+        });
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

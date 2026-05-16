@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Uploader — antcpu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
+.layout{max-width:1100px;margin:0 auto;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}}
+.full-width{grid-column:1/-1;}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:14px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;}
+.section-title span{color:#d29922;}
+.panel{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:20px;}
+.panel-gold{border-color:#d2992233;}
+.panel-green{border-color:#00ff8833;}
+.drop-zone{border:2px dashed #222;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+.drop-zone.drag-over{border-color:#00ff88;background:#00ff8808;}
+.drop-zone p{color:#555;font-family:monospace;font-size:.85rem;}
+.drop-zone span{color:#00ff88;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:monospace;}
+.btn-primary{background:#00ff88;color:#0a0a0a;}.btn-primary:hover{background:#00e67a;}
+.btn-ghost{background:#111;color:#555;border:1px solid #222;}.btn-ghost:hover{color:#c9d1d9;border-color:#444;}
+.btn-gold{background:#d29922;color:#0a0a0a;}.btn-gold:hover{background:#e6a820;}
+.file-list{display:flex;flex-direction:column;gap:6px;}
+.file-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#0d0d0d;border:1px solid #1f1f1f;border-radius:8px;font-family:monospace;font-size:.78rem;}
+.file-icon{font-size:1rem;}
+.file-name{flex:1;color:#e6edf3;}
+.file-size{color:#555;font-size:.7rem;}
+.file-date{color:#555;font-size:.7rem;}
+.icon-btn{background:none;border:none;cursor:pointer;color:#555;padding:4px;border-radius:4px;font-size:.8rem;}
+.icon-btn.del:hover{color:#f85149;}
+.empty{text-align:center;color:#333;font-size:.78rem;padding:32px;font-family:monospace;}
+.status-bar{display:none;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;font-size:.78rem;font-weight:600;margin-bottom:12px;font-family:monospace;}
+.status-bar.show{display:flex;}
+.status-bar.ok{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.status-bar.err{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.status-bar.loading{background:#5865F211;color:#5865F2;border:1px solid #5865F233;}
+.node-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.node-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:10px 12px;}
+.node-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.node-name{font-size:.8rem;color:#e6edf3;font-family:monospace;font-weight:700;}
+.node-version{font-size:.68rem;font-family:monospace;color:#555;margin-bottom:2px;}
+.node-next{font-size:.68rem;color:#555;font-family:monospace;}
+.node-next span{color:#d29922;}
+.dot{width:7px;height:7px;border-radius:50%;background:#00ff88;box-shadow:0 0 5px #00ff88;flex-shrink:0;}
+.dot.warn{background:#d29922;box-shadow:0 0 5px #d29922;}
+.bar-track{background:#1a1a1a;border-radius:20px;height:10px;overflow:hidden;margin-bottom:10px;}
+.bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#00ff88,#d29922);transition:width .5s ease;}
+.bar-label{display:flex;justify-content:space-between;margin-bottom:6px;}
+.bar-label span{font-size:.72rem;font-family:monospace;color:#555;}
+.bar-label strong{font-size:.72rem;font-family:monospace;color:#d29922;}
+.bar-controls{display:flex;gap:8px;margin-bottom:8px;}
+.bar-input{width:100%;background:#0d0d0d;border:1px solid #222;border-radius:8px;color:#c9d1d9;font-family:monospace;font-size:.78rem;padding:8px 12px;outline:none;margin-bottom:8px;}
+.bar-input:focus{border-color:#d29922;}
+.bar-log{max-height:100px;overflow-y:auto;margin-top:8px;}
+.bar-log-row{font-size:.7rem;font-family:monospace;color:#555;padding:3px 0;border-bottom:1px solid #1a1a1a;}
+.bar-log-row span{color:#d29922;}
+.api-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#0d0d0d;border-radius:6px;margin-bottom:5px;font-family:monospace;font-size:.75rem;}
+.api-route{color:#c9d1d9;}
+.badge{padding:2px 8px;border-radius:10px;font-size:.62rem;font-weight:700;}
+.badge-live{background:#00ff8822;color:#00ff88;border:1px solid #00ff8844;}
+.badge-missing{background:#f8514922;color:#f85149;border:1px solid #f8514944;}
+.badge-planned{background:#d2992222;color:#d29922;border:1px solid #d2992244;}
+.future-item{background:#0d0d0d;border-left:3px solid #d29922;border-radius:8px;padding:10px 14px;margin-bottom:8px;}
+.future-item.high{border-left-color:#f85149;}
+.future-item.low{border-left-color:#555;}
+.future-title{font-size:.82rem;color:#e6edf3;font-family:monospace;margin-bottom:3px;}
+.future-desc{font-size:.7rem;color:#555;font-family:monospace;line-height:1.5;}
+.future-tag{font-size:.65rem;font-family:monospace;color:#333;margin-top:4px;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "uploader / tower", root: "./" }</script>
+<script src="nav.js"></script>
+
+<div class="layout">
+
+  <!-- UPLOAD -->
+  <div class="panel full-width">
+    <div class="section-title">// upload files <span>→ /api/upload + discord notify</span></div>
+    <div class="status-bar" id="uploadStatus"></div>
+    <div class="drop-zone" id="dropZone">
+      <p>drag & drop files here</p>
+      <p style="margin-top:8px;"><span>or</span></p>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="document.getElementById('filePicker').click()">browse files</button>
+      <input type="file" id="filePicker" multiple style="display:none;">
+    </div>
+    <div class="section-title">// file registry</div>
+    <div class="file-list" id="fileList"><div class="empty">// no files uploaded yet</div></div>
+  </div>
+
+  <!-- NETWORK STATUS -->
+  <div class="panel panel-gold full-width">
+    <div class="section-title">// antcpu network <span>8 nodes · tower baseline</span></div>
+    <div class="node-grid">
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">antcpu.com</span><div class="dot"></div></div>
+        <div class="node-version">v1.0.2 · 2026-04-16</div>
+        <div class="node-next">next: <span>feed pipeline — blog1.html</span></div>
+      </div>
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">antcoin</span><div class="dot warn"></div></div>
+        <div class="node-version">v0.3 · 2026-04-15</div>
+        <div class="node-next">next: <span>v0.4 — blocked til May 1</span></div>
+      </div>
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">antcpu cloud</span><div class="dot"></div></div>
+        <div class="node-version">v1.0.0 · 2026-04-15</div>
+        <div class="node-next">next: <span>client intake — define scope</span></div>
+      </div>
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">Turtle Enterprises</span><div class="dot"></div></div>
+        <div class="node-version">v1.0.0 · 2026-04-15</div>
+        <div class="node-next">next: <span>listings update</span></div>
+      </div>
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">antcpu EDU</span><div class="dot"></div></div>
+        <div class="node-version">v1.0.0 · 2026-04-15</div>
+        <div class="node-next">next: <span>course 7 — automation</span></div>
+      </div>
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">antcpu AI</span><div class="dot"></div></div>
+        <div class="node-version">v1.0.0 · 2026-04-15</div>
+        <div class="node-next">next: <span>define scope</span></div>
+      </div>
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">antcpu TV</span><div class="dot"></div></div>
+        <div class="node-version">v1.0.0 · 2026-04-15</div>
+        <div class="node-next">next: <span>define scope</span></div>
+      </div>
+      <div class="node-card">
+        <div class="node-top"><span class="node-name">Amanda Photography</span><div class="dot warn"></div></div>
+        <div class="node-version">standalone · 2026-04-15</div>
+        <div class="node-next">next: <span>upload content to backend</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTOMATION BAR -->
+  <div class="panel panel-gold">
+    <div class="section-title">// automation bar <span id="barPct">35%</span></div>
+    <div class="bar-label"><span>current level</span><strong id="barLevel">35 / 100</strong></div>
+    <div class="bar-track"><div class="bar-fill" id="barFill" style="width:35%"></div></div>
+    <div class="bar-controls">
+      <button class="btn btn-gold" onclick="adjustBar(10)">▲ +10</button>
+      <button class="btn btn-ghost" onclick="adjustBar(-10)">▼ -10</button>
+    </div>
+    <input class="bar-input" id="barNote" placeholder="// why are you raising or lowering...">
+    <button class="btn btn-ghost" style="width:100%;" onclick="logBar()">log entry</button>
+    <div class="bar-log" id="barLog"></div>
+  </div>
+
+  <!-- API STATUS -->
+  <div class="panel panel-green">
+    <div class="section-title">// api routes <span>server.js</span></div>
+    <div class="api-row"><span class="api-route">GET /api/health</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/stats</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/progress</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/tower</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/radar</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/wallets</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/nodes</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/rewards</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">POST /api/upload</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">POST /api/parse-blog</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">POST /api/resend-send</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/resend-log</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/manda/assets</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/manda/profile</span><span class="badge badge-live">LIVE</span></div>
+    <div class="api-row"><span class="api-route">GET /api/search</span><span class="badge badge-missing">MISSING</span></div>
+    <div class="api-row"><span class="api-route">POST /api/auth</span><span class="badge badge-missing">MISSING</span></div>
+    <div class="api-row"><span class="api-route">Zapier webhook</span><span class="badge badge-planned">PLANNED</span></div>
+  </div>
+
+  <!-- FUTURE -->
+  <div class="panel panel-gold full-width">
+    <div class="section-title">// future build queue <span>dev cycle</span></div>
+    <div class="future-item high">
+      <div class="future-title">antcpu.com service placements</div>
+      <div class="future-desc">Sellable now. Email in → 90% automated → custom solution delivered.</div>
+      <div class="future-tag">// HIGH · revenue</div>
+    </div>
+    <div class="future-item high">
+      <div class="future-title">antcpu.com/cloud — client intake</div>
+      <div class="future-desc">Replace old forms. New clients start here. Replaces Final Call + S&S old steps.</div>
+      <div class="future-tag">// HIGH · replaces old workflow</div>
+    </div>
+    <div class="future-item">
+      <div class="future-title">click tracking — all client pages</div>
+      <div class="future-desc">Wire analytics to every client card. Know which examples convert.</div>
+      <div class="future-tag">// MED · insights</div>
+    </div>
+    <div class="future-item">
+      <div class="future-title">antcoin v0.4</div>
+      <div class="future-desc">Blocked til May 1. Resume testnet + decentralized credentials.</div>
+      <div class="future-tag">// MED · May 1</div>
+    </div>
+    <div class="future-item">
+      <div class="future-title">antcpu.js — shared utility library</div>
+      <div class="future-desc">Shared helper functions across all launcher pages. localStorage, formatting, status helpers.</div>
+      <div class="future-tag">// MED · dev infrastructure</div>
+    </div>
+    <div class="future-item low">
+      <div class="future-title">Tower v1.0 — public launch</div>
+      <div class="future-desc">Goes public when all properties hit v1.0 simultaneously.</div>
+      <div class="future-tag">// LOW · v1.0 milestone</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// UPLOAD
+function showStatus(type,msg){
+  const el=document.getElementById('uploadStatus');
+  el.className='status-bar show '+type;
+  el.textContent=msg;
+  if(type!=='loading') setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+async function handleUpload(files){
+  showStatus('loading','uploading '+files.length+' file(s)...');
+  const fd=new FormData();
+  files.forEach(f=>fd.append('files',f));
+  try{
+    const r=await fetch('/api/upload',{method:'POST',body:fd});
+    const data=await r.json();
+    if(data.success){
+      let stored=JSON.parse(localStorage.getItem('antcpu_files')||'[]');
+      stored=[...data.files,...stored];
+      localStorage.setItem('antcpu_files',JSON.stringify(stored));
+      showStatus('ok','✓ '+data.files.length+' file(s) uploaded — discord notified');
+      renderFileList();
+    } else {
+      showStatus('err','✗ '+data.error);
+    }
+  } catch(err){
+    showStatus('err','✗ upload failed');
+  }
+}
+
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');handleUpload([...e.dataTransfer.files]);});
+document.getElementById('filePicker').addEventListener('change',e=>handleUpload([...e.target.files]));
+
+function renderFileList(){
+  const files=JSON.parse(localStorage.getItem('antcpu_files')||'[]');
+  const el=document.getElementById('fileList');
+  if(!files.length){el.innerHTML='<div class="empty">// no files uploaded yet</div>';return;}
+  el.innerHTML=files.map(f=>
+    '<div class="file-row">'+
+    '<div class="file-icon">📄</div>'+
+    '<div class="file-name">'+f.name+'</div>'+
+    '<div class="file-size">'+(f.size/1024).toFixed(1)+'kb</div>'+
+    '<div class="file-date">'+new Date(f.date).toLocaleDateString()+'</div>'+
+    '<button class="icon-btn del" onclick="deleteFile(\''+f.id+'\')">🗑</button>'+
+    '</div>'
+  ).join('');
+}
+
+function deleteFile(id){
+  let files=JSON.parse(localStorage.getItem('antcpu_files')||'[]');
+  files=files.filter(f=>f.id!==id);
+  localStorage.setItem('antcpu_files',JSON.stringify(files));
+  renderFileList();
+}
+
+// AUTOMATION BAR
+let barVal=parseInt(localStorage.getItem('ant_bar')||'35');
+let barLogs=JSON.parse(localStorage.getItem('ant_bar_log')||'[]');
+
+function renderBar(){
+  document.getElementById('barFill').style.width=barVal+'%';
+  document.getElementById('barPct').textContent=barVal+'%';
+  document.getElementById('barLevel').textContent=barVal+' / 100';
+  document.getElementById('barLog').innerHTML=barLogs.slice(-6).reverse().map(l=>
+    '<div class="bar-log-row"><span>'+l.time+'</span> · '+l.val+'% · '+l.note+'</div>'
+  ).join('');
+}
+
+function adjustBar(delta){
+  barVal=Math.min(100,Math.max(0,barVal+delta));
+  localStorage.setItem('ant_bar',barVal);
+  renderBar();
+}
+
+function logBar(){
+  const note=document.getElementById('barNote').value.trim();
+  if(!note) return;
+  barLogs.push({time:new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'}),val:barVal,note});
+  localStorage.setItem('ant_bar_log',JSON.stringify(barLogs));
+  document.getElementById('barNote').value='';
+  renderBar();
+}
+
+renderBar();
+renderFileList();
+</script>
+<script src="footer.js"></script>
+</body>
+</html>

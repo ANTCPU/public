@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Send — antcpu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
+header{background:#111;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1f1f1f;}
+header h1{font-size:1.1rem;color:#00ff88;letter-spacing:2px;font-family:monospace;}
+#clock{font-size:.85rem;color:#00ff88;font-family:monospace;}
+.layout{display:flex;flex-direction:column;gap:24px;padding:24px;max-width:860px;margin:0 auto;}
+.panel{padding:20px;background:#0d0d0d;border:1px solid #1f1f1f;border-radius:10px;}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:14px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;}
+.field{margin-bottom:12px;}
+.label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#555;margin-bottom:6px;font-family:monospace;}
+.input,.textarea,.select{width:100%;background:#111;border:1px solid #222;border-radius:8px;color:#c9d1d9;font-family:monospace;font-size:.82rem;padding:9px 12px;outline:none;transition:border-color .2s;}
+.input:focus,.textarea:focus,.select:focus{border-color:#00ff88;}
+.textarea{min-height:140px;resize:vertical;line-height:1.5;}
+.char-count{text-align:right;font-size:.7rem;color:#555;margin-top:4px;font-family:monospace;}
+.char-count.warn{color:#d29922;}.char-count.over{color:#f85149;}
+
+/* channel toggle */
+.toggle-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.ch-btn{flex:1;min-width:120px;padding:10px 16px;border-radius:8px;border:1px solid #222;background:#111;color:#555;font-family:monospace;font-size:.8rem;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;letter-spacing:1px;}
+.ch-btn:hover{border-color:#444;color:#c9d1d9;}
+.ch-btn.active-discord{background:#5865F211;border-color:#5865F2;color:#5865F2;}
+.ch-btn.active-resend{background:#00ff8811;border-color:#00ff88;color:#00ff88;}
+.ch-btn.active-both{background:#d2992211;border-color:#d29922;color:#d29922;}
+
+/* webhook selector */
+.hook-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.hook-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#111;border:1px solid #222;border-radius:6px;cursor:pointer;transition:all .15s;}
+.hook-item:hover{border-color:#444;}
+.hook-item.selected{border-color:#5865F2;background:#5865F211;}
+.hook-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.hook-name{font-size:.8rem;color:#c9d1d9;font-family:monospace;flex:1;}
+.hook-channel{font-size:.7rem;color:#555;font-family:monospace;}
+.hook-check{width:16px;height:16px;border-radius:4px;border:1px solid #333;background:#0a0a0a;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.7rem;}
+.hook-item.selected .hook-check{background:#5865F2;border-color:#5865F2;color:#fff;}
+
+/* status */
+.status-bar{display:none;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:.8rem;font-weight:600;margin-bottom:12px;font-family:monospace;}
+.status-bar.show{display:flex;}
+.status-bar.ok{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.status-bar.err{background:#f8514911;color:#f85149;border:1px solid #f8514933;}
+.status-bar.loading{background:#d2992211;color:#d29922;border:1px solid #d2992233;}
+.status-bar.partial{background:#5865F211;color:#5865F2;border:1px solid #5865F233;}
+
+/* send btn */
+.btn-send{width:100%;padding:12px;border-radius:8px;border:none;font-family:monospace;font-size:.85rem;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn-send.discord{background:#5865F2;color:#fff;}.btn-send.discord:hover{background:#4752C4;}
+.btn-send.resend{background:#00ff88;color:#0a0a0a;}.btn-send.resend:hover{background:#00cc6a;}
+.btn-send.both{background:#d29922;color:#0a0a0a;}.btn-send.both:hover{background:#b8841a;}
+.btn-send:disabled{opacity:.4;cursor:not-allowed;}
+
+/* history */
+.hist-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:#111;border-radius:6px;margin-bottom:6px;font-size:.75rem;font-family:monospace;border-left:3px solid #1f1f1f;}
+.hist-row.ok{border-left-color:#00ff8844;}
+.hist-row.err{border-left-color:#f8514944;}
+.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.hist-dot.ok{background:#00ff88;}.hist-dot.err{background:#f85149;}
+.hist-meta{flex:1;min-width:0;}
+.hist-channel{font-size:.68rem;color:#555;margin-bottom:2px;}
+.hist-msg{color:#c9d1d9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-time{color:#333;font-size:.68rem;margin-top:2px;}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.62rem;font-weight:700;font-family:monospace;margin-left:6px;}
+.badge-d{background:#5865F211;color:#5865F2;border:1px solid #5865F233;}
+.badge-r{background:#00ff8811;color:#00ff88;border:1px solid #00ff8833;}
+.empty{text-align:center;color:#333;font-size:.8rem;padding:20px;font-family:monospace;}
+.spinner{width:13px;height:13px;border:2px solid rgba(255,255,136,.2);border-top-color:#d29922;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.hr{border:none;border-top:1px solid #1f1f1f;margin:16px 0;}
+.hidden{display:none;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "send / unified", root: "./" }</script>
+<script src="nav.js"></script>
+
+<div class="layout">
+
+  <div class="panel">
+    <div class="section-title">// channel</div>
+    <div class="toggle-row">
+      <div class="ch-btn active-discord" id="btn-discord" onclick="setMode('discord')">💬 Discord</div>
+      <div class="ch-btn" id="btn-resend" onclick="setMode('resend')">📧 Resend</div>
+      <div class="ch-btn" id="btn-both" onclick="setMode('both')">⚡ Both</div>
+    </div>
+
+    <!-- Discord webhook selector -->
+    <div id="discord-section">
+      <div class="section-title">// post to</div>
+      <div class="hook-grid" id="hookGrid"><div class="empty">// no webhooks found — add them in Discord Manager</div></div>
+    </div>
+
+    <!-- Resend to field -->
+    <div id="resend-section" class="hidden">
+      <div class="field"><label class="label">To</label><input class="input" id="toAddr" value="antony@antcpu.com"></div>
+    </div>
+
+    <!-- Subject (resend + both) -->
+    <div id="subject-section" class="hidden">
+      <div class="field"><label class="label">Subject</label><input class="input" id="subject" placeholder="Daily Review — 2026-04-21"></div>
+    </div>
+
+    <div class="hr"></div>
+    <div class="section-title">// message</div>
+
+    <div class="section-title">// quick templates</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="btn btn-ghost" style="justify-content:flex-start;font-size:.7rem;" onclick="fillTemplate('daily')">📋 Daily Review</button>
+      <button class="btn btn-ghost" style="justify-content:flex-start;font-size:.7rem;" onclick="fillTemplate('tower')">📡 Tower Status</button>
+      <button class="btn btn-ghost" style="justify-content:flex-start;font-size:.7rem;" onclick="fillTemplate('build')">🔧 Build Update</button>
+    </div>
+
+    <div class="status-bar" id="sendStatus"></div>
+    <div class="field">
+      <textarea class="textarea" id="msgBody" placeholder="Type your message..."></textarea>
+      <div class="char-count" id="charCount">0 / 2000</div>
+    </div>
+    <button class="btn-send discord" id="sendBtn" onclick="doSend()">💬 send to discord</button>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="section-title" style="margin:0;border:none;padding:0;">// send history</div>
+      <button onclick="clearHist()" style="background:none;border:1px solid #222;color:#555;padding:4px 12px;border-radius:6px;font-family:monospace;font-size:.72rem;cursor:pointer;">clear</button>
+    </div>
+    <div id="histList"><div class="empty">// no sends yet</div></div>
+  </div>
+
+</div>
+
+<script>
+(()=>{
+  const S={
+    get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d;}catch{return d;}},
+    set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))
+  };
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  let mode='discord';
+  let selectedHooks=new Set();
+  const today=new Date().toISOString().slice(0,10);
+
+  // clock
+  const clockEl=document.getElementById('clock');
+  if(clockEl){const tick=()=>{clockEl.textContent=new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit'});};tick();setInterval(tick,1000);}
+
+  // char count
+  const msgTA=document.getElementById('msgBody');
+  const charEl=document.getElementById('charCount');
+  msgTA.addEventListener('input',()=>{
+    const l=msgTA.value.length;
+    const max=mode==='discord'?2000:5000;
+    charEl.textContent=l+' / '+max;
+    charEl.className='char-count'+(l>max*.9&&l<=max?' warn':l>max?' over':'');
+  });
+
+  // mode
+  window.setMode=function(m){
+    mode=m;
+    ['discord','resend','both'].forEach(x=>{
+      document.getElementById('btn-'+x).className='ch-btn'+(x===m?' active-'+m:'');
+    });
+    document.getElementById('discord-section').classList.toggle('hidden',m==='resend');
+    document.getElementById('resend-section').classList.toggle('hidden',m==='discord');
+    document.getElementById('subject-section').classList.toggle('hidden',m==='discord');
+    const btn=document.getElementById('sendBtn');
+    if(m==='discord'){btn.className='btn-send discord';btn.textContent='💬 send to discord';}
+    else if(m==='resend'){btn.className='btn-send resend';btn.textContent='📧 send email';}
+    else{btn.className='btn-send both';btn.textContent='⚡ send to both';}
+    document.getElementById('subject').value=m!=='discord'?'Daily Review — '+today:'';
+    msgTA.dispatchEvent(new Event('input'));
+  };
+
+  // load webhooks from discord localStorage
+  function loadHooks(){
+    const hooks=S.get('antcpu_discord_webhooks',[]);
+    const grid=document.getElementById('hookGrid');
+    const active=hooks.filter(h=>h.active&&h.url);
+    if(!active.length){grid.innerHTML='<div class="empty">// no webhooks — add in Discord Manager</div>';return;}
+    grid.innerHTML=active.map(h=>`
+      <div class="hook-item" id="hook-${h.id}" onclick="toggleHook('${h.id}')">
+        <div class="hook-dot" style="background:${h.color}"></div>
+        <div class="hook-name">${esc(h.nickname)}</div>
+        <div class="hook-channel">${esc(h.channel)}</div>
+        <div class="hook-check" id="check-${h.id}"></div>
+      </div>
+    `).join('');
+    // auto-select first
+    if(active.length){toggleHook(active[0].id);}
+  }
+
+  window.toggleHook=function(id){
+    if(selectedHooks.has(id)){
+      selectedHooks.delete(id);
+      document.getElementById('hook-'+id)?.classList.remove('selected');
+      document.getElementById('check-'+id).textContent='';
+    } else {
+      selectedHooks.add(id);
+      document.getElementById('hook-'+id)?.classList.add('selected');
+      document.getElementById('check-'+id).textContent='✓';
+    }
+  };
+
+  // status
+  function showStatus(type,msg){
+    const el=document.getElementById('sendStatus');
+    el.className='status-bar show '+type;
+    el.innerHTML=type==='loading'?'<div class="spinner"></div> '+msg:msg;
+    if(type!=='loading')setTimeout(()=>el.classList.remove('show'),4000);
+  }
+
+  // history
+  function addHist(channel,msg,ok,badge){
+    const hist=S.get('antcpu_send_history',[]);
+    hist.unshift({id:Date.now().toString(),time:new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'}),channel,msg:msg.slice(0,80),ok,badge});
+    S.set('antcpu_send_history',hist.slice(0,30));
+    renderHist();
+  }
+
+  function renderHist(){
+    const hist=S.get('antcpu_send_history',[]);
+    const el=document.getElementById('histList');
+    if(!hist.length){el.innerHTML='<div class="empty">// no sends yet</div>';return;}
+    el.innerHTML=hist.map(h=>`
+      <div class="hist-row ${h.ok?'ok':'err'}">
+        <div class="hist-dot ${h.ok?'ok':'err'}"></div>
+        <div class="hist-meta">
+          <div class="hist-channel">${esc(h.channel)}<span class="badge badge-${h.badge}">${h.badge==='d'?'discord':'email'}</span></div>
+          <div class="hist-msg">${esc(h.msg)}</div>
+          <div class="hist-time">${h.time}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.clearHist=function(){S.set('antcpu_send_history',[]);renderHist();};
+
+  // SEND
+  window.doSend=async function(){
+    const msg=msgTA.value.trim();
+    if(!msg){showStatus('err','⚠ message cannot be empty');return;}
+    const btn=document.getElementById('sendBtn');
+    btn.disabled=true;
+    showStatus('loading','sending...');
+
+    const hooks=S.get('antcpu_discord_webhooks',[]);
+    let discordOk=0,discordErr=0,resendOk=false,resendErr=false;
+
+    // DISCORD
+    if(mode==='discord'||mode==='both'){
+      if(!selectedHooks.size){showStatus('err','⚠ select at least one webhook');btn.disabled=false;return;}
+      for(const id of selectedHooks){
+        const hook=hooks.find(h=>h.id===id);
+        if(!hook?.url)continue;
+        try{
+          const r=await fetch(hook.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:msg,username:'antcpu-send'})});
+          if(r.ok||r.status===204){discordOk++;addHist(hook.nickname,msg,true,'d');}
+          else{discordErr++;addHist(hook.nickname,msg,false,'d');}
+        }catch{discordErr++;addHist(hook.nickname,msg,false,'d');}
+      }
+    }
+
+    // RESEND
+    if(mode==='resend'||mode==='both'){
+      const to=document.getElementById('toAddr').value.trim()||'antony@antcpu.com';
+      const subject=document.getElementById('subject').value.trim()||'Message — '+today;
+      try{
+        const r=await fetch('/api/resend-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,body:msg})});
+        const d=await r.json();
+        if(d.ok){resendOk=true;addHist(to,msg,true,'r');}
+        else{resendErr=true;addHist(to,msg,false,'r');}
+      }catch{resendErr=true;addHist('resend',msg,false,'r');}
+    }
+
+    // result
+    if(mode==='discord'){
+      if(discordErr===0)showStatus('ok','✓ posted to '+discordOk+' webhook'+(discordOk!==1?'s':''));
+      else if(discordOk>0)showStatus('partial',discordOk+' sent, '+discordErr+' failed');
+      else showStatus('err','✗ all sends failed');
+    } else if(mode==='resend'){
+      if(resendOk)showStatus('ok','✓ email sent');
+      else showStatus('err','✗ email failed');
+    } else {
+      const allOk=discordErr===0&&resendOk;
+      const anyOk=discordOk>0||resendOk;
+      if(allOk)showStatus('ok','✓ sent to discord + email');
+      else if(anyOk)showStatus('partial','partial send — check history');
+      else showStatus('err','✗ all sends failed');
+    }
+
+    if(discordOk>0||resendOk){msgTA.value='';charEl.textContent='0 / 2000';}
+    btn.disabled=false;
+  };
+
+  loadHooks();
+  renderHist();
+})();
+
+  // quick templates
+  const _tplDate=new Date().toISOString().slice(0,10);
+  window.fillTemplate=function(type){
+    const msgEl=document.getElementById('msgBody');
+    if(type==='daily'){
+      msgEl.value='ANTCPU DAILY REVIEWn'+_tplDate+'nn--- BUILT TODAY ---nnn--- BLOCKERS ---nnn--- TOMORROW ---nn';
+    } else if(type==='tower'){
+      msgEl.value='TOWER STATUS REPORTn'+_tplDate+'nnGenesis Block #0 — Seals Aug 10, 2026nnWallets: 0/100nNodes: 0/10nFunding: $0/$1,000nnNotes:nn';
+    } else if(type==='build'){
+      msgEl.value='BUILD UPDATEn'+_tplDate+'nn--- COMPLETED ---nnn--- IN PROGRESS ---nnn--- NEXT SESSION ---nn';
+    }
+    msgEl.dispatchEvent(new Event('input'));
+  };
+
+</script>
+<script src="footer.js"></script>
+</body>
+</html>

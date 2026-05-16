@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTCPU - Get Your Free Consultation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #263238 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .form-header { text-align: center; margin-bottom: 30px; }
+        .form-header h1 { color: #1a237e; font-size: 28px; margin-bottom: 10px; }
+        .form-header p { color: #666; font-size: 16px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #333; font-weight: bold; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus { outline: none; border-color: #1a237e; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #1a237e 0%, #00BFFF 100%);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .submit-btn:hover { transform: translateY(-2px); }
+        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .success-message {
+            display: none;
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .error-message {
+            display: none;
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .urgency-badge {
+            display: inline-block;
+            background: #ff4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h1>🎖️ ANTCPU</h1>
+            <p>Get Your Free Automation Consultation</p>
+        </div>
+
+        <form id="leadForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone">
+            </div>
+            <div class="form-group">
+                <label for="company">Company/Business Name</label>
+                <input type="text" id="company" name="company">
+            </div>
+            <div class="form-group">
+                <label for="service">Service Needed *</label>
+                <select id="service" name="service" required>
+                    <option value="">Select a service...</option>
+                    <option value="website">Custom Website ($497+)</option>
+                    <option value="automation">Business Automation ($297+)</option>
+                    <option value="graphics">Same-Day Graphics ($97)</option>
+                    <option value="consultation">Technical Consultation ($97/hr)</option>
+                    <option value="transformation">Complete Digital Transformation</option>
+                    <option value="other">Other/Not Sure</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="urgency">Project Timeline *</label>
+                <select id="urgency" name="urgency" required>
+                    <option value="">Select timeline...</option>
+                    <option value="asap">ASAP - Need it now! 🚨</option>
+                    <option value="week">Within 1 week</option>
+                    <option value="month">Within 1 month</option>
+                    <option value="quarter">Within 3 months</option>
+                    <option value="exploring">Just exploring options</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="budget">Estimated Budget</label>
+                <select id="budget" name="budget">
+                    <option value="">Select budget range...</option>
+                    <option value="under500">Under $500</option>
+                    <option value="500-1000">$500 - $1,000</option>
+                    <option value="1000-2500">$1,000 - $2,500</option>
+                    <option value="2500-5000">$2,500 - $5,000</option>
+                    <option value="5000plus">$5,000+</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="message">Project Details *</label>
+                <textarea id="message" name="message" placeholder="Tell us about your project, current challenges, or what you're trying to achieve..." required></textarea>
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn">
+                🚀 Get My Free Consultation
+            </button>
+            <div class="success-message" id="successMessage">
+                ✅ Thank you! We'll respond within 2 hours. Check your email for next steps.
+            </div>
+            <div class="error-message" id="errorMessage">
+                ❌ Something went wrong. Please try again or email us directly at antcpu@gmail.com
+            </div>
+        </form>
+
+        <footer>
+            <p style="text-align:center;">Copyright 2026 antcpu</p>
+            <a href="https://antcpu.com">Back to Homepage</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('leadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Sending...';
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            const timestamp = new Date().toLocaleString();
+            const isUrgent = data.urgency === 'asap';
+
+            // Webhook URL loaded from server-side config — not stored in this file
+            const webhookUrl = window.DISCORD_WEBHOOK_URL || '';
+
+            if (!webhookUrl) {
+                errorMessage.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Get My Free Consultation';
+                return;
+            }
+
+            const discordPayload = {
+                embeds: [{
+                    title: `🚨 NEW LEAD ALERT ${isUrgent ? '- URGENT!' : ''}`,
+                    color: isUrgent ? 16711680 : 3447003,
+                    fields: [
+                        {
+                            name: "👤 Contact Info",
+                            value: `**Name:** ${data.name}\n**Email:** ${data.email}\n**Phone:** ${data.phone || 'Not provided'}\n**Company:** ${data.company || 'Not provided'}`,
+                            inline: false
+                        },
+                        {
+                            name: "💼 Project Details",
+                            value: `**Service:** ${data.service}\n**Timeline:** ${data.urgency}\n**Budget:** ${data.budget || 'Not specified'}`,
+                            inline: false
+                        },
+                        {
+                            name: "📝 Message",
+                            value: data.message.substring(0, 1000) + (data.message.length > 1000 ? '...' : ''),
+                            inline: false
+                        }
+                    ],
+                    footer: { text: `Submitted: ${timestamp} | Lead Source: antcpu.com` }
+                }]
+            };
+
+            if (isUrgent) {
+                discordPayload.content = "@everyone 🚨 URGENT LEAD - NEEDS IMMEDIATE RESPONSE!";
+            }
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(discordPayload)
+                });
+
+                if (response.ok) {
+                    successMessage.style.display = 'block';
+                    this.reset();
+                } else {
+                    throw new Error('Webhook failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Get My Free Consultation';
+            }
+        });
+
+        document.getElementById('urgency').addEventListener('change', function() {
+            const label = document.querySelector('label[for="urgency"]');
+            if (this.value === 'asap') {
+                if (!label.querySelector('.urgency-badge')) {
+                    label.innerHTML += '<span class="urgency-badge">URGENT</span>';
+                }
+            } else {
+                const badge = label.querySelector('.urgency-badge');
+                if (badge) badge.remove();
+            }
+        });
+    </script>
+</body>
+</html>

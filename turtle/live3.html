@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live — Turtle Enterprises</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
+header{background:#111;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1f1f1f;}
+header h1{font-size:1.1rem;color:#00ff88;letter-spacing:2px;font-family:monospace;}
+#clock{font-size:.85rem;color:#00ff88;font-family:monospace;}
+.layout{max-width:600px;margin:0 auto;padding:40px 24px;}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.72rem;font-family:monospace;font-weight:700;letter-spacing:1px;margin-bottom:24px;}
+.badge.live{background:#00ff8820;color:#00ff88;border:1px solid #00ff8840;}
+.site-name{font-size:2rem;font-weight:700;color:#e6edf3;margin-bottom:4px;}
+.site-url{font-size:.8rem;color:#555;font-family:monospace;margin-bottom:32px;}
+.row{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid #1a1a1a;}
+.row:last-of-type{border-bottom:none;}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;font-family:monospace;min-width:120px;}
+.value{font-size:.85rem;color:#c9d1d9;font-family:monospace;text-align:right;}
+.value.green{color:#00ff88;}
+.value.yellow{color:#d29922;}
+.next-btn{display:block;width:100%;margin-top:40px;padding:16px;background:#00ff8810;border:1px solid #00ff8830;border-radius:12px;color:#00ff88;font-family:monospace;font-size:.9rem;font-weight:700;text-align:center;text-decoration:none;letter-spacing:1px;transition:all .2s;}
+.next-btn:hover{background:#00ff8820;border-color:#00ff88;}
+.footer{margin-top:24px;text-align:center;font-size:.72rem;color:#333;font-family:monospace;}
+</style>
+</head>
+<body>
+<header>
+  <h1>⬤ live</h1>
+  <span id="clock">--:--:--</span>
+</header>
+
+<div class="layout">
+  <div class="badge live">● LIVE</div>
+  <div class="site-name">Turtle Enterprises</div>
+  <div class="site-url">antcpu.com/turtle · Ionos · HTML</div>
+
+  <div class="row">
+    <div class="label">status</div>
+    <div class="value green">active</div>
+  </div>
+  <div class="row">
+    <div class="label">last updated</div>
+    <div class="value" id="lastUpdated">2026-04-15</div>
+  </div>
+  <div class="row">
+    <div class="label">version</div>
+    <div class="value">1.0.0</div>
+  </div>
+  <div class="row">
+    <div class="label">host</div>
+    <div class="value">Ionos</div>
+  </div>
+  <div class="row">
+    <div class="label">deploy</div>
+    <div class="value">manual HTML</div>
+  </div>
+  <div class="row">
+    <div class="label">next</div>
+    <div class="value yellow">listings update</div>
+  </div>
+
+  <a class="next-btn" href="https://antcpu.com/edu/live4.html">→ edu/live4.html</a>
+
+  <div class="footer">antcpu agent network · chain node 04</div>
+</div>
+
+<script>
+const tick=()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit'})+' EDT';
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
