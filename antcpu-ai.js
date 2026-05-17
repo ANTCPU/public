@@ -36,7 +36,7 @@ window.ANTAI = (function () {
   const EMPLOYEES = [
     {
       id       : 'aria',
-      url      : '/aria/',
+      url      : 'https://antcpu.com/aria/',
       name     : 'ARIA',
       role     : 'Communications Agent',
       dept     : 'comms',
@@ -51,7 +51,7 @@ window.ANTAI = (function () {
     },
     {
       id       : 'forge',
-      url      : '/forge/',
+      url      : 'https://antcpu.com/forge/',
       name     : 'FORGE',
       role     : 'Build Agent',
       dept     : 'dev',
@@ -66,7 +66,7 @@ window.ANTAI = (function () {
     },
     {
       id       : 'scout',
-      url      : '/scout/',
+      url      : 'https://antcpu.com/scout/',
       name     : 'SCOUT',
       role     : 'Radar Agent',
       dept     : 'intel',
@@ -81,7 +81,7 @@ window.ANTAI = (function () {
     },
     {
       id       : 'ledger',
-      url      : '/ledger/',
+      url      : 'https://antcpu.com/ledger/',
       name     : 'LEDGER',
       role     : 'Logging + Audit Agent',
       dept     : 'finance',
@@ -96,7 +96,7 @@ window.ANTAI = (function () {
     },
     {
       id       : 'herald',
-      url      : '/herald/',
+      url      : 'https://antcpu.com/herald/',
       name     : 'HERALD',
       role     : 'Comms + Calendar Agent',
       dept     : 'marketing',
@@ -111,7 +111,7 @@ window.ANTAI = (function () {
     },
     {
       id       : 'vault',
-      url      : '/vault/',
+      url      : 'https://antcpu.com/vault/',
       name     : 'VAULT',
       role     : 'Finance + Storage Agent',
       dept     : 'security',
