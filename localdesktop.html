@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>antcpu — Dev Launcher</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { padding-top: 52px; font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #c9d1d9; min-height: 100vh; }
+
+main { padding: 28px; display: flex; flex-direction: column; gap: 32px; max-width: 1200px; margin: 0 auto; }
+
+h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: 2px; color: #555; margin-bottom: 14px; font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
+h2 span { color: #d29922; font-size: .68rem; }
+
+/* GRID */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.grid-sm { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+
+/* BUTTONS */
+.btn {
+  background: #111; border: 1px solid #1f1f1f; color: #c9d1d9;
+  padding: 11px 14px; border-radius: 8px; cursor: pointer;
+  font-size: .82rem; text-align: center; transition: all .2s;
+  text-decoration: none; display: block; font-family: monospace;
+}
+.btn:hover { background: #1a1a1a; border-color: #00ff88; color: #00ff88; }
+.btn.gold:hover { border-color: #d29922; color: #d29922; }
+.btn.ext::after { content: ' ↗'; font-size: .65rem; color: #333; }
+
+/* PROJECT CARDS */
+.project-btn {
+  background: #111; border: 1px solid #1f1f1f; color: #c9d1d9;
+  padding: 14px; border-radius: 8px; cursor: pointer;
+  font-size: .82rem; text-align: left; transition: all .2s;
+  text-decoration: none; display: flex; flex-direction: column; gap: 5px;
+}
+.project-btn:hover { background: #161616; border-color: #333; }
+.project-btn .name { color: #e6edf3; font-weight: 600; font-size: .85rem; }
+.project-btn .url  { color: #333; font-family: monospace; font-size: .68rem; }
+
+/* STATUS BADGES */
+.status { display: inline-block; font-size: .65rem; padding: 2px 7px; border-radius: 10px; font-weight: 700; font-family: monospace; }
+.live    { background: #00ff8818; color: #00ff88; border: 1px solid #00ff8833; }
+.active  { background: #1f6feb18; color: #58a6ff; border: 1px solid #1f6feb33; }
+.blocked { background: #f8514918; color: #f85149; border: 1px solid #f8514933; }
+.wip     { background: #d2992218; color: #d29922; border: 1px solid #d2992233; }
+.todo    { background: #ffffff08; color: #444;    border: 1px solid #222; }
+
+/* SEARCH */
+.search-wrap { margin-bottom: 14px; }
+#projectSearch {
+  width: 100%; padding: 9px 14px; background: #111;
+  border: 1px solid #1f1f1f; border-radius: 8px;
+  color: #00ff88; font-family: monospace; font-size: .85rem; outline: none;
+  transition: border-color .2s;
+}
+#projectSearch::placeholder { color: #2a2a2a; }
+#projectSearch:focus { border-color: #00ff8844; }
+
+/* TOOL GROUPS */
+.tool-group { margin-bottom: 16px; }
+.tool-group-label { font-size: .62rem; font-family: monospace; color: #333; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+
+.hidden { display: none; }
+
+/* DIVIDER */
+.divider { border: none; border-top: 1px solid #1a1a1a; margin: 4px 0; }
+
+  @media (max-width: 600px) {
+    .btn { font-size: .68rem; padding: 6px 10px; }
+    .project-btn { font-size: .72rem; }
+    .stat-card { min-width: 100px; }
+    .ant-a-page { width: 120px; }
+    .ant-a-last { display: none; }
+    #ant-analytics-list { gap: 4px; }
+  }
+
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+
+<script>window.ANT_PAGE = { title: "antcpu / dev-launcher", root: "./" }</script>
+<script src="nav.js"></script>
+
+<main>
+
+  <!-- QUICK START -->
+  <section>
+    <h2>// quick start <span>external</span></h2>
+    <div class="grid">
+      <a class="btn ext" href="https://ionos.com" target="_blank">🌐 Ionos</a>
+      <a class="btn ext" href="https://vercel.com/dashboard" target="_blank">▲ Vercel</a>
+      <a class="btn ext" href="https://github.com/ANTCPU" target="_blank">🐙 GitHub</a>
+      <a class="btn ext" href="https://zapier.com" target="_blank">⚡ Zapier</a>
+      <a class="btn ext" href="https://aistudio.google.com" target="_blank">🤖 AI Studio</a>
+      <a class="btn ext" href="https://antcpu.com" target="_blank">🏠 antcpu.com</a>
+      <a class="btn ext" href="https://resend.com/emails" target="_blank">📧 Resend</a>
+      <a class="btn ext" href="https://discord.com/developers/applications" target="_blank">💬 Discord Dev</a>
+    </div>
+
+  <!-- DOORBELL WIDGET -->
+  <div style="margin-top:16px;padding:12px 14px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;font-family:monospace;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;">// doorbell</span>
+      <span style="font-size:.72rem;color:#f0883e;">🔔 <span id="doorbell-count">0</span> today</span>
+    </div>
+    <div id="doorbell-last-page" style="font-size:.72rem;color:#888;">no visitors yet</div>
+    <div id="doorbell-last-ref" style="font-size:.7rem;color:#555;margin-top:2px;"></div>
+    <div id="doorbell-last-ts" style="font-size:.65rem;color:#333;margin-top:2px;"></div>
+  </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section>
+    <h2>// projects <span id="proj-count"></span></h2>
+    <div class="search-wrap">
+      <input type="text" id="projectSearch" placeholder="search projects..." onkeyup="filterProjects()">
+    </div>
+    <div id="projectGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:12px;">
+
+      <!-- LIVE -->
+      <a class="project-btn" href="https://antcpu.com" target="_blank" data-status="live" data-deploy="ionos">
+        <span class="proj-name">antcpu.com</span>
+        <span class="proj-url">ionos / root</span>
+        <div class="proj-badges"><span class="proj-status live">● LIVE</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <a class="project-btn" href="https://introtopi.com" target="_blank" data-status="live" data-deploy="external">
+        <span class="proj-name">introtopi.com</span>
+        <span class="proj-url">introtopi.com</span>
+        <div class="proj-badges"><span class="proj-status live">● LIVE</span><span class="proj-deploy external">external</span></div>
+      </a>
+
+      <!-- ACTIVE -->
+      <a class="project-btn" href="https://antcpu.com/manda" target="_blank" data-status="active" data-deploy="ionos">
+        <span class="proj-name">Amanda Photography</span>
+        <span class="proj-url">antcpu.com/manda</span>
+        <div class="proj-badges"><span class="proj-status active">● v0.1 ACTIVE</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <a class="project-btn" href="https://antcpu.com/antcoin" target="_blank" data-status="active" data-deploy="ionos">
+        <span class="proj-name">Antcoin</span>
+        <span class="proj-url">antcpu.com/antcoin</span>
+        <div class="proj-badges"><span class="proj-status active">● ACTIVE</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <a class="project-btn" href="https://antcpu.com/edu" target="_blank" data-status="active" data-deploy="ionos">
+        <span class="proj-name">EDU</span>
+        <span class="proj-url">antcpu.com/edu</span>
+        <div class="proj-badges"><span class="proj-status active">● ACTIVE</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <a class="project-btn" href="https://antcpu-ads.vercel.app" target="_blank" data-status="active" data-deploy="vercel">
+        <span class="proj-name">AD Platform</span>
+        <span class="proj-url">antcpu-ads.vercel.app</span>
+        <div class="proj-badges"><span class="proj-status active">● ACTIVE</span><span class="proj-deploy vercel">vercel</span></div>
+      </a>
+
+      <a class="project-btn" href="http://localhost:3000/mapofpi/" target="_blank" data-status="active" data-deploy="local">
+        <span class="proj-name">Map of Pi</span>
+        <span class="proj-url">mapofpi/ · wrapper</span>
+        <div class="proj-badges"><span class="proj-status active">● ACTIVE</span><span class="proj-deploy local">local</span></div>
+      </a>
+
+      <!-- IN PROGRESS -->
+      <a class="project-btn" href="https://antchain.vercel.app" target="_blank" data-status="wip" data-deploy="vercel">
+        <span class="proj-name">Antchain</span>
+        <span class="proj-url">antchain.vercel.app</span>
+        <div class="proj-badges"><span class="proj-status wip">⚡ IN PROGRESS</span><span class="proj-deploy vercel">vercel</span></div>
+      </a>
+
+      <a class="project-btn" href="https://antcpu.com/Game" target="_blank" data-status="wip" data-deploy="ionos">
+        <span class="proj-name">Game</span>
+        <span class="proj-url">antcpu.com/Game</span>
+        <div class="proj-badges"><span class="proj-status wip">⚡ IN PROGRESS</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <a class="project-btn" href="https://antcpu.com/TV" target="_blank" data-status="wip" data-deploy="pi">
+        <span class="proj-name">Streaming TV</span>
+        <span class="proj-url">antcpu.com/TV</span>
+        <div class="proj-badges"><span class="proj-status wip">⚡ Pi Mainnet</span><span class="proj-deploy pi">pi</span></div>
+      </a>
+
+      <!-- LOCAL DEV -->
+      <a class="project-btn" href="http://localhost:3000/projects/antcpu-tv/" target="_blank" data-status="local" data-deploy="local">
+        <span class="proj-name">antcpu TV</span>
+        <span class="proj-url">projects/antcpu-tv/ · React</span>
+        <div class="proj-badges"><span class="proj-status local">◈ LOCAL</span><span class="proj-deploy local">local</span></div>
+      </a>
+
+      <a class="project-btn" href="http://localhost:3000/projects/photography/" target="_blank" data-status="local" data-deploy="local">
+        <span class="proj-name">Photography</span>
+        <span class="proj-url">projects/photography/ · Next.js</span>
+        <div class="proj-badges"><span class="proj-status local">◈ LOCAL</span><span class="proj-deploy local">local</span></div>
+      </a>
+
+      <a class="project-btn" href="http://localhost:3000/pi/" target="_blank" data-status="local" data-deploy="local">
+        <span class="proj-name">Pi App</span>
+        <span class="proj-url">pi/ · app</span>
+        <div class="proj-badges"><span class="proj-status local">◈ LOCAL</span><span class="proj-deploy local">local</span></div>
+      </a>
+
+      <a class="project-btn" href="http://localhost:3000/amandaland/" target="_blank" data-status="local" data-deploy="vercel">
+        <span class="proj-name">Amandaland</span>
+        <span class="proj-url">amandaland/ · Next.js</span>
+        <div class="proj-badges"><span class="proj-status local">◈ LOCAL</span><span class="proj-deploy vercel">vercel</span></div>
+      </a>
+
+      <!-- TODO -->
+      <a class="project-btn" href="https://antcpu.com/cloud" target="_blank" data-status="todo" data-deploy="ionos">
+        <span class="proj-name">antcpu Cloud</span>
+        <span class="proj-url">antcpu.com/cloud</span>
+        <div class="proj-badges"><span class="proj-status todo">○ TODO</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <a class="project-btn" href="https://antcpu.com/turtle" target="_blank" data-status="todo" data-deploy="ionos">
+        <span class="proj-name">Turtle Enterprises</span>
+        <span class="proj-url">antcpu.com/turtle</span>
+        <div class="proj-badges"><span class="proj-status todo">○ TODO</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <a class="project-btn" href="https://antcpu.com/social" target="_blank" data-status="todo" data-deploy="ionos">
+        <span class="proj-name">Social</span>
+        <span class="proj-url">antcpu.com/social</span>
+        <div class="proj-badges"><span class="proj-status todo">○ TODO</span><span class="proj-deploy ionos">ionos</span></div>
+      </a>
+
+      <!-- STUB -->
+      <a class="project-btn" href="#" data-status="stub" data-deploy="none">
+        <span class="proj-name">PYSO</span>
+        <span class="proj-url">PYSO/ · html stub</span>
+        <div class="proj-badges"><span class="proj-status stub">◌ STUB</span><span class="proj-deploy none">none</span></div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section>
+    <h2>// tools <span>launcher</span></h2>
+
+    <div class="tool-group">
+      <div class="tool-group-label">// comms</div>
+      <div class="grid-sm">
+        <a class="btn" href="send.html">⚡ Unified Send</a>
+        <a class="btn" href="discord.html">💬 Discord</a>
+        <a class="btn" href="resend.html">📧 Resend</a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="tool-group-label">// intelligence</div>
+      <div class="grid-sm">
+        <a class="btn" href="progress.html">📊 Progress</a>
+        <a class="btn" href="radar.html">🔭 Radar</a>
+        <a class="btn" href="pipeline.html">🔁 Pipeline</a>
+        <a class="btn" href="wiki.html">📖 Wiki</a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="tool-group-label">// system</div>
+      <div class="grid-sm">
+        <a class="btn" href="employees.html">🤖 Employees</a>
+        <a class="btn" href="chain.html">⛓ Chain</a>
+        <a class="btn" href="uploader.html">⬆ Uploader</a>
+        <a class="btn" href="arena/index.html">🕷️ Arena</a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="tool-group-label">// docs</div>
+      <div class="grid-sm">
+        <a class="btn" href="ROADMAP.md">🗺 Roadmap</a>
+        <a class="btn" href="FUTURE.md">🔮 Future</a>
+        <a class="btn" href="BUILD.md">🔧 Build</a>
+        <a class="btn" href="COMMS.md">📡 Comms</a>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ENVIRONMENT STATUS -->
+  <section>
+    <h2>// environment <span id="env-status-label">checking...</span></h2>
+    <div class="grid" id="envGrid">
+      <div class="stat-card" id="env-server">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-label">server</div>
+        <div class="stat-val" id="env-server-val">—</div>
+      </div>
+      <div class="stat-card" id="env-db">
+        <div class="stat-icon">🗄</div>
+        <div class="stat-label">database</div>
+        <div class="stat-val" id="env-db-val">—</div>
+      </div>
+      <div class="stat-card" id="env-version">
+        <div class="stat-icon">🔖</div>
+        <div class="stat-label">version</div>
+        <div class="stat-val" id="env-version-val">—</div>
+      </div>
+      <div class="stat-card" id="env-time">
+        <div class="stat-icon">🕐</div>
+        <div class="stat-label">server time</div>
+        <div class="stat-val" id="env-time-val">—</div>
+      </div>
+      <div class="stat-card" id="env-genesis">
+        <div class="stat-icon">⛓</div>
+        <div class="stat-label">genesis</div>
+        <div class="stat-val" id="env-genesis-val">—</div>
+      </div>
+      <div class="stat-card" id="env-routes">
+        <div class="stat-icon">🔀</div>
+        <div class="stat-label">nav routes</div>
+        <div class="stat-val" id="env-routes-val">12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS WIDGET -->
+  <div style="margin-top:24px;padding:0 12px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+  <!-- PAGES CARD -->
+  <div style="background:#111;border:1px solid #1f1f1f;border-radius:8px;padding:16px;">
+    <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:12px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <span>// top pages</span>
+      <span id="ant-analytics-total" style="color:#333;">— pages</span>
+    </div>
+    <div id="ant-analytics-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    <div id="ant-analytics-detail" style="display:none;margin-top:12px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:14px;font-family:monospace;font-size:.72rem;"></div>
+  </div>
+
+  <!-- FILES CARD -->
+  <div style="background:#111;border:1px solid #1f1f1f;border-radius:8px;padding:16px;">
+    <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:12px;font-family:monospace;border-bottom:1px solid #1f1f1f;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <span>// top files</span>
+      <span id="ant-files-total" style="color:#333;">— files</span>
+    </div>
+    <div id="ant-files-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+
+</div>
+
+<style>
+.ant-a-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#111;border:1px solid #1a1a1a;border-radius:6px;cursor:pointer;transition:all .2s;font-family:monospace;}
+.ant-a-row:hover{border-color:#00ff8840;}
+.ant-a-row.selected{border-color:#00ff88;background:#00ff8808;}
+.ant-a-bar-wrap{flex:1;height:4px;background:#1a1a1a;border-radius:2px;overflow:hidden;}
+.ant-a-bar{height:100%;background:#00ff88;border-radius:2px;transition:width .4s;}
+.ant-a-page{font-size:.72rem;color:#c9d1d9;width:180px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ant-a-hits{font-size:.72rem;color:#00ff88;width:40px;text-align:right;flex-shrink:0;}
+.ant-a-last{font-size:.60rem;color:#333;width:90px;text-align:right;flex-shrink:0;}
+
+  @media (max-width: 600px) {
+    .btn { font-size: .68rem; padding: 6px 10px; }
+    .project-btn { font-size: .72rem; }
+    .stat-card { min-width: 100px; }
+    .ant-a-page { width: 120px; }
+    .ant-a-last { display: none; }
+    #ant-analytics-list { gap: 4px; }
+  }
+
+</style>
+
+<script>
+(function(){
+  fetch('/api/analytics')
+    .then(r=>r.json())
+    .then(data=>{
+      const views = data.views || [];
+      const total = data.total_pages || views.length;
+      document.getElementById('ant-analytics-total').textContent = total + ' pages';
+      const top = views.slice(0,10);
+      const max = top[0] ? top[0].hits : 1;
+      const list = document.getElementById('ant-analytics-list');
+      let selected = null;
+      top.forEach(v=>{
+        const pct = Math.round((v.hits/max)*100);
+        const last = v.last_seen ? new Date(v.last_seen).toLocaleDateString() : '—';
+        const row = document.createElement('div');
+        row.className = 'ant-a-row';
+        row.innerHTML =
+          '<div class="ant-a-page">'+v.page+'</div>'+
+          '<div class="ant-a-bar-wrap"><div class="ant-a-bar" style="width:'+pct+'%"></div></div>'+
+          '<div class="ant-a-hits">'+v.hits+'</div>'+
+          '<div class="ant-a-last">'+last+'</div>';
+        row.addEventListener('click',function(){
+          const detail = document.getElementById('ant-analytics-detail');
+          if(selected === v.page){
+            detail.style.display='none';
+            row.classList.remove('selected');
+            selected=null; return;
+          }
+          document.querySelectorAll('.ant-a-row').forEach(r=>r.classList.remove('selected'));
+          row.classList.add('selected');
+          selected = v.page;
+          const first = v.first_seen ? new Date(v.first_seen).toLocaleString() : '—';
+          const lastFull = v.last_seen ? new Date(v.last_seen).toLocaleString() : '—';
+          detail.style.display='block';
+          detail.innerHTML =
+            '<div style="color:#00ff88;margin-bottom:8px;">'+v.page+'</div>'+
+            '<div style="color:#555;margin-bottom:4px;">hits: <span style="color:#c9d1d9;">'+v.hits+'</span></div>'+
+            '<div style="color:#555;margin-bottom:4px;">first seen: <span style="color:#c9d1d9;">'+first+'</span></div>'+
+            '<div style="color:#555;">last seen: <span style="color:#c9d1d9;">'+lastFull+'</span></div>';
+        });
+        list.appendChild(row);
+      });
+    })
+    .catch(()=>{
+      document.getElementById('ant-analytics-total').textContent = 'offline';
+    });
+
+  // FILES
+  fetch('/api/files')
+    .then(r=>r.json())
+    .then(data=>{
+      const files = (data.files || data || []).filter(f=>f.name && f.type !== 'application/octet-stream');
+      document.getElementById('ant-files-total').textContent = files.length + ' files';
+      const list = document.getElementById('ant-files-list');
+      const top = files.slice(0,10);
+      if(top.length === 0){
+        list.innerHTML = '<div style="font-family:monospace;font-size:.65rem;color:#333;">no files yet</div>';
+        return;
+      }
+      top.forEach(f=>{
+        const date = f.created_at ? new Date(f.created_at).toLocaleDateString() : '—';
+        const row = document.createElement('div');
+        row.className = 'ant-a-row';
+        row.innerHTML =
+          '<div class="ant-a-page" style="width:160px;" title="'+f.name+'">'+f.name+'</div>'+
+          '<div style="flex:1;font-family:monospace;font-size:.65rem;color:#555;">'+f.type+'</div>'+
+          '<div class="ant-a-last">'+date+'</div>';
+        list.appendChild(row);
+      });
+    })
+    .catch(()=>{
+      document.getElementById('ant-files-total').textContent = 'offline';
+    });
+})();
+</script>
+
+  <!-- FOOTER -->
+  <footer style="border-top:1px solid #1a1a1a;padding:20px 0;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:.68rem;color:#2a2a2a;">
+    <span>⚡ antcpu-launcher</span>
+    <span id="footer-version">v1.3.0</span>
+    <span id="footer-time"></span>
+  </footer>
+
+</main>
+
+<script>
+function filterProjects(){
+  const q = document.getElementById('projectSearch').value.toLowerCase();
+  const cards = document.querySelectorAll('.project-btn');
+  let visible = 0;
+  cards.forEach(card => {
+    const match = card.innerText.toLowerCase().includes(q);
+    card.classList.toggle('hidden', !match);
+    if (match) visible++;
+  });
+  document.getElementById('proj-count').textContent = visible + ' projects';
+}
+// init count
+document.addEventListener('DOMContentLoaded', () => {
+  const total = document.querySelectorAll('.project-btn').length;
+  document.getElementById('proj-count').textContent = total + ' projects';
+});
+</script>
+
+<script src="footer.js"></script>
+
+<!-- ANTCPU DOORBELL UI -->
+<div id="doorbell-toast" style="display:none;position:fixed;bottom:2rem;right:2rem;background:#0a0a0a;border:1px solid #f0883e;border-radius:12px;padding:1rem 1.5rem;z-index:9999;min-width:260px;box-shadow:0 4px 24px rgba(240,136,62,0.15);">
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span style="font-size:1.4rem;">🔔</span>
+    <div>
+      <div style="color:#f0883e;font-weight:700;font-size:0.85rem;letter-spacing:0.05em;">VISITOR ON ANTCPU.COM</div>
+      <div id="doorbell-page" style="color:#888;font-size:0.75rem;margin-top:0.2rem;"></div>
+      <div id="doorbell-ref" style="color:#555;font-size:0.7rem;"></div>
+    </div>
+  </div>
+</div>
+
+<audio id="doorbell-sound" src="sounds/doorbell00.mp3" preload="auto"></audio>
+
+<script>
+(function() {
+  var lastTs = localStorage.getItem('doorbell_lastTs') || null;
+  var todayCount = parseInt(localStorage.getItem('doorbell_today') || '0');
+  var todayDate = localStorage.getItem('doorbell_date') || '';
+  var today = new Date().toDateString();
+  if (todayDate !== today) { todayCount = 0; localStorage.setItem('doorbell_date', today); }
+  document.getElementById('doorbell-count').textContent = todayCount;
+  var sound  = document.getElementById('doorbell-sound');
+
+  function checkDoorbell() {
+    fetch('http://localhost:3000/api/doorbell')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.lastVisitor && data.lastVisitor.ts !== lastTs) {
+          lastTs = data.lastVisitor.ts;
+          localStorage.setItem('doorbell_lastTs', lastTs);
+          todayCount++;
+          localStorage.setItem('doorbell_today', todayCount);
+          document.getElementById('doorbell-count').textContent = todayCount;
+          document.getElementById('doorbell-last-page').textContent = data.lastVisitor.page || '/';
+          document.getElementById('doorbell-last-ref').textContent  = 'ref: ' + (data.lastVisitor.ref || 'direct');
+          document.getElementById('doorbell-last-ts').textContent   = data.lastVisitor.ts;
+          if (sound) {
+            sound.volume = 1.0;
+            sound.play().catch(function(){});
+            // Fade out last 20% of duration
+            sound.oncanplaythrough = function() {
+              var fadeDuration = 0.3;
+              var fadeStart = sound.duration - fadeDuration;
+              var fadeInterval = setInterval(function() {
+                if (sound.currentTime >= fadeStart) {
+                  var remaining = sound.duration - sound.currentTime;
+                  sound.volume = Math.max(0, remaining / fadeDuration);
+                  if (sound.volume <= 0) {
+                    sound.pause();
+                    sound.currentTime = 0;
+                    sound.volume = 1.0;
+                    clearInterval(fadeInterval);
+                  }
+                }
+              }, 50);
+            };
+          }
+        }
+      })
+      .catch(function(){});
+  }
+
+  // Poll every 30 seconds
+  setInterval(checkDoorbell, 5000);
+  checkDoorbell();
+})();
+</script>
+
+<!-- PROJECT DETAIL DRAWER -->
+<div id="proj-drawer-overlay" style="display:none;position:fixed;inset:0;background:#00000088;z-index:1000;" onclick="closeProjDrawer()"></div>
+
+<div id="proj-drawer" style="
+  position:fixed; right:-400px; top:0; width:360px; height:100vh;
+  background:#0d0d0d; border-left:1px solid #1f1f1f;
+  z-index:1001; transition:right .25s cubic-bezier(.4,0,.2,1);
+  display:flex; flex-direction:column; font-family:monospace;
+  overflow-y:auto;
+">
+  <div style="padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1a1a1a;padding-bottom:16px;">
+    <span style="font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:#555;">// project</span>
+    <button onclick="closeProjDrawer()" style="background:none;border:none;color:#555;cursor:pointer;font-size:1.1rem;padding:4px 8px;">✕</button>
+  </div>
+
+  <div style="padding:20px;flex:1;">
+    <!-- STATUS BAR -->
+    <div id="pd-status-bar" style="height:3px;border-radius:2px;margin-bottom:20px;"></div>
+
+    <!-- NAME -->
+    <div id="pd-name" style="font-size:1.1rem;font-weight:700;color:#e6edf3;margin-bottom:6px;"></div>
+    <div id="pd-url" style="font-size:.72rem;color:#555;margin-bottom:16px;"></div>
+
+    <!-- BADGES -->
+    <div id="pd-badges" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;"></div>
+
+    <!-- ANALYTICS -->
+    <div style="background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:20px;">
+      <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:10px;">// analytics</div>
+      <div style="display:flex;gap:20px;">
+        <div>
+          <div id="pd-hits" style="font-size:1.4rem;font-weight:700;color:#00ff88;">—</div>
+          <div style="font-size:.62rem;color:#555;">total hits</div>
+        </div>
+        <div>
+          <div id="pd-last" style="font-size:.85rem;color:#c9d1d9;">—</div>
+          <div style="font-size:.62rem;color:#555;">last seen</div>
+        </div>
+        <div>
+          <div id="pd-first" style="font-size:.85rem;color:#c9d1d9;">—</div>
+          <div style="font-size:.62rem;color:#555;">first seen</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <a id="pd-open-live" href="#" target="_blank" style="display:block;padding:11px 16px;background:#00ff8810;border:1px solid #00ff8830;border-radius:8px;color:#00ff88;text-decoration:none;font-size:.82rem;text-align:center;transition:all .2s;">↗ Open Live</a>
+      <a id="pd-open-local" href="#" target="_blank" style="display:none;padding:11px 16px;background:#7c3aed10;border:1px solid #7c3aed30;border-radius:8px;color:#a78bfa;text-decoration:none;font-size:.82rem;text-align:center;transition:all .2s;">◈ Open Local</a>
+      <button onclick="copyProjUrl()" style="padding:11px 16px;background:#111;border:1px solid #1f1f1f;border-radius:8px;color:#555;font-family:monospace;font-size:.82rem;cursor:pointer;transition:all .2s;" id="pd-copy-btn">⎘ Copy URL</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@media (max-width: 600px) {
+  #proj-drawer {
+    right: auto !important;
+    left: 0 !important;
+    bottom: -100vh !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 75vh !important;
+    border-left: none !important;
+    border-top: 1px solid #1f1f1f !important;
+    border-radius: 16px 16px 0 0 !important;
+    transition: bottom .25s cubic-bezier(.4,0,.2,1) !important;
+  }
+  #proj-drawer.open {
+    bottom: 0 !important;
+    right: auto !important;
+  }
+}
+</style>
+
+<script>
+(function(){
+  var analyticsCache = null;
+
+  // Pre-fetch analytics once
+  fetch('/api/analytics').then(r=>r.json()).then(d=>{ analyticsCache = d; }).catch(()=>{});
+
+  // Status color map
+  var statusColors = {
+    live: '#00ff88', active: '#58a6ff', wip: '#d29922',
+    blocked: '#f85149', todo: '#333', local: '#a78bfa', stub: '#222'
+  };
+
+  // Intercept all project card clicks
+  document.querySelectorAll('.project-btn').forEach(function(card){
+    card.addEventListener('click', function(e){
+      e.preventDefault();
+      openProjDrawer(card);
+    });
+  });
+
+  window.openProjDrawer = function(card) {
+    var name    = card.querySelector('.proj-name') ? card.querySelector('.proj-name').textContent : '';
+    var url     = card.querySelector('.proj-url')  ? card.querySelector('.proj-url').textContent  : '';
+    var href    = card.getAttribute('href') || '#';
+    var status  = card.getAttribute('data-status') || 'todo';
+    var deploy  = card.getAttribute('data-deploy') || 'none';
+    var badgesEl = card.querySelector('.proj-badges');
+    var color   = statusColors[status] || '#333';
+
+    // Populate drawer
+    document.getElementById('pd-name').textContent = name;
+    document.getElementById('pd-url').textContent  = url;
+    document.getElementById('pd-status-bar').style.background = color;
+    document.getElementById('pd-badges').innerHTML = badgesEl ? badgesEl.innerHTML : '';
+
+    // Live link
+    var liveBtn = document.getElementById('pd-open-live');
+    liveBtn.href = href;
+    liveBtn.style.display = (href === '#') ? 'none' : 'block';
+
+    // Local link — show if href is localhost
+    var localBtn = document.getElementById('pd-open-local');
+    if (href.includes('localhost')) {
+      localBtn.href = href;
+      localBtn.style.display = 'block';
+      liveBtn.style.display = 'none';
+    } else {
+      localBtn.style.display = 'none';
+    }
+
+    // Store URL for copy
+    window._projDrawerUrl = href;
+
+    // Analytics
+    document.getElementById('pd-hits').textContent  = '—';
+    document.getElementById('pd-last').textContent  = '—';
+    document.getElementById('pd-first').textContent = '—';
+
+    if (analyticsCache && analyticsCache.views) {
+      // Match by page name — strip domain from href
+      var pageName = href.replace(/https?:\/\/[^\/]+\/?/, '').replace(/^\//, '') || 'index.html';
+      if (pageName === '' || pageName === '/') pageName = 'index.html';
+      var match = analyticsCache.views.find(function(v){
+        return v.page === pageName || v.page === pageName + 'index.html';
+      });
+      if (match) {
+        document.getElementById('pd-hits').textContent  = match.hits;
+        document.getElementById('pd-last').textContent  = match.last_seen  ? new Date(match.last_seen).toLocaleDateString()  : '—';
+        document.getElementById('pd-first').textContent = match.first_seen ? new Date(match.first_seen).toLocaleDateString() : '—';
+      }
+    }
+
+    // Open drawer
+    var drawer  = document.getElementById('proj-drawer');
+    var overlay = document.getElementById('proj-drawer-overlay');
+    overlay.style.display = 'block';
+    requestAnimationFrame(function(){
+      drawer.style.right = '0px';
+      drawer.classList.add('open');
+    });
+  };
+
+  window.closeProjDrawer = function() {
+    var drawer  = document.getElementById('proj-drawer');
+    var overlay = document.getElementById('proj-drawer-overlay');
+    var isMobile = window.innerWidth <= 600;
+    if (isMobile) {
+      drawer.style.bottom = '-100vh';
+    } else {
+      drawer.style.right = '-400px';
+    }
+    drawer.classList.remove('open');
+    setTimeout(function(){ overlay.style.display = 'none'; }, 260);
+  };
+
+  window.copyProjUrl = function() {
+    var url = window._projDrawerUrl || '';
+    if (!url || url === '#') return;
+    navigator.clipboard.writeText(url).then(function(){
+      var btn = document.getElementById('pd-copy-btn');
+      btn.textContent = '✓ Copied';
+      setTimeout(function(){ btn.textContent = '⎘ Copy URL'; }, 1500);
+    });
+  };
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeProjDrawer();
+  });
+})();
+</script>
+
+</body>
+</html>

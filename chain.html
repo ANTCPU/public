@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chain — antcpu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
+header{background:#111;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1f1f1f;}
+header h1{font-size:1.1rem;color:#00ff88;letter-spacing:2px;font-family:monospace;}
+#clock{font-size:.85rem;color:#00ff88;font-family:monospace;}
+.layout{max-width:600px;margin:0 auto;padding:40px 24px;}.section-label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#333;font-family:monospace;margin-bottom:12px;}.node{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid #1a1a1a;border-radius:8px;margin-bottom:8px;text-decoration:none;transition:all .2s;}.node:hover{border-color:#00ff8840;background:#00ff8808;}.node-left{display:flex;align-items:center;gap:12px;}.node-num{font-size:.7rem;color:#333;font-family:monospace;min-width:24px;}.node-name{font-size:.9rem;color:#e6edf3;font-family:monospace;}.node-url{font-size:.72rem;color:#555;font-family:monospace;}.node-right{font-size:.72rem;color:#00ff88;font-family:monospace;}.divider{height:1px;background:#1a1a1a;margin:24px 0;}.back{display:inline-block;margin-top:32px;font-size:.8rem;color:#555;font-family:monospace;text-decoration:none;}.back:hover{color:#00ff88;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+<script>window.ANT_PAGE = { title: "chain", root: "./" }</script>
+<script src="nav.js"></script>
+<div class="layout">
+  <div class="section-label">// antcpu daisy chain</div><a class="node" href="https://antcpu.com/live.html" target="_blank"><div class="node-left"><div class="node-num">00</div><div><div class="node-name">antcpu.com</div><div class="node-url">antcpu.com/live.html</div></div></div><div class="node-right">root ↗</div></a><a class="node" href="https://antcpu.com/antcoin/live1.html" target="_blank"><div class="node-left"><div class="node-num">01</div><div><div class="node-name">antcoin</div><div class="node-url">antcpu.com/antcoin/live1.html</div></div></div><div class="node-right">↗</div></a><a class="node" href="https://antcpu.com/cloud/live2.html" target="_blank"><div class="node-left"><div class="node-num">02</div><div><div class="node-name">antcpu cloud</div><div class="node-url">antcpu.com/cloud/live2.html</div></div></div><div class="node-right">↗</div></a><a class="node" href="https://antcpu.com/turtle/live3.html" target="_blank"><div class="node-left"><div class="node-num">03</div><div><div class="node-name">Turtle Enterprises</div><div class="node-url">antcpu.com/turtle/live3.html</div></div></div><div class="node-right">↗</div></a><a class="node" href="https://antcpu.com/edu/live4.html" target="_blank"><div class="node-left"><div class="node-num">04</div><div><div class="node-name">antcpu EDU</div><div class="node-url">antcpu.com/edu/live4.html</div></div></div><div class="node-right">↗</div></a><a class="node" href="https://antcpu.com/AI/live5.html" target="_blank"><div class="node-left"><div class="node-num">05</div><div><div class="node-name">antcpu AI</div><div class="node-url">antcpu.com/AI/live5.html</div></div></div><div class="node-right">↗</div></a><a class="node" href="https://antcpu.com/TV/live6.html" target="_blank"><div class="node-left"><div class="node-num">06</div><div><div class="node-name">antcpu TV</div><div class="node-url">antcpu.com/TV/live6.html</div></div></div><div class="node-right">↺ loop ↗</div></a><div class="divider"></div><div class="section-label">// standalone</div><a class="node" href="https://antcpu.com/manda/live.html" target="_blank"><div class="node-left"><div class="node-num">──</div><div><div class="node-name">Amanda Photography</div><div class="node-url">antcpu.com/manda/live.html</div></div></div><div class="node-right">standalone ↗</div></a>
+</div>
+<script>
+</script>
+<script src="footer.js"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live — antcpu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
+
+/* ── LOGO BANNER ── */
+.logo-banner{width:100%;background:#111;border-bottom:1px solid #1a1a1a;display:flex;justify-content:center;align-items:center;padding:28px 0;margin-top:80px;}
+.logo-banner img{height:90px;opacity:.95;filter:brightness(1.1);}
+
+.layout{max-width:700px;margin:0 auto;padding:40px 24px 60px;}
+
+/* ── BADGE + TITLE ── */
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.72rem;font-family:monospace;font-weight:700;letter-spacing:1px;margin-bottom:24px;}
+.badge.live{background:#00ff8820;color:#00ff88;border:1px solid #00ff8840;}
+.site-name{font-size:2rem;font-weight:700;color:#e6edf3;margin-bottom:4px;}
+.site-url{font-size:.8rem;color:#555;font-family:monospace;margin-bottom:32px;}
+
+/* ── STATUS ROWS ── */
+.row{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid #1a1a1a;}
+.row:last-of-type{border-bottom:none;}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;font-family:monospace;min-width:120px;}
+.value{font-size:.85rem;color:#c9d1d9;font-family:monospace;text-align:right;}
+.value.green{color:#00ff88;}
+.value.yellow{color:#d29922;}
+
+/* ── SECTION HEADER ── */
+.section-head{font-size:.7rem;text-transform:uppercase;letter-spacing:3px;color:#333;font-family:monospace;margin:40px 0 16px;border-top:1px solid #1a1a1a;padding-top:24px;}
+.section-head span{color:#555;}
+
+/* ── DASHBOARD PLACEHOLDER ── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
+.dash-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;position:relative;opacity:.45;}
+.dash-card-title{font-size:.78rem;font-family:monospace;color:#e6edf3;letter-spacing:1px;margin-bottom:6px;}
+.dash-card-sub{font-size:.68rem;font-family:monospace;color:#444;}
+.dash-soon-tag{position:absolute;top:10px;right:10px;font-size:.6rem;font-family:monospace;color:#333;letter-spacing:1px;}
+
+/* ── AGENT POD ── */
+.pod-beta{font-size:.65rem;font-family:monospace;color:#333;letter-spacing:2px;margin-bottom:16px;}
+.pod-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+.agent-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:14px 16px;}
+.agent-card.active{border-left:3px solid #00ff88;}
+.agent-card.standby{border-left:3px solid #1a1a1a;}
+.agent-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.agent-avatar{font-size:1.2rem;}
+.agent-name{font-size:.82rem;font-family:monospace;font-weight:700;color:#e6edf3;letter-spacing:1px;}
+.agent-badge{margin-left:auto;font-size:.58rem;font-family:monospace;padding:2px 7px;border-radius:10px;}
+.agent-badge.active{background:#00ff8815;color:#00ff88;border:1px solid #00ff8830;}
+.agent-badge.standby{background:#ffffff08;color:#444;border:1px solid #1f1f1f;}
+.agent-role{font-size:.68rem;font-family:monospace;color:#555;margin-bottom:4px;}
+.agent-bio{font-size:.68rem;color:#444;line-height:1.5;}
+
+/* ── CHAIN BUTTON ── */
+.next-btn{display:block;width:100%;margin-top:40px;padding:16px;background:#00ff8810;border:1px solid #00ff8830;border-radius:12px;color:#00ff88;font-family:monospace;font-size:.9rem;font-weight:700;text-align:center;text-decoration:none;letter-spacing:1px;transition:all .2s;}
+.next-btn:hover{background:#00ff8820;border-color:#00ff88;}
+</style>
+<link rel="stylesheet" href="antcpu.css">
+</head>
+<body>
+
+<script>window.ANT_PAGE = { title: "live", root: "./" }</script>
+<script src="version.js"></script>
+<script src="nav.js"></script>
+
+<!-- LOGO BANNER -->
+<div class="logo-banner">
+  <img src="https://antcpu.com/drive/stock/logo/antcpulogo.jpg" alt="antcpu">
+</div>
+
+<div class="layout">
+
+  <!-- LIVE BADGE -->
+  <div class="badge live">● LIVE</div>
+  <div class="site-name">antcpu.com</div>
+  <div class="site-url">antcpu.com · Ionos · HTML</div>
+
+  <!-- STATUS ROWS -->
+  <div class="row">
+    <div class="label">status</div>
+    <div class="value green">active</div>
+  </div>
+  <div class="row">
+    <div class="label">last updated</div>
+    <div class="value" id="lastUpdated">2026-04-29</div>
+  </div>
+  <div class="row">
+    <div class="label">version</div>
+    <div class="value" id="page-version">—</div>
+  </div>
+  <div class="row">
+    <div class="label">host</div>
+    <div class="value">Ionos</div>
+  </div>
+  <div class="row">
+    <div class="label">deploy</div>
+    <div class="value">manual HTML</div>
+  </div>
+  <div class="row">
+    <div class="label">next</div>
+    <div class="value yellow">noon runner fires · agent-convo.js · dashboard online</div>
+  </div>
+
+  <!-- DASHBOARD PLACEHOLDER -->
+  <div class="section-head">// dashboard <span>— coming online</span></div>
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="dash-soon-tag">// soon</div>
+      <div class="dash-card-title">📡 RADAR</div>
+      <div class="dash-card-sub">opportunity + blocker feed</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-soon-tag">// soon</div>
+      <div class="dash-card-title">🏟 ARENA</div>
+      <div class="dash-card-sub">pipeline + cost tracking</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-soon-tag">// soon</div>
+      <div class="dash-card-title">🗼 TOWER</div>
+      <div class="dash-card-sub">system log + node health</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-soon-tag">// soon</div>
+      <div class="dash-card-title">⚡ ANTCOIN</div>
+      <div class="dash-card-sub">wallet + tokenomics</div>
+    </div>
+  </div>
+
+  <!-- AGENT POD -->
+  <div class="section-head">// agent pod <span>— 10 seated · beta · internal</span></div>
+  <div class="pod-beta">▸ AI workforce in development — not yet released</div>
+  <div class="pod-grid">
+
+    <div class="agent-card active">
+      <div class="agent-top">
+        <div class="agent-avatar">📡</div>
+        <div class="agent-name">ARIA</div>
+        <span class="agent-badge active">ACTIVE</span>
+      </div>
+      <div class="agent-role">Communications Agent</div>
+      <div class="agent-bio">Handles outbound messaging, email drafts, and brand voice across all antcpu channels.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">🔧</div>
+        <div class="agent-name">FORGE</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Build Agent</div>
+      <div class="agent-bio">Code, routes, deploys. Node.js + HTML specialist. Builds what the team designs.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">🔭</div>
+        <div class="agent-name">SCOUT</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Radar Agent</div>
+      <div class="agent-bio">Scans the radar table for opportunities and blockers. Surfaces what matters.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">📊</div>
+        <div class="agent-name">LEDGER</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Logging + Audit Agent</div>
+      <div class="agent-bio">Audits tower_log and transaction history. Flags anomalies. Tracks token usage.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">📣</div>
+        <div class="agent-name">HERALD</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Comms + Calendar Agent</div>
+      <div class="agent-bio">Manages scheduling, Discord announcements, and upcoming event coordination.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">🔐</div>
+        <div class="agent-name">VAULT</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Finance + Storage Agent</div>
+      <div class="agent-bio">Audits API keys, env vars, wallet balances, and cost limits. Security by design.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">📷</div>
+        <div class="agent-name">AMANDA</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Photography Client Agent</div>
+      <div class="agent-bio">Dedicated to Amanda's photography site, client profile, and antcoin wire coordination.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">🗺</div>
+        <div class="agent-name">MAC</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Map of Pi Agent</div>
+      <div class="agent-bio">Monitors the Pi ecosystem, pioneer intelligence, and mapofpi.com status.</div>
+    </div>
+
+    <div class="agent-card standby">
+      <div class="agent-top">
+        <div class="agent-avatar">⚡</div>
+        <div class="agent-name">ANTCOIN</div>
+        <span class="agent-badge standby">STANDBY</span>
+      </div>
+      <div class="agent-role">Hybrid Business Agent</div>
+      <div class="agent-bio">Tokenomics, wallet monitoring, and hybrid business operations for the antcoin network.</div>
+    </div>
+
+    <div class="agent-card active">
+      <div class="agent-top">
+        <div class="agent-avatar">🧠</div>
+        <div class="agent-name">ANTCPU</div>
+        <span class="agent-badge active">ACTIVE</span>
+      </div>
+      <div class="agent-role">Owner — Dispatcher</div>
+      <div class="agent-bio">Dispatches tasks, approves outputs, sets priorities. The mission runs through here.</div>
+    </div>
+
+  </div>
+
+  <!-- CHAIN LINK -->
+  <a class="next-btn" href="https://antcpu.com/antcoin/live1.html">→ antcoin live1</a>
+
+</div>
+
+<script src="footer.js"></script>
+
+<script>
+// pull version from central version.js
+window.addEventListener('load', function() {
+  const v = window.ANT_VERSION;
+  if (v) {
+    const el = document.getElementById('page-version');
+    if (el) el.textContent = v.live;
+  }
+});
+</script>
+</body>
+</html>

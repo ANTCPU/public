@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>antcpu — Website Review Cheat Sheet</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #0a0a0a; color: #f0f0f0; padding: 16px; max-width: 600px; margin: 0 auto; }
+  .header { border-left: 4px solid #ff4d00; padding-left: 12px; margin-bottom: 24px; }
+  .header h1 { font-size: 18px; color: #ff4d00; }
+  .header p { font-size: 12px; color: #888; margin-top: 4px; }
+  .section { margin-bottom: 28px; }
+  .section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ff4d00; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #222; }
+  .q { background: #111; border-left: 3px solid #333; padding: 12px; margin-bottom: 10px; border-radius: 0 4px 4px 0; }
+  .q.hot { background: #1a0a00; border-left: 3px solid #ff4d00; }
+  .q .label { font-size: 10px; color: #888; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .q.hot .label { color: #ff4d00; }
+  .q .question { font-size: 14px; color: #f0f0f0; line-height: 1.5; margin-bottom: 8px; }
+  .q .why { font-size: 11px; color: #555; font-style: italic; }
+  .q.hot .why { color: #884400; }
+  .answer-line { width: 100%; background: transparent; border: none; border-bottom: 1px solid #222; color: #f0f0f0; font-size: 13px; padding: 6px 0; outline: none; font-family: inherit; margin-top: 8px; }
+  .q.hot .answer-line { border-bottom-color: #441a00; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1a1a1a; }
+  .checkbox-row input[type=checkbox] { width: 18px; height: 18px; accent-color: #ff4d00; }
+  .checkbox-row label { font-size: 13px; color: #ccc; }
+  .checkbox-row.hot label { color: #ff4d00; font-weight: 600; }
+  .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-top: 1px solid #222; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #888; }
+  .status-bar span.live { color: #00ff88; }
+  .save-btn { background: #ff4d00; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .pb { padding-bottom: 60px; }
+  .tip { background: #0a1a0a; border-left: 3px solid #00ff88; padding: 10px 12px; margin-bottom: 16px; border-radius: 0 4px 4px 0; font-size: 12px; color: #00aa55; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🗂 Website Review — Cheat Sheet</h1>
+  <p>antcpu Client Tool · Existing Site Review · General Use</p>
+</div>
+
+<div class="pb">
+
+<div class="tip">💡 Let them talk. Your job is to listen, guide and note. Never make them feel behind — make them feel possible.</div>
+
+<!-- SECTION 1 — AWARENESS -->
+<div class="section">
+  <div class="section-title">1 — Awareness</div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">Do you visit your own website? How often?</div>
+    <div class="why">Tells you how invested they are. Low visits = low ownership = big opportunity.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">Do you know how people find your website right now?</div>
+    <div class="why">Most small orgs have no idea. Opens the door to SEO conversation.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Who built your current website and when?</div>
+    <div class="why">Helps gauge how outdated it is and who has access.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Do you have login access to your website?</div>
+    <div class="why">Critical for any future updates. Many clients don't have this.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+</div>
+
+<!-- SECTION 2 — PURPOSE -->
+<div class="section">
+  <div class="section-title">2 — Purpose</div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">What do you want people to do when they land on your site?</div>
+    <div class="why">The #1 question. Most sites have no clear call to action. This defines everything.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">Who is the person you most want to reach with this website?</div>
+    <div class="why">Audience definition. New visitors? Existing members? Youth? Community?</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Is there anything on the site right now that is wrong or out of date?</div>
+    <div class="why">Quick wins. Shows you pay attention and builds trust fast.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Is there anything missing from the site you wish was there?</div>
+    <div class="why">Their wishlist in their own words. Gold for the build brief.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+</div>
+
+<!-- SECTION 3 — CONTENT -->
+<div class="section">
+  <div class="section-title">3 — Content</div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">Do you create content regularly — videos, photos, announcements?</div>
+    <div class="why">Content pipeline check. If yes — the site should be feeding from it automatically.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Do you share your website on social media or anywhere else?</div>
+    <div class="why">Distribution check. Most don't. Opens the traffic conversation.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Do you have photos or videos you own that we could use?</div>
+    <div class="why">Asset inventory. Real photos always beat stock. Builds authenticity.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+</div>
+
+<!-- SECTION 4 — GROWTH -->
+<div class="section">
+  <div class="section-title">4 — Growth</div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">If your website could do one thing it doesn't do today — what would that be?</div>
+    <div class="why">The dream question. Their answer tells you exactly what to build first.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">Are you open to the site helping generate support or revenue for your mission?</div>
+    <div class="why">Opens donations, monetization, giving page conversation without pressure.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Do you have a way for people to contact you or sign up for anything online?</div>
+    <div class="why">Contact form, email list, newsletter — most small orgs are missing this entirely.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">On a scale of 1–10 how happy are you with your website right now?</div>
+    <div class="why">Calibration question. Sets the baseline. Anything under 7 is your opening.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+</div>
+
+<!-- SECTION 5 — WRAP -->
+<div class="section">
+  <div class="section-title">5 — Wrap Up</div>
+
+  <div class="q hot">
+    <div class="label">🔴 Critical</div>
+    <div class="question">If we could show you a better version of your site today — would you want to see it?</div>
+    <div class="why">The bridge to Part 3. Gets explicit buy-in before the live demo.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+  <div class="q">
+    <div class="label">General</div>
+    <div class="question">Is there anyone else involved in decisions about the website?</div>
+    <div class="why">Decision maker check. Avoids surprises later.</div>
+    <input class="answer-line" type="text" placeholder="Their answer..." />
+  </div>
+
+</div>
+
+<!-- CHECKLIST -->
+<div class="section">
+  <div class="section-title">✅ Section Completion</div>
+  <div class="checkbox-row hot"><input type="checkbox"><label>Awareness — covered</label></div>
+  <div class="checkbox-row hot"><input type="checkbox"><label>Purpose — covered</label></div>
+  <div class="checkbox-row hot"><input type="checkbox"><label>Content — covered</label></div>
+  <div class="checkbox-row hot"><input type="checkbox"><label>Growth — covered</label></div>
+  <div class="checkbox-row hot"><input type="checkbox"><label>Buy-in for demo — confirmed</label></div>
+  <div class="checkbox-row"><input type="checkbox"><label>Decision maker identified</label></div>
+</div>
+
+</div><!-- end pb -->
+
+<div class="status-bar">
+  <span>antcpu Client Tool · <span class="live">● OFFLINE READY</span></span>
+  <button class="save-btn" onclick="window.print()">PRINT / SAVE</button>
+</div>
+
+</body>
+</html>

@@ -272,3 +272,58 @@ function renderLog(){
 
 // ── RATE LIMIT GUARD ──────────────────────────────────
 // Gemini 2.0 Flash free tier: 15 RPM / 20 RPD
+
+
+<!-- BOOT OVERLAY -->
+<div id="bootOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:monospace;">
+  <div id="bootCanvas" style="width:192px;height:192px;display:block;margin:0 auto;"></div>
+  <div id="bootLine"   style="font-size:.65rem;color:#f0883e;letter-spacing:2px;min-height:20px;">&nbsp;</div>
+  <div id="bootBar"    style="width:192px;height:4px;background:#111;border:1px solid #1a1a1a;">
+    <div id="bootProgress" style="height:100%;width:0%;background:#f0883e;transition:width .3s;"></div>
+  </div>
+</div>
+<script src="../../talking-head-svg.js"></script>
+<script src="face.js"></script>
+<script>
+(async function bootSequence() {
+  const bootCv = document.getElementById("bootCanvas");
+  if(!bootCv || typeof TalkingHeadSVG === 'undefined') {
+    document.getElementById('bootOverlay').style.display = 'none';
+    return;
+  }
+  const bootHead = new TalkingHeadSVG(bootCv, {
+    name:"FORGE", size:192, special:null,
+    palette:{ bg:"#0a0a0a", accent:"#f0883e", accent2:"#cc6620",
+      iris:"#cc6600", brow:"#f0883e", hair:"#f0883e",
+      face:"#e8d5b0", cheek:"#d4b896", shadow:"#8a6a4a", lip:"#c07050" }
+  });
+  bootHead.setState("thinking");
+  const line = document.getElementById("bootLine");
+  const bar  = document.getElementById("bootProgress");
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  async function type(text, pct) {
+    line.textContent = "";
+    bar.style.width  = pct + "%";
+    for (let i = 0; i < text.length; i++) {
+      line.textContent += text[i];
+      await sleep(30);
+    }
+    await sleep(300);
+  }
+    await type("ANTCPU OS v1.0 ...", 10);
+    await type("LOADING FORGE AGENT ...", 30);
+    await type("WIRING BUILD MODULE ...", 55);
+    bootHead.setState("speaking");
+    await type("LOADING CODE CONTEXT ...", 75);
+    await type("FORGE READY.", 100);
+  await sleep(600);
+  const overlay = document.getElementById("bootOverlay");
+  overlay.style.transition = "opacity .5s";
+  overlay.style.opacity = "0";
+  await sleep(500);
+  overlay.style.display = "none";
+  bootHead.destroy();
+  if(typeof mountFORGEFace === 'function') mountFORGEFace('forgeCanvas', 'forgeState');
+})();
+</script>
+<script src="../../nav.js"></script>
