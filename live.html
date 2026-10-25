@@ -3,330 +3,795 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Live — antcpu</title>
+<title>Live — ANTCPU · Building in Public</title>
+<meta name="description" content="ANTCPU live build status — what we're shipping, what's live, and who's running the mission.">
+<meta property="og:title" content="ANTCPU · Live">
+<meta property="og:description" content="Building in public. Real projects. Real progress.">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#c9d1d9;min-height:100vh;}
-
-/* ── LOGO BANNER ── */
-.logo-banner{width:100%;background:transparent;display:flex;justify-content:center;align-items:center;padding:16px 0 0;margin-top:72px;}
-.logo-banner img{
-  height:52px;
-  opacity:.55;
-  filter:brightness(1.2) grayscale(0.15);
-  mix-blend-mode:lighten;
-  -webkit-mask-image:linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.7) 70%, transparent 100%);
-  mask-image:linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.7) 30%, rgba(0,0,0,.7) 70%, transparent 100%);
-  transition:opacity .3s;
+/* ── WINTER PALETTE ─────────────────────────────────── */
+:root {
+  --bg:        #07090f;
+  --bg2:       #0b0e17;
+  --bg3:       #0f1420;
+  --card:      #111827;
+  --border:    #1e2535;
+  --border2:   #252f42;
+  --frost:     #a8c4e0;
+  --frost-dim: #3a5a7a;
+  --frost-glow:rgba(168,196,224,0.07);
+  --ice:       #d6eaf8;
+  --snow:      #eaf4fb;
+  --muted:     #4a5a72;
+  --text:      #8fa8c4;
+  --bright:    #c8dff0;
+  --green:     #00ff88;
+  --gold:      #d29922;
+  --font:      'Segoe UI', system-ui, sans-serif;
 }
-.logo-banner img:hover{opacity:.8;}
 
-.layout{max-width:700px;margin:0 auto;padding:40px 24px 60px;}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
 
-/* ── BADGE + TITLE ── */
-.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.72rem;font-family:monospace;font-weight:700;letter-spacing:1px;margin-bottom:24px;}
-.badge.live{background:#00ff8820;color:#00ff88;border:1px solid #00ff8840;}
-.site-name{font-size:2rem;font-weight:700;color:#e6edf3;margin-bottom:4px;}
-.site-url{font-size:.8rem;color:#555;font-family:monospace;margin-bottom:32px;}
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-top: 80px; /* nav 52px + ticker 28px */
+  overflow-x: hidden;
+}
 
-/* ── STATUS ROWS ── */
-.row{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid #1a1a1a;}
-.row:last-of-type{border-bottom:none;}
-.label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;font-family:monospace;min-width:120px;}
-.value{font-size:.85rem;color:#c9d1d9;font-family:monospace;text-align:right;}
-.value.green{color:#00ff88;}
-.value.yellow{color:#d29922;}
+/* ── SNOW CANVAS ─────────────────────────────────────── */
+#snow-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
 
-/* ── SECTION HEADER ── */
-.section-head{font-size:.7rem;text-transform:uppercase;letter-spacing:3px;color:#333;font-family:monospace;margin:40px 0 16px;border-top:1px solid #1a1a1a;padding-top:24px;}
-.section-head span{color:#555;}
+/* ── AMBIENT GLOW ────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(168,196,224,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(100,140,200,0.03) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-/* ── DASHBOARD PLACEHOLDER ── */
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
-.dash-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;position:relative;opacity:.45;}
-.dash-card-title{font-size:.78rem;font-family:monospace;color:#e6edf3;letter-spacing:1px;margin-bottom:6px;}
-.dash-card-sub{font-size:.68rem;font-family:monospace;color:#444;}
-.dash-soon-tag{position:absolute;top:10px;right:10px;font-size:.6rem;font-family:monospace;color:#333;letter-spacing:1px;}
+/* ── LAYOUT ──────────────────────────────────────────── */
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  position: relative;
+  z-index: 1;
+}
 
-/* ── AGENT POD ── */
-.pod-beta{font-size:.65rem;font-family:monospace;color:#333;letter-spacing:2px;margin-bottom:16px;}
-.pod-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
-.agent-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:14px 16px;}
-.agent-card.active{border-left:3px solid #00ff88;}
-.agent-card.standby{border-left:3px solid #1a1a1a;}
-.agent-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.agent-avatar{font-size:1.2rem;}
-.agent-name{font-size:.82rem;font-family:monospace;font-weight:700;color:#e6edf3;letter-spacing:1px;}
-.agent-badge{margin-left:auto;font-size:.58rem;font-family:monospace;padding:2px 7px;border-radius:10px;}
-.agent-badge.active{background:#00ff8815;color:#00ff88;border:1px solid #00ff8830;}
-.agent-badge.standby{background:#ffffff08;color:#444;border:1px solid #1f1f1f;}
-.agent-role{font-size:.68rem;font-family:monospace;color:#555;margin-bottom:4px;}
-.agent-bio{font-size:.68rem;color:#444;line-height:1.5;}
+/* ── HERO ────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 48px 0 40px;
+  position: relative;
+}
 
-/* ── CHAIN BUTTON ── */
-.next-btn{display:block;width:100%;margin-top:40px;padding:16px;background:#00ff8810;border:1px solid #00ff8830;border-radius:12px;color:#00ff88;font-family:monospace;font-size:.9rem;font-weight:700;text-align:center;text-decoration:none;letter-spacing:1px;transition:all .2s;}
-.next-btn:hover{background:#00ff8820;border-color:#00ff88;}
+.logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+.logo-wrap img {
+  height: 48px;
+  width: auto;
+  border-radius: 50%;
+  opacity: .7;
+  filter: brightness(1.1) saturate(0.6) hue-rotate(180deg);
+  transition: opacity .3s;
+}
+.logo-wrap img:hover { opacity: .9; }
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(168,196,224,0.06);
+  border: 1px solid rgba(168,196,224,0.15);
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: .7rem;
+  font-family: monospace;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--frost);
+  margin-bottom: 20px;
+}
+.hero-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+.hero-title {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 700;
+  color: var(--ice);
+  letter-spacing: -.02em;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.hero-title .accent { color: var(--frost); }
+
+.hero-sub {
+  font-size: .9rem;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto 28px;
+}
+
+/* status pill row */
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-family: monospace;
+  font-size: .72rem;
+}
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.status-pill .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #333;
+}
+.status-pill .dot.green { background: var(--green); box-shadow: 0 0 5px var(--green); }
+.status-pill .dot.gold  { background: var(--gold);  box-shadow: 0 0 5px var(--gold); }
+.status-pill .val { color: var(--bright); }
+
+/* ── SECTION HEADER ──────────────────────────────────── */
+.section-head {
+  font-size: .65rem;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--frost-dim);
+  margin: 48px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-head::before {
+  content: '//';
+  color: var(--border2);
+}
+
+/* ── LIVE PLATFORMS ──────────────────────────────────── */
+.platform-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 520px) { .platform-grid { grid-template-columns: 1fr; } }
+
+.platform-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .2s, transform .2s;
+  display: block;
+}
+.platform-card:hover {
+  border-color: var(--frost-dim);
+  transform: translateY(-2px);
+}
+.platform-card.featured {
+  border-color: rgba(168,196,224,0.2);
+  background: linear-gradient(135deg, var(--card), rgba(168,196,224,0.03));
+}
+.pc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.pc-name {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--bright);
+  font-family: monospace;
+}
+.pc-badge {
+  font-size: .58rem;
+  font-family: monospace;
+  font-weight: 700;
+  letter-spacing: .1em;
+  padding: 2px 7px;
+  border-radius: 100px;
+}
+.pc-badge.live    { background: rgba(0,255,136,.1);   color: var(--green); border: 1px solid rgba(0,255,136,.2); }
+.pc-badge.active  { background: rgba(168,196,224,.08); color: var(--frost); border: 1px solid rgba(168,196,224,.15); }
+.pc-badge.wip     { background: rgba(210,153,34,.08);  color: var(--gold);  border: 1px solid rgba(210,153,34,.15); }
+.pc-url {
+  font-size: .68rem;
+  font-family: monospace;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.pc-desc {
+  font-size: .75rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ── BUILD STATUS ────────────────────────────────────── */
+.build-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.build-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.build-icon { font-size: 1.1rem; flex-shrink: 0; }
+.build-body { flex: 1; min-width: 0; }
+.build-name {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--bright);
+  font-family: monospace;
+  margin-bottom: 4px;
+}
+.build-desc {
+  font-size: .72rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.build-right { flex-shrink: 0; text-align: right; }
+.build-pct {
+  font-size: .72rem;
+  font-family: monospace;
+  color: var(--frost);
+  margin-bottom: 4px;
+}
+.build-bar-track {
+  width: 80px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.build-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--frost-dim), var(--frost));
+  transition: width .6s ease;
+}
+
+/* ── AGENT POD ───────────────────────────────────────── */
+.agent-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 520px) { .agent-grid { grid-template-columns: 1fr; } }
+
+.agent-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 15px;
+  border-left: 3px solid var(--border);
+  transition: border-color .2s;
+}
+.agent-card.active {
+  border-left-color: var(--frost);
+  background: linear-gradient(135deg, var(--card), rgba(168,196,224,0.03));
+}
+.agent-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.agent-avatar { font-size: 1rem; }
+.agent-name {
+  font-size: .78rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--bright);
+  letter-spacing: .05em;
+  flex: 1;
+}
+.agent-badge {
+  font-size: .55rem;
+  font-family: monospace;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 100px;
+  letter-spacing: .08em;
+}
+.agent-badge.active  { background: rgba(168,196,224,.1); color: var(--frost); border: 1px solid rgba(168,196,224,.2); }
+.agent-badge.standby { background: rgba(255,255,255,.03); color: var(--muted); border: 1px solid var(--border); }
+.agent-role {
+  font-size: .65rem;
+  font-family: monospace;
+  color: var(--frost-dim);
+  margin-bottom: 3px;
+}
+.agent-bio {
+  font-size: .65rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* ── CONNECT ─────────────────────────────────────────── */
+.connect-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 480px) { .connect-grid { grid-template-columns: 1fr 1fr; } }
+
+.connect-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--muted);
+  font-family: monospace;
+  font-size: .68rem;
+  text-align: center;
+  transition: border-color .2s, color .2s, transform .2s;
+}
+.connect-btn:hover {
+  border-color: var(--frost-dim);
+  color: var(--frost);
+  transform: translateY(-2px);
+}
+.connect-btn .icon { font-size: 1.3rem; }
+
+/* ── FOOTER NOTE ─────────────────────────────────────── */
+.page-foot {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-family: monospace;
+  font-size: .65rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.page-foot a { color: var(--frost-dim); text-decoration: none; }
+.page-foot a:hover { color: var(--frost); }
+
+/* ── SNOW ACCUMULATION SPOTS ─────────────────────────── */
+/* subtle frost on a few card tops — only a dusting */
+.frost-edge::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(214,234,248,.18), rgba(214,234,248,.28), rgba(214,234,248,.18), transparent);
+  border-radius: 0 0 4px 4px;
+  pointer-events: none;
+}
+.frost-edge { position: relative; overflow: visible; }
 </style>
-<link rel="stylesheet" href="antcpu.css">
 </head>
 <body>
+
+<!-- Snow canvas -->
+<canvas id="snow-canvas"></canvas>
 
 <script>window.ANT_PAGE = { title: "live", root: "./" }</script>
 <script src="version.js"></script>
 <script src="nav.js"></script>
 
-<!-- LOGO BANNER -->
-<div class="logo-banner">
-  <img src="https://antcpu.com/drive/stock/logo/antcpulogo.jpg" alt="antcpu">
-</div>
+<div class="wrap">
 
-<div class="layout">
-
-  <!-- LIVE BADGE -->
-  <div class="badge live">● LIVE</div>
-  <div class="site-name">antcpu.com</div>
-  <div class="site-url">antcpu.com · Ionos · HTML</div>
-
-  <!-- STATUS ROWS -->
-
-  <div class="row">
-    <div class="label">local version</div>
-    <div class="value" id="local-version">—</div>
-  </div>
-  <div class="row">
-    <div class="label">live version</div>
-    <div class="value green" id="live-version">—</div>
-  </div>
-  <div class="row">
-    <div class="label">build phase</div>
-    <div class="value" id="build-phase" style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-      <span id="build-phase-label">—</span>
-      <div style="width:120px;height:3px;background:#1a1a1a;border-radius:2px;overflow:hidden;">
-        <div id="build-phase-bar" style="height:100%;width:0%;transition:width .6s;border-radius:2px;"></div>
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="logo-wrap">
+      <img src="https://antcpu.com/drive/stock/logo/antcpulogo.jpg" alt="antcpu">
+    </div>
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Building in Public
+    </div>
+    <h1 class="hero-title">ANTCPU <span class="accent">Live</span></h1>
+    <p class="hero-sub">Real projects. Real progress. Veteran-owned, developer-built — Thomasville, NC.</p>
+    <div class="status-row">
+      <div class="status-pill">
+        <span class="dot green"></span>
+        <span>status</span>
+        <span class="val" id="status-label">active</span>
+      </div>
+      <div class="status-pill">
+        <span class="dot" id="version-dot"></span>
+        <span>version</span>
+        <span class="val" id="version-label">—</span>
+      </div>
+      <div class="status-pill">
+        <span class="dot gold"></span>
+        <span>phase</span>
+        <span class="val" id="phase-label">—</span>
       </div>
     </div>
   </div>
-  <div class="row">
-    <div class="label">status</div>
-    <div class="value" id="status-dot" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
-      <span id="status-indicator" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;"></span>
-      <span id="status-label" style="font-size:.78rem;font-family:monospace;color:#00ff88;">active</span>
-    </div>
+
+  <!-- ── LIVE PLATFORMS ── -->
+  <div class="section-head">What's Live</div>
+  <div class="platform-grid">
+
+    <a class="platform-card featured frost-edge" href="https://antcpu.com" target="_blank">
+      <div class="pc-top">
+        <span class="pc-name">antcpu.com</span>
+        <span class="pc-badge live">LIVE</span>
+      </div>
+      <div class="pc-url">antcpu.com · Ionos</div>
+      <div class="pc-desc">Main platform — same-day creative services, AI automation, veteran-owned.</div>
+    </a>
+
+    <a class="platform-card" href="https://antcpu.com/edu" target="_blank">
+      <div class="pc-top">
+        <span class="pc-name">antcpu EDU</span>
+        <span class="pc-badge live">LIVE</span>
+      </div>
+      <div class="pc-url">antcpu.com/edu</div>
+      <div class="pc-desc">Free web dev courses. 7.1K+ students. HTML → DevOps.</div>
+    </a>
+
+    <a class="platform-card" href="https://introtopi.com" target="_blank">
+      <div class="pc-top">
+        <span class="pc-name">Intro to Pi</span>
+        <span class="pc-badge live">LIVE</span>
+      </div>
+      <div class="pc-url">introtopi.com</div>
+      <div class="pc-desc">Pioneer education hub. 47M+ ecosystem. KYC, mining, Mainnet guides.</div>
+    </a>
+
+    <a class="platform-card" href="https://antcpu-ads.vercel.app" target="_blank">
+      <div class="pc-top">
+        <span class="pc-name">ADS Arena</span>
+        <span class="pc-badge live">LIVE</span>
+      </div>
+      <div class="pc-url">antcpu-ads.vercel.app</div>
+      <div class="pc-desc">Ad network platform. Precision placement across the antcpu network.</div>
+    </a>
+
+    <a class="platform-card" href="https://antchain.vercel.app" target="_blank">
+      <div class="pc-top">
+        <span class="pc-name">AntChain</span>
+        <span class="pc-badge wip">TESTNET</span>
+      </div>
+      <div class="pc-url">antchain.vercel.app</div>
+      <div class="pc-desc">Human-powered blockchain. Auth live. Wallet creation. MAINNET v1 backend.</div>
+    </a>
+
+    <a class="platform-card" href="https://antcpu.com/antcoin" target="_blank">
+      <div class="pc-top">
+        <span class="pc-name">ANTCOIN</span>
+        <span class="pc-badge active">PHASE 1</span>
+      </div>
+      <div class="pc-url">antcpu.com/antcoin</div>
+      <div class="pc-desc">Early membership open. Genesis wallets. First coin not yet minted.</div>
+    </a>
+
   </div>
-  <div class="row">
-    <div class="label">host</div>
-    <div class="value">Ionos</div>
-  </div>
-  <div class="row">
-    <div class="label">deploy</div>
-    <div class="value">manual HTML</div>
-  </div>
-  <div class="row">
-    <div class="label">next</div>
-    <div class="value yellow">noon runner fires · agent-convo.js · dashboard online</div>
-  </div>
 
-  <!-- DASHBOARD PLACEHOLDER -->
-  <div class="section-head">// dashboard <span>— coming online</span></div>
-  <div class="dash-grid">
-    <div class="dash-card">
-      <div class="dash-soon-tag">// soon</div>
-      <div class="dash-card-title">📡 RADAR</div>
-      <div class="dash-card-sub">opportunity + blocker feed</div>
-    </div>
-    <div class="dash-card">
-      <div class="dash-soon-tag">// soon</div>
-      <div class="dash-card-title">🏟 ARENA</div>
-      <div class="dash-card-sub">pipeline + cost tracking</div>
-    </div>
-    <div class="dash-card">
-      <div class="dash-soon-tag">// soon</div>
-      <div class="dash-card-title">🗼 TOWER</div>
-      <div class="dash-card-sub">system log + node health</div>
-    </div>
-    <div class="dash-card">
-      <div class="dash-soon-tag">// soon</div>
-      <div class="dash-card-title">⚡ ANTCOIN</div>
-      <div class="dash-card-sub">wallet + tokenomics</div>
-    </div>
-  </div>
+  <!-- ── WHAT WE'RE BUILDING ── -->
+  <div class="section-head">What We're Building</div>
+  <div class="build-list">
 
-  <!-- AGENT POD -->
-  <div class="section-head">// agent pod <span>— 10 seated · beta · internal</span></div>
-  <div class="pod-beta">▸ AI workforce in development — not yet released</div>
-  <div class="pod-grid">
-
-    <div class="agent-card active">
-      <div class="agent-top">
-        <div class="agent-avatar">📡</div>
-        <div class="agent-name">ARIA</div>
-        <span class="agent-badge active">ACTIVE</span>
+    <div class="build-item">
+      <div class="build-icon">⛓</div>
+      <div class="build-body">
+        <div class="build-name">AntChain v0.5</div>
+        <div class="build-desc">Live transactions, guided onboarding, Genesis badge fully on-chain.</div>
       </div>
-      <div class="agent-role">Communications Agent</div>
-      <div class="agent-bio">Handles outbound messaging, email drafts, and brand voice across all antcpu channels.</div>
+      <div class="build-right">
+        <div class="build-pct">40%</div>
+        <div class="build-bar-track"><div class="build-bar-fill" style="width:40%"></div></div>
+      </div>
     </div>
 
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">🔧</div>
-        <div class="agent-name">FORGE</div>
-        <span class="agent-badge standby">STANDBY</span>
+    <div class="build-item">
+      <div class="build-icon">🤖</div>
+      <div class="build-body">
+        <div class="build-name">Agent v2</div>
+        <div class="build-desc">AI workforce — ARIA active, full pod deployment in progress.</div>
       </div>
-      <div class="agent-role">Build Agent</div>
-      <div class="agent-bio">Code, routes, deploys. Node.js + HTML specialist. Builds what the team designs.</div>
+      <div class="build-right">
+        <div class="build-pct">25%</div>
+        <div class="build-bar-track"><div class="build-bar-fill" style="width:25%"></div></div>
+      </div>
     </div>
 
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">🔭</div>
-        <div class="agent-name">SCOUT</div>
-        <span class="agent-badge standby">STANDBY</span>
+    <div class="build-item">
+      <div class="build-icon">🎮</div>
+      <div class="build-body">
+        <div class="build-name">Game</div>
+        <div class="build-desc">antcpu.com/Game — in progress, Pi Network integration planned.</div>
       </div>
-      <div class="agent-role">Radar Agent</div>
-      <div class="agent-bio">Scans the radar table for opportunities and blockers. Surfaces what matters.</div>
+      <div class="build-right">
+        <div class="build-pct">15%</div>
+        <div class="build-bar-track"><div class="build-bar-fill" style="width:15%"></div></div>
+      </div>
     </div>
 
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">📊</div>
-        <div class="agent-name">LEDGER</div>
-        <span class="agent-badge standby">STANDBY</span>
+    <div class="build-item">
+      <div class="build-icon">📡</div>
+      <div class="build-body">
+        <div class="build-name">OS Dashboard</div>
+        <div class="build-desc">RADAR · ARENA · TOWER · ANTCOIN — command center coming online.</div>
       </div>
-      <div class="agent-role">Logging + Audit Agent</div>
-      <div class="agent-bio">Audits tower_log and transaction history. Flags anomalies. Tracks token usage.</div>
-    </div>
-
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">📣</div>
-        <div class="agent-name">HERALD</div>
-        <span class="agent-badge standby">STANDBY</span>
+      <div class="build-right">
+        <div class="build-pct">20%</div>
+        <div class="build-bar-track"><div class="build-bar-fill" style="width:20%"></div></div>
       </div>
-      <div class="agent-role">Comms + Calendar Agent</div>
-      <div class="agent-bio">Manages scheduling, Discord announcements, and upcoming event coordination.</div>
-    </div>
-
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">🔐</div>
-        <div class="agent-name">VAULT</div>
-        <span class="agent-badge standby">STANDBY</span>
-      </div>
-      <div class="agent-role">Finance + Storage Agent</div>
-      <div class="agent-bio">Audits API keys, env vars, wallet balances, and cost limits. Security by design.</div>
-    </div>
-
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">📷</div>
-        <div class="agent-name">AMANDA</div>
-        <span class="agent-badge standby">STANDBY</span>
-      </div>
-      <div class="agent-role">Photography Client Agent</div>
-      <div class="agent-bio">Dedicated to Amanda's photography site, client profile, and antcoin wire coordination.</div>
-    </div>
-
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">🗺</div>
-        <div class="agent-name">MAC</div>
-        <span class="agent-badge standby">STANDBY</span>
-      </div>
-      <div class="agent-role">Map of Pi Agent</div>
-      <div class="agent-bio">Monitors the Pi ecosystem, pioneer intelligence, and mapofpi.com status.</div>
-    </div>
-
-    <div class="agent-card standby">
-      <div class="agent-top">
-        <div class="agent-avatar">⚡</div>
-        <div class="agent-name">ANTCOIN</div>
-        <span class="agent-badge standby">STANDBY</span>
-      </div>
-      <div class="agent-role">Hybrid Business Agent</div>
-      <div class="agent-bio">Tokenomics, wallet monitoring, and hybrid business operations for the antcoin network.</div>
-    </div>
-
-    <div class="agent-card active">
-      <div class="agent-top">
-        <div class="agent-avatar">🧠</div>
-        <div class="agent-name">ANTCPU</div>
-        <span class="agent-badge active">ACTIVE</span>
-      </div>
-      <div class="agent-role">Owner — Dispatcher</div>
-      <div class="agent-bio">Dispatches tasks, approves outputs, sets priorities. The mission runs through here.</div>
     </div>
 
   </div>
 
-  <!-- CHAIN LINK -->
-  <a class="next-btn" href="https://antcpu.com/antcoin/live1.html">→ antcoin live1</a>
+  <!-- ── AGENT POD ── -->
+  <div class="section-head">The Team</div>
+  <p style="font-size:.72rem;color:var(--muted);font-family:monospace;margin-bottom:14px;">▸ AI workforce — building in public · 10 agents seated</p>
+  <div class="agent-grid" id="agent-grid"></div>
 
-</div>
+  <!-- ── CONNECT ── -->
+  <div class="section-head">Connect</div>
+  <div class="connect-grid">
+    <a class="connect-btn" href="https://www.facebook.com/antcoin" target="_blank">
+      <span class="icon">📘</span>Facebook<span style="color:var(--frost-dim)">5K+</span>
+    </a>
+    <a class="connect-btn" href="https://www.tiktok.com/@antcpu" target="_blank">
+      <span class="icon">🎵</span>TikTok<span style="color:var(--frost-dim)">6K+</span>
+    </a>
+    <a class="connect-btn" href="https://github.com/ANTCPU" target="_blank">
+      <span class="icon">🐙</span>GitHub<span style="color:var(--frost-dim)">open</span>
+    </a>
+    <a class="connect-btn" href="https://antcpu.zapier.app" target="_blank">
+      <span class="icon">🤖</span>AI Bot<span style="color:var(--frost-dim)">free</span>
+    </a>
+    <a class="connect-btn" href="https://antcpu.com/lead-form.html" target="_blank">
+      <span class="icon">⚡</span>Same-Day<span style="color:var(--frost-dim)">hire us</span>
+    </a>
+    <a class="connect-btn" href="mailto:antcpu@gmail.com">
+      <span class="icon">✉️</span>Email<span style="color:var(--frost-dim)">direct</span>
+    </a>
+  </div>
+
+  <!-- ── PAGE FOOT ── -->
+  <div class="page-foot">
+    <a href="https://antcpu.com">antcpu.com</a> · <a href="https://github.com/ANTCPU/public">built in public</a> · Thomasville, NC · 2026<br>
+    Veteran-Owned · Same-Day Delivery · Real Results
+  </div>
+
+</div><!-- /wrap -->
 
 <script src="footer.js"></script>
 
 <script>
+/* ── AGENTS DATA ─────────────────────────────────────── */
+const AGENTS = [
+  { avatar:'📡', name:'ARIA',    role:'Communications',    bio:'Outbound messaging, email drafts, brand voice.',          status:'active'  },
+  { avatar:'🔧', name:'FORGE',   role:'Build Agent',       bio:'Code, routes, deploys. Node.js + HTML specialist.',       status:'standby' },
+  { avatar:'🔭', name:'SCOUT',   role:'Radar Agent',       bio:'Scans for opportunities and blockers. Surfaces what matters.', status:'standby' },
+  { avatar:'📊', name:'LEDGER',  role:'Audit Agent',       bio:'Tower log, transaction history, token usage.',            status:'standby' },
+  { avatar:'📣', name:'HERALD',  role:'Comms + Calendar',  bio:'Scheduling, Discord announcements, event coordination.',  status:'standby' },
+  { avatar:'🔐', name:'VAULT',   role:'Finance + Storage', bio:'API keys, env vars, wallet balances, cost limits.',       status:'standby' },
+  { avatar:'📷', name:'AMANDA',  role:'Client Agent',      bio:'Amanda photography site, client profile, antcoin wire.',  status:'standby' },
+  { avatar:'🗺', name:'MAC',     role:'Pi Network Agent',  bio:'Pi ecosystem, pioneer intelligence, mapofpi.com.',        status:'standby' },
+  { avatar:'⚡', name:'ANTCOIN', role:'Hybrid Business',   bio:'Tokenomics, wallet monitoring, antcoin network ops.',     status:'standby' },
+  { avatar:'🧠', name:'ANTCPU',  role:'Owner · Dispatcher','bio':'Dispatches tasks, approves outputs, sets priorities.',  status:'active'  },
+];
+
+function renderAgents() {
+  const grid = document.getElementById('agent-grid');
+  if (!grid) return;
+  grid.innerHTML = AGENTS.map(a => `
+    <div class="agent-card ${a.status}">
+      <div class="agent-top">
+        <span class="agent-avatar">${a.avatar}</span>
+        <span class="agent-name">${a.name}</span>
+        <span class="agent-badge ${a.status}">${a.status === 'active' ? 'ACTIVE' : 'STANDBY'}</span>
+      </div>
+      <div class="agent-role">${a.role}</div>
+      <div class="agent-bio">${a.bio}</div>
+    </div>
+  `).join('');
+}
+renderAgents();
+
+/* ── VERSION + PROGRESS ──────────────────────────────── */
+const STATUS_MAP = {
+  active    : { color:'var(--green)', label:'active'    },
+  enhancing : { color:'var(--gold)',  label:'enhancing' },
+  blocked   : { color:'#ff5f57',      label:'blocked'   }
+};
+
+window.addEventListener('load', function() {
+  const v     = window.ANT_VERSION || {};
+  const key   = (v.status || 'active').toLowerCase();
+  const state = STATUS_MAP[key] || STATUS_MAP.active;
+
+  const statusEl  = document.getElementById('status-label');
+  const versionEl = document.getElementById('version-label');
+  const vDot      = document.getElementById('version-dot');
+  const phaseEl   = document.getElementById('phase-label');
+
+  if (statusEl)  { statusEl.textContent = state.label; statusEl.style.color = state.color; }
+  if (versionEl && v.live) versionEl.textContent = 'v' + v.live;
+  if (vDot) { vDot.style.background = state.color; vDot.style.boxShadow = '0 0 5px ' + state.color; }
+
+  fetch('https://antcpu.com/data/progress.json')
+    .then(r => r.json())
+    .then(d => {
+      const curMonth = new Date().toISOString().slice(0,7);
+      const bucket   = (d.monthly || []).find(b => b.month === curMonth);
+      if (bucket && phaseEl) {
+        phaseEl.textContent = bucket.version + ' · ' + (bucket.pct || 0) + '%';
+      }
+    })
+    .catch(() => { if (phaseEl) phaseEl.textContent = 'in progress'; });
+});
+
+/* ── SNOW ────────────────────────────────────────────── */
 (function() {
-  const STATUS_MAP = {
-    active    : { color: '#00ff88', label: 'active',     glow: '#00ff88' },
-    enhancing : { color: '#d29922', label: 'enhancing',  glow: '#d29922' },
-    blocked   : { color: '#ff5f57', label: 'blocked',    glow: '#ff5f57' }
-  };
+  const canvas = document.getElementById('snow-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H;
 
-  window.addEventListener('load', function() {
-    const v = window.ANT_VERSION || {};
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
 
-    // ── local version ─────────────────────────────────
-    const localEl = document.getElementById('local-version');
-    if (localEl) localEl.textContent = v.live ? 'v' + v.live : '—';
+  /* Flurry config — early winter, light dusting
+     Few flakes, slow, small, mostly transparent
+     Some collect briefly at the bottom of the viewport */
+  const FLAKE_COUNT = 55;
 
-    // ── status dot — fully curated via version.js ─────
-    const key    = (v.status || 'active').toLowerCase();
-    const state  = STATUS_MAP[key] || STATUS_MAP.active;
-    const dotEl  = document.getElementById('status-indicator');
-    const lblEl  = document.getElementById('status-label');
-    if (dotEl) {
-      dotEl.style.background  = state.color;
-      dotEl.style.boxShadow   = '0 0 8px ' + state.glow;
-    }
-    if (lblEl) {
-      lblEl.textContent  = state.label;
-      lblEl.style.color  = state.color;
-    }
+  function mkFlake() {
+    return {
+      x:     Math.random() * W,
+      y:     Math.random() * H - H,        // start above viewport
+      r:     Math.random() * 2.2 + 0.4,    // tiny — 0.4 to 2.6px
+      speed: Math.random() * 0.6 + 0.2,    // slow drift
+      drift: (Math.random() - 0.5) * 0.3,  // gentle sideways
+      alpha: Math.random() * 0.45 + 0.1,   // mostly transparent
+      wobble:      Math.random() * Math.PI * 2,
+      wobbleSpeed: Math.random() * 0.008 + 0.003,
+      // accumulation — a few flakes settle near bottom
+      settling: Math.random() < 0.12,      // only ~12% settle
+      settled:  false,
+      settleY:  H * (0.88 + Math.random() * 0.1),
+    };
+  }
 
-    // ── live version + build phase — from progress.json ─
-    fetch('https://antcpu.com/data/progress.json')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        const curMonth = new Date().toISOString().slice(0, 7);
-        const bucket   = (d.monthly || []).find(function(b) { return b.month === curMonth; });
+  let flakes = Array.from({ length: FLAKE_COUNT }, mkFlake);
 
-        // live version — just the version tag, no build detail
-        const liveEl = document.getElementById('live-version');
-        if (liveEl && bucket) liveEl.textContent = bucket.version;
+  // Accumulated snow piles — just a few subtle drifts at bottom
+  const PILES = [
+    { x: W * 0.12, w: 60,  h: 3.5 },
+    { x: W * 0.38, w: 40,  h: 2.5 },
+    { x: W * 0.61, w: 55,  h: 3.0 },
+    { x: W * 0.82, w: 45,  h: 2.8 },
+  ];
 
-        // build phase bar — color only, no label text exposed
-        const barEl = document.getElementById('build-phase-bar');
-        if (barEl && bucket) {
-          const pct = bucket.pct || 0;
-          barEl.style.width      = pct + '%';
-          barEl.style.background = pct === 100 ? '#00ff88' : pct > 50 ? '#00ff88' : state.color;
-        }
+  function drawPiles() {
+    PILES.forEach(p => {
+      const grd = ctx.createRadialGradient(p.x, H - 1, 0, p.x, H - 1, p.w * 0.6);
+      grd.addColorStop(0,   'rgba(214,234,248,0.18)');
+      grd.addColorStop(0.5, 'rgba(214,234,248,0.08)');
+      grd.addColorStop(1,   'rgba(214,234,248,0)');
+      ctx.beginPath();
+      ctx.ellipse(p.x, H, p.w * 0.6, p.h, 0, Math.PI, 0);
+      ctx.fillStyle = grd;
+      ctx.fill();
+    });
+  }
 
-        // build phase label — generic, no sprint/task detail
-        const phaseEl = document.getElementById('build-phase-label');
-        if (phaseEl && bucket) {
-          phaseEl.textContent = bucket.version + ' · ' + state.label;
-          phaseEl.style.color = state.color;
-        }
-      })
-      .catch(function() {
-        // silent fallback — dot still shows from version.js
-        const liveEl = document.getElementById('live-version');
-        if (liveEl) liveEl.textContent = '—';
-      });
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // draw settled piles first
+    drawPiles();
+
+    flakes.forEach(f => {
+      if (f.settled) {
+        // draw as a tiny settled dot, very faint
+        ctx.beginPath();
+        ctx.arc(f.x, f.settleY, f.r * 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(214,234,248,${f.alpha * 0.5})`;
+        ctx.fill();
+        return;
+      }
+
+      // wobble drift
+      f.wobble += f.wobbleSpeed;
+      f.x += f.drift + Math.sin(f.wobble) * 0.4;
+      f.y += f.speed;
+
+      // wrap horizontally
+      if (f.x < -5)  f.x = W + 5;
+      if (f.x > W + 5) f.x = -5;
+
+      // settling logic — only for settling flakes near bottom
+      if (f.settling && f.y >= f.settleY) {
+        f.settled = true;
+        // after a while, melt and reset
+        setTimeout(() => {
+          Object.assign(f, mkFlake());
+          f.y = -10;
+          f.settled = false;
+        }, 4000 + Math.random() * 6000);
+        return;
+      }
+
+      // reset non-settling flakes when they leave bottom
+      if (f.y > H + 10) {
+        f.y = -10;
+        f.x = Math.random() * W;
+      }
+
+      // draw flake — soft circle, no hard edges
+      const grd = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+      grd.addColorStop(0,   `rgba(214,234,248,${f.alpha})`);
+      grd.addColorStop(0.6, `rgba(214,234,248,${f.alpha * 0.5})`);
+      grd.addColorStop(1,   `rgba(214,234,248,0)`);
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  // Reposition piles on resize
+  window.addEventListener('resize', () => {
+    PILES[0].x = W * 0.12;
+    PILES[1].x = W * 0.38;
+    PILES[2].x = W * 0.61;
+    PILES[3].x = W * 0.82;
+    flakes.forEach(f => { if (f.settling) f.settleY = H * (0.88 + Math.random() * 0.1); });
   });
+
+  draw();
 })();
 </script>
+
 </body>
 </html>
+
