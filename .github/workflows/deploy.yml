@@ -18,14 +18,6 @@ jobs:
           username: ${{ secrets.IONOS_USER }}
           server: ${{ secrets.IONOS_HOST }}
           password: ${{ secrets.IONOS_PASS }}
-          local_path: |
-            ./index.html
-            ./live.html
-            ./antcpu.css
-            ./nav.js
-            ./footer.js
-            ./version.js
-            ./antcpu.js
+          local_path: './index.html ./live.html ./antcpu.css ./antcpu.js ./footer.js ./nav.js ./version.js ./images'
           remote_path: '/'
           sftp_only: true
-
