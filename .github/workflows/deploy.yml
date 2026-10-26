@@ -28,3 +28,4 @@ jobs:
             ./antcpu.js
           remote_path: '/'
           sftp_only: true
+
